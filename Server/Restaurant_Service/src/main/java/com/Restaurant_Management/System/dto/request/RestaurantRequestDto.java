@@ -15,6 +15,7 @@ public class RestaurantRequestDto {
     private String restaurantPhone;
     private String restaurantEmail;
     private boolean availability;
+    private boolean orderAvailability;
     private double rating;
 
 }

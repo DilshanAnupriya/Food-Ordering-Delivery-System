@@ -3,6 +3,8 @@ package com.Restaurant_Management.System.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Set;
 
 @Entity(name = "restaurant")
@@ -32,6 +34,11 @@ public class Restaurant {
 
     @Column( nullable = false)
     private boolean availability;
+
+    @Column( nullable = false)
+    private boolean orderAvailability;
+
+    private LocalDateTime createdAt;
 
     @Column( nullable = false)
     private double rating;

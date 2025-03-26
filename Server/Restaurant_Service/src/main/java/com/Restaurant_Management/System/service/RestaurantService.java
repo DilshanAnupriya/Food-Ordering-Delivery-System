@@ -12,4 +12,6 @@ public interface RestaurantService {
     public RestaurantResponseDto restaurantFindById(String id);
     public void restaurantDeleteById(String id);
     public RestaurantResponsePaginateDto findAllRestaurant(String searchText, int page, int size);
+    public void setRestaurantAvailability(String id, boolean availability);
+    public  void setOrderAvailability(String id, boolean OrderAvailability);
 }

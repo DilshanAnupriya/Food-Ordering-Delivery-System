@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Data
 @Getter
 @Setter
@@ -23,4 +25,5 @@ public class FoodItemResponseDto {
     private boolean available;
     private String restaurantId;
     private String restaurantName;
+    private LocalDateTime createdAt;
 }

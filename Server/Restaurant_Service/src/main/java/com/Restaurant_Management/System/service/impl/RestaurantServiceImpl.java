@@ -4,6 +4,7 @@ import com.Restaurant_Management.System.dto.request.RestaurantRequestDto;
 import com.Restaurant_Management.System.dto.response.RestaurantResponseDto;
 import com.Restaurant_Management.System.dto.response.paginate.RestaurantResponsePaginateDto;
 import com.Restaurant_Management.System.entity.Restaurant;
+import com.Restaurant_Management.System.exception.DuplicateEntryException;
 import com.Restaurant_Management.System.exception.EntryNotFoundException;
 import com.Restaurant_Management.System.repo.RestaurantRepo;
 import com.Restaurant_Management.System.service.RestaurantService;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.management.RuntimeErrorException;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,9 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public void restaurantSave(RestaurantRequestDto dto) {
+        if (restaurantRepo.existsRestaurantByRestaurantName(dto.getRestaurantName())) {
+            throw new DuplicateEntryException("Restaurant with this name already exists.");
+        }
         restaurantRepo.save(toRestaurant(dto));
 
     }
@@ -32,11 +37,11 @@ public class RestaurantServiceImpl implements RestaurantService {
         Restaurant restaurant = restaurantRepo.findById(id).orElseThrow(()-> new EntryNotFoundException("not found"));
 
         restaurant.setRestaurantName(dto.getRestaurantName());
-        restaurant.setRestaurantName(dto.getRestaurantName());
         restaurant.setRestaurantPhone(dto.getRestaurantPhone());
         restaurant.setRestaurantEmail(dto.getRestaurantEmail());
         restaurant.setRestaurantAddress(dto.getRestaurantAddress());
         restaurant.setAvailability(dto.isAvailability());
+        restaurant.setOrderAvailability(dto.isOrderAvailability());
         restaurant.setRating(dto.getRating());
 
         restaurantRepo.save(restaurant);
@@ -69,6 +74,20 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .build();
     }
 
+    @Override
+    public void setRestaurantAvailability(String id, boolean availability) {
+        Restaurant restaurant = restaurantRepo.findById(id).orElseThrow(()-> new EntryNotFoundException("not found"));
+        restaurant.setAvailability(availability);
+        restaurantRepo.save(restaurant);
+    }
+
+    @Override
+    public void setOrderAvailability(String id, boolean OrderAvailability) {
+        Restaurant restaurant = restaurantRepo.findById(id).orElseThrow(()-> new EntryNotFoundException("not found"));
+        restaurant.setOrderAvailability(OrderAvailability);
+        restaurantRepo.save(restaurant);
+    }
+
     private Restaurant toRestaurant(RestaurantRequestDto dto) {
         if(dto==null) throw new RuntimeException("null");
         return  Restaurant.builder()
@@ -78,6 +97,8 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .restaurantEmail(dto.getRestaurantEmail())
                 .restaurantAddress(dto.getRestaurantAddress())
                 .availability(dto.isAvailability())
+                .orderAvailability(dto.isOrderAvailability())
+                .createdAt(LocalDateTime.now())
                 .rating(dto.getRating())
                 .build();
     }
@@ -90,6 +111,8 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .restaurantEmail(restaurant.getRestaurantEmail())
                 .restaurantAddress(restaurant.getRestaurantAddress())
                 .availability(restaurant.isAvailability())
+                .orderAvailability(restaurant.isOrderAvailability())
+                .createdAt(restaurant.getCreatedAt())
                 .rating(restaurant.getRating())
                 .build();
     }

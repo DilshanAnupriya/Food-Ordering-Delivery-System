@@ -13,5 +13,5 @@ public interface RestaurantRepo extends JpaRepository<Restaurant,String> {
     @Query(nativeQuery = true,value = "SELECT COUNT(*) FROM restaurant WHERE restaurant_name LIKE %?1% OR restaurant_address LIKE %?1%")
     public long countAllRestaurant(String searchText);
 
-
+    boolean existsRestaurantByRestaurantName(String restaurantName);
 }

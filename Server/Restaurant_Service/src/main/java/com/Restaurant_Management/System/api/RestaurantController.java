@@ -90,5 +90,36 @@ public class RestaurantController {
         );
     }
 
+    @PutMapping("/availability/{id}")
+    public ResponseEntity<StandardResponseDto> updateAvailability(
+            @PathVariable("id") String restaurantId,
+            @RequestBody  Boolean availability
+    ){
+        restaurantService.setRestaurantAvailability(restaurantId, availability);
+        return  new ResponseEntity<>(
+                StandardResponseDto.builder()
+                        .code(201)
+                        .message("Restaurant availability updated successfully!")
+                        .data(null)
+                        .build(),
+                HttpStatus.CREATED
+        );
+    }
+
+    @PutMapping("/order-availability/{id}")
+    public ResponseEntity<StandardResponseDto> updateOrderAvailability(
+            @PathVariable("id") String restaurantId,
+            @RequestBody  Boolean OrderAvailability
+    ){
+        restaurantService.setOrderAvailability(restaurantId, OrderAvailability);
+        return new ResponseEntity<>(
+                StandardResponseDto.builder()
+                        .code(201)
+                        .message("Restaurant order availability updated successfully!")
+                        .data(null)
+                        .build(),
+                HttpStatus.CREATED
+        );
+    }
 
 }
