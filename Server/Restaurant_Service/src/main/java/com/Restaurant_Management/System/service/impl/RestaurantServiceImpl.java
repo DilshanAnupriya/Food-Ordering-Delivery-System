@@ -1,12 +1,18 @@
 package com.Restaurant_Management.System.service.impl;
 
+import com.Restaurant_Management.System.dto.request.RestaurantAvailabilityDto;
+import com.Restaurant_Management.System.dto.request.RestaurantOrderAvailabilityDto;
 import com.Restaurant_Management.System.dto.request.RestaurantRequestDto;
 import com.Restaurant_Management.System.dto.response.RestaurantResponseDto;
+import com.Restaurant_Management.System.dto.response.SearchHistoryResponseDto;
 import com.Restaurant_Management.System.dto.response.paginate.RestaurantResponsePaginateDto;
+import com.Restaurant_Management.System.dto.response.paginate.TrendingRestaurantResponseListDto;
 import com.Restaurant_Management.System.entity.Restaurant;
+import com.Restaurant_Management.System.entity.SearchHistory;
 import com.Restaurant_Management.System.exception.DuplicateEntryException;
 import com.Restaurant_Management.System.exception.EntryNotFoundException;
 import com.Restaurant_Management.System.repo.RestaurantRepo;
+import com.Restaurant_Management.System.repo.SearchHistoryRepo;
 import com.Restaurant_Management.System.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import javax.management.RuntimeErrorException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -22,6 +29,7 @@ import java.util.stream.Collectors;
 public class RestaurantServiceImpl implements RestaurantService {
 
     private final RestaurantRepo restaurantRepo;
+    private final SearchHistoryRepo searchHistoryRepo;
 
     @Override
     public void restaurantSave(RestaurantRequestDto dto) {
@@ -40,6 +48,12 @@ public class RestaurantServiceImpl implements RestaurantService {
         restaurant.setRestaurantPhone(dto.getRestaurantPhone());
         restaurant.setRestaurantEmail(dto.getRestaurantEmail());
         restaurant.setRestaurantAddress(dto.getRestaurantAddress());
+        restaurant.setCity(dto.getCity());
+        restaurant.setOpeningTime(dto.getOpeningTime());
+        restaurant.setClosingTime(dto.getClosingTime());
+        restaurant.setDescription(dto.getDescription());
+        restaurant.setActive(dto.isActive());
+        restaurant.setUpdatedAt(LocalDateTime.now());
         restaurant.setAvailability(dto.isAvailability());
         restaurant.setOrderAvailability(dto.isOrderAvailability());
         restaurant.setRating(dto.getRating());
@@ -64,6 +78,24 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public RestaurantResponsePaginateDto findAllRestaurant(String searchText, int page, int size) {
+
+        if (restaurantRepo.existsRestaurantByRestaurantName(searchText)) {
+            SearchHistory searchHistory = searchHistoryRepo.findSearchHistoriesByRestaurantName(searchText);
+                if (searchHistory != null) {
+                    searchHistory.setSearchCount(searchHistory.getSearchCount() + 1);
+                    searchHistory.setLatestCountAt(LocalDateTime.now());
+                    searchHistoryRepo.save(searchHistory);
+                }else{
+                    searchHistory = new SearchHistory();
+                    searchHistory.setSearch_id(UUID.randomUUID().toString());
+                    searchHistory.setRestaurantName(searchText);
+                    searchHistory.setSearchCount(1);
+                    searchHistory.setLatestCountAt(LocalDateTime.now());
+                }
+
+                searchHistoryRepo.save(searchHistory);
+
+        }
         return RestaurantResponsePaginateDto.builder()
                 .dataCount(restaurantRepo.countAllRestaurant(searchText))
                 .dataList(
@@ -75,18 +107,36 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
 
     @Override
-    public void setRestaurantAvailability(String id, boolean availability) {
+    public void setRestaurantAvailability(String id, RestaurantAvailabilityDto dto) {
         Restaurant restaurant = restaurantRepo.findById(id).orElseThrow(()-> new EntryNotFoundException("not found"));
-        restaurant.setAvailability(availability);
+        restaurant.setAvailability(dto.isAvailability());
         restaurantRepo.save(restaurant);
     }
 
     @Override
-    public void setOrderAvailability(String id, boolean OrderAvailability) {
+    public void setOrderAvailability(String id, RestaurantOrderAvailabilityDto dto) {
         Restaurant restaurant = restaurantRepo.findById(id).orElseThrow(()-> new EntryNotFoundException("not found"));
-        restaurant.setOrderAvailability(OrderAvailability);
+        restaurant.setOrderAvailability(dto.isOrderAvailability());
         restaurantRepo.save(restaurant);
     }
+
+    @Override
+    public TrendingRestaurantResponseListDto trendingRestaurant() {
+        List<SearchHistory> trendingRestaurants = searchHistoryRepo.trendingRestaurants();
+
+        List<SearchHistoryResponseDto> trendingRestaurantDto = trendingRestaurants.stream()
+                .map(searchHistory -> SearchHistoryResponseDto.builder()
+                        .search_id(searchHistory.getSearch_id())
+                        .restaurantName(searchHistory.getRestaurantName())
+                        .searchCount(searchHistory.getSearchCount())
+                        .build())
+                .toList();
+
+        return TrendingRestaurantResponseListDto.builder()
+                .trendingRestaurants(trendingRestaurantDto)
+                .build();
+    }
+
 
     private Restaurant toRestaurant(RestaurantRequestDto dto) {
         if(dto==null) throw new RuntimeException("null");
@@ -96,12 +146,22 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .restaurantPhone(dto.getRestaurantPhone())
                 .restaurantEmail(dto.getRestaurantEmail())
                 .restaurantAddress(dto.getRestaurantAddress())
+                .restaurantType(dto.getRestaurantType())
+                .city(dto.getCity())
+                .latitude(dto.getLatitude())
+                .longitude(dto.getLongitude())
                 .availability(dto.isAvailability())
                 .orderAvailability(dto.isOrderAvailability())
+                .openingTime(dto.getOpeningTime())
+                .closingTime(dto.getClosingTime())
+                .description(dto.getDescription())
+                .active(dto.isActive())
+                .updatedAt(LocalDateTime.now())
                 .createdAt(LocalDateTime.now())
                 .rating(dto.getRating())
                 .build();
     }
+
     private RestaurantResponseDto toRestaurantResponseDto(Restaurant restaurant) {
         if(restaurant==null) throw new RuntimeException("null");
         return  RestaurantResponseDto.builder()
@@ -110,8 +170,15 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .restaurantPhone(restaurant.getRestaurantPhone())
                 .restaurantEmail(restaurant.getRestaurantEmail())
                 .restaurantAddress(restaurant.getRestaurantAddress())
+                .restaurantType(restaurant.getRestaurantType())
+                .city(restaurant.getCity())
                 .availability(restaurant.isAvailability())
                 .orderAvailability(restaurant.isOrderAvailability())
+                .openingTime(restaurant.getOpeningTime())
+                .closingTime(restaurant.getClosingTime())
+                .description(restaurant.getDescription())
+                .active(restaurant.isActive())
+                .updatedAt(LocalDateTime.now())
                 .createdAt(restaurant.getCreatedAt())
                 .rating(restaurant.getRating())
                 .build();

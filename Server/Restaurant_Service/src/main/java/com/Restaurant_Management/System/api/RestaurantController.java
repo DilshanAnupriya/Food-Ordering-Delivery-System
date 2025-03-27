@@ -1,6 +1,8 @@
 package com.Restaurant_Management.System.api;
 
 
+import com.Restaurant_Management.System.dto.request.RestaurantAvailabilityDto;
+import com.Restaurant_Management.System.dto.request.RestaurantOrderAvailabilityDto;
 import com.Restaurant_Management.System.dto.request.RestaurantRequestDto;
 import com.Restaurant_Management.System.service.RestaurantService;
 import com.Restaurant_Management.System.util.StandardResponseDto;
@@ -93,9 +95,9 @@ public class RestaurantController {
     @PutMapping("/availability/{id}")
     public ResponseEntity<StandardResponseDto> updateAvailability(
             @PathVariable("id") String restaurantId,
-            @RequestBody  Boolean availability
+            @RequestBody  RestaurantAvailabilityDto dto
     ){
-        restaurantService.setRestaurantAvailability(restaurantId, availability);
+        restaurantService.setRestaurantAvailability(restaurantId,  dto);
         return  new ResponseEntity<>(
                 StandardResponseDto.builder()
                         .code(201)
@@ -109,9 +111,9 @@ public class RestaurantController {
     @PutMapping("/order-availability/{id}")
     public ResponseEntity<StandardResponseDto> updateOrderAvailability(
             @PathVariable("id") String restaurantId,
-            @RequestBody  Boolean OrderAvailability
-    ){
-        restaurantService.setOrderAvailability(restaurantId, OrderAvailability);
+            @RequestBody RestaurantOrderAvailabilityDto dto
+            ){
+        restaurantService.setOrderAvailability(restaurantId, dto);
         return new ResponseEntity<>(
                 StandardResponseDto.builder()
                         .code(201)
@@ -119,6 +121,19 @@ public class RestaurantController {
                         .data(null)
                         .build(),
                 HttpStatus.CREATED
+        );
+    }
+
+    @GetMapping("/trending-list")
+    public ResponseEntity<StandardResponseDto> getTrendingRestaurant() {
+
+        return new ResponseEntity<>(
+                StandardResponseDto.builder()
+                        .code(200)
+                        .message("Restaurant trending list !")
+                        .data(restaurantService.trendingRestaurant())
+                        .build(),
+                HttpStatus.OK
         );
     }
 

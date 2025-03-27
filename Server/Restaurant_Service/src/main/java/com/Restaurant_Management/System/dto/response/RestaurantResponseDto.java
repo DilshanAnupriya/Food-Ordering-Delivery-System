@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @Getter
@@ -18,8 +19,15 @@ public class RestaurantResponseDto {
     private String restaurantAddress;
     private String restaurantPhone;
     private String restaurantEmail;
+    private String restaurantType;
+    private String city;
     private boolean availability;
     private boolean orderAvailability;
     private double rating;
+    private LocalTime openingTime;
+    private LocalTime closingTime;
+    private String description;
+    private boolean active;
+    private LocalDateTime updatedAt;
     private LocalDateTime createdAt;
 }
