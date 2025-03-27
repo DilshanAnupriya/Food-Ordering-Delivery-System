@@ -1,9 +1,11 @@
 package com.DeliveryOrder.DeliveryOrder.service;
 
-
-
 import com.DeliveryOrder.DeliveryOrder.model.Delivery;
+import com.DeliveryOrder.DeliveryOrder.model.Driver;
+import com.DeliveryOrder.DeliveryOrder.model.DeliveryDriver;
 import com.DeliveryOrder.DeliveryOrder.repository.DeliveryRepository;
+import com.DeliveryOrder.DeliveryOrder.repository.DriverRepository;
+import com.DeliveryOrder.DeliveryOrder.repository.DeliveryDriverRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,32 +18,55 @@ public class DeliveryService {
     @Autowired
     private DeliveryRepository deliveryRepository;
 
-    // Assign a driver and create a delivery entry
+    @Autowired
+    private DriverRepository driverRepository;
+
+    @Autowired
+    private DeliveryDriverRepository deliveryDriverRepository;
+
     public Delivery createDelivery(Delivery delivery) {
-        delivery.setStatus("Assigned");
         return deliveryRepository.save(delivery);
     }
 
-    // Get all deliveries
     public List<Delivery> getAllDeliveries() {
         return deliveryRepository.findAll();
     }
 
-    // Get delivery by Order ID
     public Optional<Delivery> getDeliveryByOrderId(String orderId) {
         return deliveryRepository.findByOrderId(orderId);
     }
 
-    // Update Delivery Status
-    public Delivery updateDeliveryStatus(String orderId, String status) {
-        Delivery delivery = deliveryRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("Delivery not found!"));
-        delivery.setStatus(status);
-        return deliveryRepository.save(delivery);
+    public Delivery updateDeliveryStatus(Long deliveryId, String status) {
+        Optional<Delivery> optionalDelivery = deliveryRepository.findById(deliveryId);
+        if (optionalDelivery.isPresent()) {
+            Delivery delivery = optionalDelivery.get();
+            delivery.setStatus(status);
+            return deliveryRepository.save(delivery);
+        }
+        return null;
     }
 
-    // Delete Delivery
     public void deleteDelivery(Long id) {
         deliveryRepository.deleteById(id);
+    }
+
+    // Assign Driver to a Delivery
+    public String assignDriverToDelivery(Long deliveryId, Long driverId) {
+        Optional<Delivery> deliveryOpt = deliveryRepository.findById(deliveryId);
+        Optional<Driver> driverOpt = driverRepository.findById(driverId);
+
+        if (deliveryOpt.isPresent() && driverOpt.isPresent()) {
+            Delivery delivery = deliveryOpt.get();
+            Driver driver = driverOpt.get();
+
+            delivery.setAssignedDriver(driver);
+            deliveryRepository.save(delivery);
+
+            DeliveryDriver deliveryDriver = new DeliveryDriver(null, delivery, driver);
+            deliveryDriverRepository.save(deliveryDriver);
+
+            return "Driver assigned successfully!";
+        }
+        return "Delivery or Driver not found!";
     }
 }

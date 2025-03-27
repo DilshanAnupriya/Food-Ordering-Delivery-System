@@ -2,6 +2,7 @@ package com.DeliveryOrder.DeliveryOrder.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
 
@@ -9,32 +10,39 @@ public class Delivery {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long deliveryId;
     private String orderId;
-    private String customerName;
-    private String customerAddress;
-    private String assignedDriver;
     private String status;
+    private LocalDateTime estimatedDeliveryTime;
+    private LocalDateTime actualDeliveryTime;
+    private String trackingLink;
+
+    @ManyToOne
+    @JoinColumn(name = "driver_id")
+
+    private Driver assignedDriver;
 
     public  Delivery(){
 
     }
 
-    public Delivery(Long id, String orderId, String customerName, String customerAddress, String assignedDriver, String status) {
-        this.id = id;
+    public Delivery(Long deliveryId, String orderId, String status, String estimatedDeliveryTime, String actualDeliveryTime, String trackingLink,Driver assignedDriver) {
+        this.deliveryId = deliveryId;
         this.orderId = orderId;
-        this.customerName = customerName;
-        this.customerAddress = customerAddress;
-        this.assignedDriver = assignedDriver;
         this.status = status;
+        this.estimatedDeliveryTime = LocalDateTime.parse(estimatedDeliveryTime);
+        this.actualDeliveryTime = LocalDateTime.parse(actualDeliveryTime);
+        this.trackingLink = trackingLink;
+        this.assignedDriver = assignedDriver;
+
     }
 
-    public Long getId() {
-        return id;
+    public Long getDeliveryId() {
+        return deliveryId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setDeliveryId(Long deliveryId) {
+        this.deliveryId = deliveryId;
     }
 
     public String getOrderId() {
@@ -45,35 +53,43 @@ public class Delivery {
         this.orderId = orderId;
     }
 
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public String getCustomerAddress() {
-        return customerAddress;
-    }
-
-    public void setCustomerAddress(String customerAddress) {
-        this.customerAddress = customerAddress;
-    }
-
-    public String getAssignedDriver() {
-        return assignedDriver;
-    }
-
-    public void setAssignedDriver(String assignedDriver) {
-        this.assignedDriver = assignedDriver;
-    }
-
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public LocalDateTime getEstimatedDeliveryTime() {
+        return estimatedDeliveryTime;
+    }
+
+    public void setEstimatedDeliveryTime(LocalDateTime estimatedDeliveryTime) {
+        this.estimatedDeliveryTime = estimatedDeliveryTime;
+    }
+
+    public LocalDateTime getActualDeliveryTime() {
+        return actualDeliveryTime;
+    }
+
+    public void setActualDeliveryTime(LocalDateTime actualDeliveryTime) {
+        this.actualDeliveryTime = actualDeliveryTime;
+    }
+
+    public String getTrackingLink() {
+        return trackingLink;
+    }
+
+    public void setTrackingLink(String trackingLink) {
+        this.trackingLink = trackingLink;
+    }
+
+    public Driver getAssignedDriver() {
+        return assignedDriver;
+    }
+
+    public void setAssignedDriver(Driver assignedDriver) {
+        this.assignedDriver = assignedDriver;
     }
 }

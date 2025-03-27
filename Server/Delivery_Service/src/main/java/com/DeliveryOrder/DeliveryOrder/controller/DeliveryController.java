@@ -15,34 +15,29 @@ public class DeliveryController {
     @Autowired
     private DeliveryService deliveryService;
 
-    // Create a Delivery
     @PostMapping
     public Delivery createDelivery(@RequestBody Delivery delivery) {
         return deliveryService.createDelivery(delivery);
     }
 
-    // Get All Deliveries
     @GetMapping
     public List<Delivery> getAllDeliveries() {
         return deliveryService.getAllDeliveries();
     }
 
-    // Get Delivery by Order ID
     @GetMapping("/{orderId}")
     public Optional<Delivery> getDeliveryByOrderId(@PathVariable String orderId) {
         return deliveryService.getDeliveryByOrderId(orderId);
     }
 
-    // Update Delivery Status
-    @PutMapping("/{orderId}")
-    public Delivery updateDeliveryStatus(@PathVariable String orderId, @RequestParam String status) {
-        return deliveryService.updateDeliveryStatus(orderId, status);
+    @PutMapping("/{deliveryId}/status")
+    public Delivery updateDeliveryStatus(@PathVariable Long deliveryId, @RequestParam String status) {
+        return deliveryService.updateDeliveryStatus(deliveryId, status);
     }
 
-    // Delete Delivery
-    @DeleteMapping("/{id}")
-    public String deleteDelivery(@PathVariable Long id) {
-        deliveryService.deleteDelivery(id);
-        return "Delivery removed!";
+
+    @PostMapping("/{deliveryId}/assign/{driverId}")
+    public String assignDriver(@PathVariable Long deliveryId, @PathVariable Long driverId) {
+        return deliveryService.assignDriverToDelivery(deliveryId, driverId);
     }
 }
