@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -92,6 +93,7 @@ public class FoodItemServiceImpl implements FoodItemService {
                 .description(dto.getDescription())
                 .available(dto.isAvailable())
                 .restaurant(restaurant)
+                .createdAt(LocalDateTime.now())
                 .build();
     }
     private FoodItemResponseDto toFoodItemResponseDto( FoodItem foodItem) {
@@ -108,6 +110,7 @@ public class FoodItemServiceImpl implements FoodItemService {
                 .available(foodItem.isAvailable())
                 .restaurantId(foodItem.getRestaurant().getRestaurantId())
                 .restaurantName(foodItem.getRestaurant().getRestaurantName())
+                .createdAt(foodItem.getCreatedAt())
                 .build();
     }
 }

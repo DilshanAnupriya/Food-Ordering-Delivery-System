@@ -1,8 +1,12 @@
 package com.Restaurant_Management.System.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Date;
 import java.util.Set;
 
 @Entity(name = "restaurant")
@@ -31,10 +35,46 @@ public class Restaurant {
     private String restaurantEmail;
 
     @Column( nullable = false)
+    private String restaurantType;
+
+    @Column( nullable = false)
+    private String city;
+
+    @Column( nullable = false)
+    private Double latitude;
+
+    @Column( nullable = false)
+    private Double longitude;
+
+    @Column( nullable = false)
     private boolean availability;
 
     @Column( nullable = false)
+    private boolean orderAvailability;
+
+
+    private LocalDateTime createdAt;
+
+    @Column( nullable = false)
     private double rating;
+
+    @Column( nullable = false)
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime openingTime;
+
+    @Column( nullable = false)
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime closingTime;
+
+    private String description;
+
+    @Column( nullable = false)
+    private boolean active;
+
+    @Column( nullable = false)
+    private String imageUrl;
+
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "restaurant",cascade = CascadeType.ALL, fetch = FetchType.LAZY,orphanRemoval = true)
     private Set<FoodItem> foodItems;
