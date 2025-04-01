@@ -24,9 +24,43 @@ public class DeliveryService {
     @Autowired
     private DeliveryDriverRepository deliveryDriverRepository;
 
+    // Create a new delivery and auto-assign the nearest available driver
     public Delivery createDelivery(Delivery delivery) {
+        Optional<Driver> assignedDriver = findNearestAvailableDriver(delivery.getOrderLocation());
+
+        if (assignedDriver.isPresent()) {
+            Driver driver = assignedDriver.get();
+            delivery.setAssignedDriver(driver);
+            delivery.setStatus("Assigned");
+            delivery.setTrackingLink(generateTrackingLink(delivery.getOrderId()));
+
+            // Mark driver as unavailable
+            driver.setAvailability(false);
+            driverRepository.save(driver);
+        } else {
+            delivery.setStatus("Pending - No Driver Available");
+        }
+
         return deliveryRepository.save(delivery);
     }
+
+    // Find the nearest available driver based on location
+    private Optional<Driver> findNearestAvailableDriver(String orderLocation) {
+        return driverRepository.findAll().stream()
+                .filter(Driver::isAvailability) // Only available drivers
+                .min((d1, d2) -> compareDistances(orderLocation, d1.getLocationPoint(), d2.getLocationPoint()));
+    }
+
+    // Mock distance comparison (Replace with actual geo-distance logic)
+    private int compareDistances(String orderLocation, String loc1, String loc2) {
+        return loc1.compareTo(loc2); // Dummy comparison (Implement real distance calculation)
+    }
+
+    // Generate a mock tracking link
+    private String generateTrackingLink(String orderId) {
+        return "https://tracking.example.com/" + orderId;
+    }
+
 
     public List<Delivery> getAllDeliveries() {
         return deliveryRepository.findAll();
@@ -46,27 +80,14 @@ public class DeliveryService {
         return null;
     }
 
-    public void deleteDelivery(Long id) {
-        deliveryRepository.deleteById(id);
-    }
-
-    // Assign Driver to a Delivery
-    public String assignDriverToDelivery(Long deliveryId, Long driverId) {
-        Optional<Delivery> deliveryOpt = deliveryRepository.findById(deliveryId);
-        Optional<Driver> driverOpt = driverRepository.findById(driverId);
-
-        if (deliveryOpt.isPresent() && driverOpt.isPresent()) {
-            Delivery delivery = deliveryOpt.get();
-            Driver driver = driverOpt.get();
-
-            delivery.setAssignedDriver(driver);
-            deliveryRepository.save(delivery);
-
-            DeliveryDriver deliveryDriver = new DeliveryDriver(null, delivery, driver);
-            deliveryDriverRepository.save(deliveryDriver);
-
-            return "Driver assigned successfully!";
+    public boolean deleteDelivery(Long id) {
+        Optional<Delivery> delivery = deliveryRepository.findById(id);
+        if (delivery.isPresent()) {
+            deliveryRepository.deleteById(id); // Delete the delivery if found
+            return true; // Return true if the deletion was successful
         }
-        return "Delivery or Driver not found!";
+        return false; // Return false if the delivery was not found
     }
+
+
 }
