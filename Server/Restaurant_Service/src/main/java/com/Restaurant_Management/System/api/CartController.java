@@ -1,16 +1,14 @@
 package com.Restaurant_Management.System.api;
 
 
+import com.Restaurant_Management.System.dto.request.UpdateQuantityRequestDto;
 import com.Restaurant_Management.System.dto.request.FoodCartRequestDto;
 import com.Restaurant_Management.System.service.CartService;
 import com.Restaurant_Management.System.util.StandardResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/cart")
@@ -33,4 +31,53 @@ public class CartController {
                 HttpStatus.CREATED
         );
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<StandardResponseDto> getCartById( @PathVariable("id") String userId ) {
+
+        return new ResponseEntity<>(
+                StandardResponseDto.builder()
+                        .code(200)
+                        .message("Cart")
+                        .data(cartService.getCartByUserId(userId))
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+
+    @DeleteMapping("/{userId}/{foodId}")
+    public ResponseEntity<StandardResponseDto> deleteCartItem(
+            @PathVariable("userId") String userId,
+            @PathVariable("foodId") String foodId) {
+        cartService.removeFromCart(userId, foodId);
+        return new ResponseEntity<>(
+                StandardResponseDto.builder()
+                        .code(200)
+                        .message("Item removed from cart successfully!")
+                        .data(null)
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/{userId}/{foodId}")
+    public ResponseEntity<StandardResponseDto> updateCartItemQuantity(
+            @PathVariable("userId") String userId,
+            @PathVariable("foodId") String foodId,
+            @RequestBody UpdateQuantityRequestDto requestDto) {
+        cartService.updateCartItemQuantity(userId, foodId, requestDto.getQuantity(), requestDto.isIncrease());
+
+        return new ResponseEntity<>(
+                StandardResponseDto.builder()
+                        .code(200)
+                        .message("Item quantity updated successfully!")
+                        .data(null)
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+
+
 }

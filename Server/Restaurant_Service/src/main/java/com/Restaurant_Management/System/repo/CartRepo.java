@@ -13,12 +13,6 @@ public interface CartRepo extends JpaRepository<Cart, String> {
 
     Cart findByUserId(String userId);
 
-    // Custom method to remove a food item from a cart using native SQL query
-    @Modifying
-    @Transactional
-    @Query(value = "DELETE FROM cart_items WHERE cart_id IN (SELECT cart_id FROM cart WHERE user_id = ?1) AND food_item_id = ?2", nativeQuery = true)
-    void removeFoodItemFromCart(String userId, String foodItemId);
-
 
     @Query(value = "SELECT * FROM cart WHERE user_id = ?1", nativeQuery = true)
     Optional<Cart> findCartByUserId(String userId);

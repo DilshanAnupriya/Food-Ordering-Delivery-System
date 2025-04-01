@@ -10,5 +10,6 @@ public interface CartService {
     public void addToCart(FoodCartRequestDto dto);
     public void removeFromCart(String userId,String foodId);
     public CartResponseDto getCartByUserId(String userId);
+    void updateCartItemQuantity(String userId, String foodId, int quantity,boolean increase);
 
 }

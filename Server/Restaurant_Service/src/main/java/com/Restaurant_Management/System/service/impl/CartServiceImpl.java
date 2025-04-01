@@ -39,52 +39,80 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void removeFromCart(String userId, String foodId) {
-        cartRepo.removeFoodItemFromCart(userId, foodId);
+        Cart cart = cartRepo.findCartByUserId(userId)
+                .orElseThrow(() -> new EntryNotFoundException("Cart not found for user: " + userId));
+
+
+        CartItems itemToRemove = cart.getCartItems().stream()
+                .filter(item -> item.getFoodItem().getFoodItemId().equals(foodId))
+                .findFirst()
+                .orElseThrow(() -> new EntryNotFoundException("Food item not found in cart"));
+
+
+        cart.getCartItems().remove(itemToRemove);
+
+
+        cart.setTotalPrice(calculateTotalPrice(cart));
+
+
+        cartRepo.save(cart);
     }
 
     @Override
     public CartResponseDto getCartByUserId(String userId) {
-        return null;
+        Cart cart = cartRepo.findCartByUserId(userId)
+                .orElseThrow(() -> new EntryNotFoundException("Cart not found for user: " + userId));
+
+        return toCartResponseDto(cart);
     }
 
+    @Override
+    public void updateCartItemQuantity(String userId, String foodId, int quantity, boolean increase) {
+        Cart cart = cartRepo.findCartByUserId(userId)
+                .orElseThrow(() -> new EntryNotFoundException("Cart not found for user: " + userId));
 
-    public Cart toCart(FoodCartRequestDto dto) {
-        if (dto == null) throw new RuntimeException("Null");
+        CartItems item = cart.getCartItems().stream()
+                .filter(cartItem -> cartItem.getFoodItem().getFoodItemId().equals(foodId))
+                .findFirst()
+                .orElseThrow(() -> new EntryNotFoundException("Food item not found in cart"));
 
-        List<CartItems> cartItems = new ArrayList<>();
-        double totalPrice = 0;
+        int updatedQuantity;
+        if (increase) {
 
-        for(FoodCartItemRequestDto cartDto : dto.getCartItems() ) {
+            updatedQuantity = item.getQuantity() + quantity;
+        } else {
 
-            FoodItem foodItem = foodItemRepo.findFoodItemByFoodItemId(cartDto.getFoodItemId())
-                    .orElseThrow(() -> new EntryNotFoundException("Not found"));
-
-
-            // Create CartItem for each item in the cart
-            CartItems cartItem = CartItems.builder()
-                    .id(UUID.randomUUID().toString())
-                    .foodName(foodItem.getName())// Generate a new ID for cart item
-                    .foodItem(foodItem)  // Map the food item from the repository
-                    .quantity(cartDto.getQuantity())  // Set the quantity from the DTO
-                    .build();
-
-            cartItems.add(cartItem);
-            totalPrice += foodItem.getPrice() * cartDto.getQuantity();
+            updatedQuantity = item.getQuantity() - quantity;
+            if (updatedQuantity <= 0) {
+                cart.getCartItems().remove(item);
+            }
         }
-        Cart cart = Cart.builder()
-                .cartId(UUID.randomUUID().toString())  // Generate a unique cart ID
-                .userId(dto.getUserId())  // Set the user ID from the DTO
-                .cartItems(cartItems)  // Set the list of cart items
-                .totalPrice(totalPrice)  // Set the total price
-                .createdAt(LocalDateTime.now())  // Set the current time
+
+        if (updatedQuantity > 0) {
+            item.setQuantity(updatedQuantity);
+        }
+
+        cart.setTotalPrice(calculateTotalPrice(cart));
+        cartRepo.save(cart);
+    }
+
+    private CartResponseDto toCartResponseDto(Cart cart) {
+        List<FoodCartItemRequestDto> cartItems = cart.getCartItems().stream().map(item ->
+                FoodCartItemRequestDto.builder()
+                        .foodItemId(item.getFoodItem().getFoodItemId())
+                        .foodName(item.getFoodItem().getName())
+                        .price(item.getFoodItem().getPrice())
+                        .quantity(item.getQuantity())
+                        .build()
+        ).toList();
+
+        return CartResponseDto.builder()
+                .userId(cart.getUserId())
+                .cartId(cart.getCartId())
+                .cartItems(cartItems)
+                .totalPrice(cart.getTotalPrice())
+                .createdAt(cart.getCreatedAt())
                 .build();
-
-
-        for (CartItems cartItem : cartItems) {
-            cartItem.setFoodCart(cart);  // Associate the cart with the cart item
-        }
-
-        return cart;  // Return the fully constructed cart entity
     }
 
     private Cart createNewCart(FoodCartRequestDto dto) {
@@ -129,7 +157,7 @@ public class CartServiceImpl implements CartService {
             FoodItem foodItem = foodItemRepo.findFoodItemByFoodItemId(cartDto.getFoodItemId())
                     .orElseThrow(() -> new EntryNotFoundException("Food item not found"));
 
-            // Check if the food item already exists in the cart
+
             CartItems existingCartItem = cart.getCartItems().stream()
                     .filter(item -> item.getFoodItem().getFoodItemId().equals(foodItem.getFoodItemId()))
                     .findFirst()
@@ -158,6 +186,12 @@ public class CartServiceImpl implements CartService {
 
 
         cart.setTotalPrice(totalPrice);
+    }
+
+    private double calculateTotalPrice(Cart cart) {
+        return cart.getCartItems().stream()
+                .mapToDouble(item -> item.getFoodItem().getPrice() * item.getQuantity())
+                .sum();
     }
 
 

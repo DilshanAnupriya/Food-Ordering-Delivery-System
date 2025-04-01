@@ -20,10 +20,10 @@ public class CartItems {
 
     private String foodName;
 
-    // Many-to-one relationship with FoodCart
+
     @ManyToOne
-    @JoinColumn(name = "cart_id", nullable = false)  // Foreign key to the FoodCart entity
-    private Cart foodCart;  // Reference to the food cart this item belongs to
+    @JoinColumn(name = "cart_id", nullable = false)
+    private Cart foodCart;
 
     @ManyToOne
     @JoinColumn(name = "food_item_id")

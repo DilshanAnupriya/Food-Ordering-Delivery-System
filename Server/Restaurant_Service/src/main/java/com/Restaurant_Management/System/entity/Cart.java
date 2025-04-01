@@ -21,9 +21,9 @@ public class Cart {
 
     private String userId;
 
-    // One-to-many relationship between FoodCart and FoodCartItems
+
     @OneToMany(mappedBy = "foodCart", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CartItems> cartItems;  // List of cart items
+    private List<CartItems> cartItems;
 
     private double totalPrice;
     private LocalDateTime createdAt;

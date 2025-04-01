@@ -17,4 +17,6 @@ public class CartResponseDto {
     private List<FoodCartItemRequestDto> cartItems;
     private double totalPrice;
     private LocalDateTime createdAt;
+
+
 }
