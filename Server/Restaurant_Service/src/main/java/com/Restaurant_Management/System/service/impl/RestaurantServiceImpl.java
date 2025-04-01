@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class RestaurantServiceImpl implements RestaurantService {
+public class  RestaurantServiceImpl implements RestaurantService {
 
     private final RestaurantRepo restaurantRepo;
     private final SearchHistoryRepo searchHistoryRepo;
@@ -80,21 +80,23 @@ public class RestaurantServiceImpl implements RestaurantService {
     public RestaurantResponsePaginateDto findAllRestaurant(String searchText, int page, int size) {
 
         if (restaurantRepo.existsRestaurantByRestaurantName(searchText)) {
+            String imageUrl = restaurantRepo.findRestaurantImageUrlByRestaurantName(searchText);
             SearchHistory searchHistory = searchHistoryRepo.findSearchHistoriesByRestaurantName(searchText);
-                if (searchHistory != null) {
-                    searchHistory.setSearchCount(searchHistory.getSearchCount() + 1);
-                    searchHistory.setLatestCountAt(LocalDateTime.now());
-                    searchHistoryRepo.save(searchHistory);
-                }else{
-                    searchHistory = new SearchHistory();
-                    searchHistory.setSearch_id(UUID.randomUUID().toString());
-                    searchHistory.setRestaurantName(searchText);
-                    searchHistory.setSearchCount(1);
-                    searchHistory.setLatestCountAt(LocalDateTime.now());
-                }
 
-                searchHistoryRepo.save(searchHistory);
+            if (searchHistory != null) {
+                searchHistory.setSearchCount(searchHistory.getSearchCount() + 1);
+                searchHistory.setLatestCountAt(LocalDateTime.now());
 
+            } else {
+                searchHistory = new SearchHistory();
+                searchHistory.setSearch_id(UUID.randomUUID().toString());
+                searchHistory.setRestaurantName(searchText);
+                searchHistory.setSearchCount(1);
+                searchHistory.setLatestCountAt(LocalDateTime.now());
+                searchHistory.setUrl(imageUrl);
+            }
+
+            searchHistoryRepo.save(searchHistory);
         }
         return RestaurantResponsePaginateDto.builder()
                 .dataCount(restaurantRepo.countAllRestaurant(searchText))
@@ -129,6 +131,7 @@ public class RestaurantServiceImpl implements RestaurantService {
                         .search_id(searchHistory.getSearch_id())
                         .restaurantName(searchHistory.getRestaurantName())
                         .searchCount(searchHistory.getSearchCount())
+                        .url(searchHistory.getUrl())
                         .build())
                 .toList();
 
@@ -156,6 +159,7 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .closingTime(dto.getClosingTime())
                 .description(dto.getDescription())
                 .active(dto.isActive())
+                .imageUrl(dto.getImageUrl())
                 .updatedAt(LocalDateTime.now())
                 .createdAt(LocalDateTime.now())
                 .rating(dto.getRating())
@@ -178,6 +182,7 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .closingTime(restaurant.getClosingTime())
                 .description(restaurant.getDescription())
                 .active(restaurant.isActive())
+                .imageUrl(restaurant.getImageUrl())
                 .updatedAt(LocalDateTime.now())
                 .createdAt(restaurant.getCreatedAt())
                 .rating(restaurant.getRating())

@@ -71,6 +71,9 @@ public class Restaurant {
     @Column( nullable = false)
     private boolean active;
 
+    @Column( nullable = false)
+    private String imageUrl;
+
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "restaurant",cascade = CascadeType.ALL, fetch = FetchType.LAZY,orphanRemoval = true)

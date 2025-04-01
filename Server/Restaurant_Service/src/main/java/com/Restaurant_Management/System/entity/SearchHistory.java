@@ -22,4 +22,5 @@ public class SearchHistory {
     private  String restaurantName;
     private long searchCount;
     private LocalDateTime latestCountAt;
+    private String url;
 }

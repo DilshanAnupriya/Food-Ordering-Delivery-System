@@ -15,4 +15,8 @@ public interface RestaurantRepo extends JpaRepository<Restaurant,String> {
     public long countAllRestaurant(String searchText);
 
     boolean existsRestaurantByRestaurantName(String restaurantName);
+
+    @Query(nativeQuery = true, value = "SELECT image_url FROM restaurant WHERE restaurant_name = ?1 LIMIT 1")
+    String findRestaurantImageUrlByRestaurantName(String restaurantName);
+
 }

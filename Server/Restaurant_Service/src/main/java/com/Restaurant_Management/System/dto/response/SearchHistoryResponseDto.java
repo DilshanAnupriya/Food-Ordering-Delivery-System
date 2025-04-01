@@ -17,4 +17,5 @@ public class SearchHistoryResponseDto {
     private String restaurantName;
     private String search_id;
     private long searchCount;
+    private String url;
 }
