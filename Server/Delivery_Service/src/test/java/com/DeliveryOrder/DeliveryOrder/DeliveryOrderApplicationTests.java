@@ -2,11 +2,9 @@ package com.DeliveryOrder.DeliveryOrder;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 
-@Import(TestcontainersConfiguration.class)
 @SpringBootTest
-class DeliveryOrderApplicationTests {
+class DeliveryProjectApplicationTests {
 
 	@Test
 	void contextLoads() {

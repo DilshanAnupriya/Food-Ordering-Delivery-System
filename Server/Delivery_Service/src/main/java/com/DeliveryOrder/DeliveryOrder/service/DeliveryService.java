@@ -1,93 +1,81 @@
 package com.DeliveryOrder.DeliveryOrder.service;
 
 import com.DeliveryOrder.DeliveryOrder.model.Delivery;
-import com.DeliveryOrder.DeliveryOrder.model.Driver;
-import com.DeliveryOrder.DeliveryOrder.model.DeliveryDriver;
-import com.DeliveryOrder.DeliveryOrder.repository.DeliveryRepository;
-import com.DeliveryOrder.DeliveryOrder.repository.DriverRepository;
-import com.DeliveryOrder.DeliveryOrder.repository.DeliveryDriverRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.DeliveryOrder.DeliveryOrder.model.DriverLocation;
+import com.DeliveryOrder.DeliveryOrder.model.LocationDTO;
+import com.DeliveryOrder.DeliveryOrder.repository.DriverLocationRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class DeliveryService {
+    private final com.DeliveryOrder.DeliveryOrder.repository.DeliveryRepository deliveryRepo;
+    private final DriverLocationRepository driverLocationRepo;
 
-    @Autowired
-    private DeliveryRepository deliveryRepository;
+    public void updateLocation(LocationDTO location) {
+        // Always update driver location
+        DriverLocation driverLoc = driverLocationRepo.findById(location.getDriverId())
+                .orElse(new DriverLocation(location.getDriverId(), location.getLatitude(), location.getLongitude(), true));
+        driverLoc.setLatitude(location.getLatitude());
+        driverLoc.setLongitude(location.getLongitude());
+        driverLocationRepo.save(driverLoc);
 
-    @Autowired
-    private DriverRepository driverRepository;
+        // If driver is currently delivering, update delivery too
+        deliveryRepo.findByDriverId(location.getDriverId()).ifPresent(delivery -> {
+            delivery.setLatitude(location.getLatitude());
+            delivery.setLongitude(location.getLongitude());
+            deliveryRepo.save(delivery);
+        });
+    }
 
-    @Autowired
-    private DeliveryDriverRepository deliveryDriverRepository;
+    public void createDelivery(String orderId, double lat, double lon) {
+        List<DriverLocation> availableDrivers = driverLocationRepo.findByIsAvailableTrue();
 
-    // Create a new delivery and auto-assign the nearest available driver
-    public Delivery createDelivery(Delivery delivery) {
-        Optional<Driver> assignedDriver = findNearestAvailableDriver(delivery.getOrderLocation());
+        if (availableDrivers.isEmpty()) throw new RuntimeException("No available drivers!");
 
-        if (assignedDriver.isPresent()) {
-            Driver driver = assignedDriver.get();
-            delivery.setAssignedDriver(driver);
-            delivery.setStatus("Assigned");
-            delivery.setTrackingLink(generateTrackingLink(delivery.getOrderId()));
+        DriverLocation nearest = null;
+        double minDist = Double.MAX_VALUE;
 
-            // Mark driver as unavailable
-            driver.setAvailability(false);
-            driverRepository.save(driver);
-        } else {
-            delivery.setStatus("Pending - No Driver Available");
+        for (DriverLocation d : availableDrivers) {
+            double dist = calculateDistance(lat, lon, d.getLatitude(), d.getLongitude());
+            if (dist < minDist) {
+                minDist = dist;
+                nearest = d;
+            }
         }
 
-        return deliveryRepository.save(delivery);
-    }
+        if (nearest != null) {
+            Delivery delivery = new Delivery(null, orderId, nearest.getDriverId(), lat, lon, false);
+            deliveryRepo.save(delivery);
 
-    // Find the nearest available driver based on location
-    private Optional<Driver> findNearestAvailableDriver(String orderLocation) {
-        return driverRepository.findAll().stream()
-                .filter(Driver::isAvailability) // Only available drivers
-                .min((d1, d2) -> compareDistances(orderLocation, d1.getLocationPoint(), d2.getLocationPoint()));
-    }
-
-    // Mock distance comparison (Replace with actual geo-distance logic)
-    private int compareDistances(String orderLocation, String loc1, String loc2) {
-        return loc1.compareTo(loc2); // Dummy comparison (Implement real distance calculation)
-    }
-
-    // Generate a mock tracking link
-    private String generateTrackingLink(String orderId) {
-        return "https://tracking.example.com/" + orderId;
-    }
-
-
-    public List<Delivery> getAllDeliveries() {
-        return deliveryRepository.findAll();
-    }
-
-    public Optional<Delivery> getDeliveryByOrderId(String orderId) {
-        return deliveryRepository.findByOrderId(orderId);
-    }
-
-    public Delivery updateDeliveryStatus(Long deliveryId, String status) {
-        Optional<Delivery> optionalDelivery = deliveryRepository.findById(deliveryId);
-        if (optionalDelivery.isPresent()) {
-            Delivery delivery = optionalDelivery.get();
-            delivery.setStatus(status);
-            return deliveryRepository.save(delivery);
+            nearest.setAvailable(false);
+            driverLocationRepo.save(nearest);
         }
-        return null;
     }
 
-    public boolean deleteDelivery(Long id) {
-        Optional<Delivery> delivery = deliveryRepository.findById(id);
-        if (delivery.isPresent()) {
-            deliveryRepository.deleteById(id); // Delete the delivery if found
-            return true; // Return true if the deletion was successful
-        }
-        return false; // Return false if the delivery was not found
+    public void markAsDelivered(String driverId) {
+        Delivery delivery = deliveryRepo.findByDriverId(driverId)
+                .orElseThrow(() -> new RuntimeException("No delivery assigned to this driver"));
+        delivery.setDelivered(true);
+        deliveryRepo.save(delivery);
+
+        driverLocationRepo.findById(driverId).ifPresent(driver -> {
+            driver.setAvailable(true);
+            driverLocationRepo.save(driver);
+        });
     }
 
-
+    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371;
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
 }

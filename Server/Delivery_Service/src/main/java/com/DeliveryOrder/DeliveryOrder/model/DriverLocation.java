@@ -5,25 +5,22 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "deliveries")
+@Table(name = "driver_locations")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Delivery {
+public class DriverLocation {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String orderId;
-
-    @Column(nullable = false)
+    @Column(name = "driver_id", nullable = false)
     private String driverId;
 
+    @Column(nullable = false)
     private double latitude;
 
+    @Column(nullable = false)
     private double longitude;
 
-    private boolean isDelivered;
+    @Column(nullable = false)
+    private boolean isAvailable;
 }
