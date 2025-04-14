@@ -3,6 +3,8 @@ package com.Restaurant_Management.System.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity(name = "food_items")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,10 +28,13 @@ public class FoodItem {
     private String imageUrl;
     private String description;
     private boolean available;
+    private LocalDateTime createdAt;
 
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id",nullable = false)
     private Restaurant restaurant;
+
+
 
 }
