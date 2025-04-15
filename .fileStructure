@@ -1,0 +1,64 @@
+food-delivery-app/
+│
+├── public/
+│   └── index.html
+│
+├── src/
+│   ├── assets/                # Images, icons, logos, fonts
+│   │   └── logo.svg
+│   │
+│   ├── components/            # Reusable UI components (buttons, cards, etc.)
+│   │   ├── Navbar.jsx
+│   │   ├── FoodCard.jsx
+│   │   └── Loader.jsx
+│   │
+│   ├── features/              # Domain-specific components + logic
+│   │   ├── auth/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   └── authSlice.js
+│   │   │
+│   │   ├── restaurants/
+│   │   │   ├── RestaurantList.jsx
+│   │   │   ├── RestaurantDetails.jsx
+│   │   │   └── restaurantSlice.js
+│   │   │
+│   │   ├── cart/
+│   │   │   ├── CartPage.jsx
+│   │   │   └── cartSlice.js
+│   │   │
+│   │   └── orders/
+│   │       ├── OrderSummary.jsx
+│   │       └── orderSlice.js
+│   │
+│   ├── pages/                 # Route-level pages
+│   │   ├── Home.jsx
+│   │   ├── Menu.jsx
+│   │   ├── Checkout.jsx
+│   │   └── NotFound.jsx
+│   │
+│   ├── services/              # API calls and external services
+│   │   ├── api.js             # Axios instance
+│   │   ├── authService.js
+│   │   └── orderService.js
+│   │
+│   ├── routes/                # All application routes
+│   │   └── AppRoutes.jsx
+│   │
+│   ├── store/                 # Redux Toolkit store setup
+│   │   ├── store.js
+│   │   └── rootReducer.js
+│   │
+│   ├── utils/                 # Helper functions & constants
+│   │   ├── formatCurrency.js
+│   │   └── validateForm.js
+│   │
+│   ├── App.jsx
+│   ├── main.jsx               # Entry point (Vite) or index.js (CRA)
+│   └── styles/                # Global styles
+│       ├── variables.css
+│       └── main.css
+│
+├── .env
+├── package.json
+└── README.md
