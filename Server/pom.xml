@@ -22,7 +22,6 @@
       <module>Payment_Service</module>
       <module>ContactUs_Service</module>
       <module>Review_Service</module>
-      <module>Users_Service</module>
     </modules>
 
   <build>
