@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 
-@RequestMapping("/contactus")
+@RequestMapping("/api/v1/contactus")
 
 public class ContactusController {
     @Autowired
