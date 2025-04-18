@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/v1/orders")
 @CrossOrigin(origins = "*") // For development, restrict this in production
 public class OrderController {
 
