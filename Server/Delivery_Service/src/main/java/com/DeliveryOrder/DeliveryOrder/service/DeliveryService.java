@@ -3,6 +3,7 @@ package com.DeliveryOrder.DeliveryOrder.service;
 import com.DeliveryOrder.DeliveryOrder.model.Delivery;
 import com.DeliveryOrder.DeliveryOrder.model.DriverLocation;
 import com.DeliveryOrder.DeliveryOrder.model.LocationDTO;
+import com.DeliveryOrder.DeliveryOrder.repository.DeliveryRepository;
 import com.DeliveryOrder.DeliveryOrder.repository.DriverLocationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,18 +13,17 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class DeliveryService {
-    private final com.DeliveryOrder.DeliveryOrder.repository.DeliveryRepository deliveryRepo;
+
+    private final DeliveryRepository deliveryRepo;
     private final DriverLocationRepository driverLocationRepo;
 
     public void updateLocation(LocationDTO location) {
-        // Always update driver location
         DriverLocation driverLoc = driverLocationRepo.findById(location.getDriverId())
                 .orElse(new DriverLocation(location.getDriverId(), location.getLatitude(), location.getLongitude(), true));
         driverLoc.setLatitude(location.getLatitude());
         driverLoc.setLongitude(location.getLongitude());
         driverLocationRepo.save(driverLoc);
 
-        // If driver is currently delivering, update delivery too
         deliveryRepo.findByDriverId(location.getDriverId()).ifPresent(delivery -> {
             delivery.setLatitude(location.getLatitude());
             delivery.setLongitude(location.getLongitude());
