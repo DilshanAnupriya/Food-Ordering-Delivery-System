@@ -24,6 +24,7 @@
       <module>Review_Service</module>
         <module>discoveryserver</module>
         <module>api_gateway</module>
+      <module>Auth_Service</module>
     </modules>
 
   <properties>
