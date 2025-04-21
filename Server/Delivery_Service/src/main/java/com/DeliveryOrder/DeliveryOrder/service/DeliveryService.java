@@ -104,4 +104,8 @@ public class DeliveryService {
         return deliveryRepo.findByDriverId(driverId)
                 .orElseThrow(() -> new RuntimeException("No active delivery assigned to this driver"));
     }
+
+    public List<CompletedDelivery> getCompletedDeliveriesByDriver(String driverId) {
+        return completedDeliveryRepo.findByDriverId(driverId);
+    }
 }

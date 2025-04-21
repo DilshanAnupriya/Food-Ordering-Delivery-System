@@ -1,11 +1,14 @@
 package com.DeliveryOrder.DeliveryOrder.controller;
 
+import com.DeliveryOrder.DeliveryOrder.model.CompletedDelivery;
 import com.DeliveryOrder.DeliveryOrder.model.Delivery;
 import com.DeliveryOrder.DeliveryOrder.model.LocationDTO;
 import com.DeliveryOrder.DeliveryOrder.service.DeliveryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/delivery")
@@ -44,5 +47,11 @@ public class DeliveryController {
     public ResponseEntity<Delivery> getDeliveryByDriver(@PathVariable String driverId) {
         Delivery delivery = deliveryService.getDeliveryByDriver(driverId);
         return ResponseEntity.ok(delivery);
+    }
+
+    @GetMapping("/completed-deliveries/{driverId}")  // Note: Typo in "deliveries" (correct it)
+    public ResponseEntity<List<CompletedDelivery>> getCompletedDeliveries(@PathVariable String driverId) {
+        List<CompletedDelivery> deliveries = deliveryService.getCompletedDeliveriesByDriver(driverId);
+        return ResponseEntity.ok(deliveries);
     }
 }
