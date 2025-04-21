@@ -1,13 +1,17 @@
 package com.DeliveryOrder.DeliveryOrder.service;
 
+import com.DeliveryOrder.DeliveryOrder.model.CompletedDelivery;
 import com.DeliveryOrder.DeliveryOrder.model.Delivery;
 import com.DeliveryOrder.DeliveryOrder.model.DriverLocation;
 import com.DeliveryOrder.DeliveryOrder.model.LocationDTO;
+import com.DeliveryOrder.DeliveryOrder.repository.CompletedDeliveryRepository;
 import com.DeliveryOrder.DeliveryOrder.repository.DeliveryRepository;
 import com.DeliveryOrder.DeliveryOrder.repository.DriverLocationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -16,7 +20,9 @@ public class DeliveryService {
 
     private final DeliveryRepository deliveryRepo;
     private final DriverLocationRepository driverLocationRepo;
+    private final CompletedDeliveryRepository completedDeliveryRepo;
 
+    @Transactional
     public void updateLocation(LocationDTO location) {
         DriverLocation driverLoc = driverLocationRepo.findById(location.getDriverId())
                 .orElse(new DriverLocation(location.getDriverId(), location.getLatitude(), location.getLongitude(), true));
@@ -31,10 +37,13 @@ public class DeliveryService {
         });
     }
 
+    @Transactional
     public void createDelivery(String orderId, double lat, double lon) {
         List<DriverLocation> availableDrivers = driverLocationRepo.findByIsAvailableTrue();
 
-        if (availableDrivers.isEmpty()) throw new RuntimeException("No available drivers!");
+        if (availableDrivers.isEmpty()) {
+            throw new RuntimeException("No available drivers!");
+        }
 
         DriverLocation nearest = null;
         double minDist = Double.MAX_VALUE;
@@ -56,11 +65,23 @@ public class DeliveryService {
         }
     }
 
+    @Transactional
     public void markAsDelivered(String driverId) {
         Delivery delivery = deliveryRepo.findByDriverId(driverId)
                 .orElseThrow(() -> new RuntimeException("No delivery assigned to this driver"));
-        delivery.setDelivered(true);
-        deliveryRepo.save(delivery);
+
+        CompletedDelivery completed = new CompletedDelivery(
+                null,
+                delivery.getOrderId(),
+                delivery.getDriverId(),
+                delivery.getLatitude(),
+                delivery.getLongitude(),
+                true,
+                LocalDateTime.now()
+        );
+        completedDeliveryRepo.save(completed);
+
+        deliveryRepo.delete(delivery);
 
         driverLocationRepo.findById(driverId).ifPresent(driver -> {
             driver.setAvailable(true);
@@ -69,13 +90,18 @@ public class DeliveryService {
     }
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        final int R = 6371;
+        final int R = 6371; // Radius of the earth in km
         double latDistance = Math.toRadians(lat2 - lat1);
         double lonDistance = Math.toRadians(lon2 - lon1);
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
+        return R * c; // Distance in km
+    }
+
+    public Delivery getDeliveryByDriver(String driverId) {
+        return deliveryRepo.findByDriverId(driverId)
+                .orElseThrow(() -> new RuntimeException("No active delivery assigned to this driver"));
     }
 }
