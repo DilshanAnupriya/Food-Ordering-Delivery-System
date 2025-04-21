@@ -22,7 +22,7 @@ public class Delivery {
     private String driverId;
 
     private double latitude;
-    //for map
+
 
     private double longitude;
 
