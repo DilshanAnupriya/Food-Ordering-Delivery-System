@@ -19,7 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/orders")
-@CrossOrigin(origins = "*") // For development, restrict this in production
+@CrossOrigin(origins = "*") 
 public class OrderController {
 
     @Autowired
