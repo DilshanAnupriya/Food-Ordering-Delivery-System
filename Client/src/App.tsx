@@ -6,6 +6,7 @@ import Footer from './components/layout/Footer';
 import Home from './pages/Home';
 import DriverDashboard from './pages/Delivery/DriverDashboard';
 import DriverDeliveryPageWrapper from './pages/Delivery/DriverDeliveryPageWrapper';
+import CustomerTrackingPage from './pages/Delivery/CustomerTraking';        
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
         <Route path="/driver-delivery/:driverId" element={<DriverDeliveryPageWrapper />} />
         <Route path="/driver-delivery" element={<DriverDeliveryPageWrapper />} />
         <Route path="/driver-dashboard" element={<DriverDashboard />} />
+        <Route path="/customer-tracking" element={<CustomerTrackingPage />} />
+        {/* Add more routes as needed */}
       </Routes>
       <Footer />
     </Router>
