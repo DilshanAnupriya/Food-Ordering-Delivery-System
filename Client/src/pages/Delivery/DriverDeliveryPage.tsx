@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 export interface Location {
@@ -12,17 +11,20 @@ export interface Location {
 export interface Delivery {
   orderId: string;
   isDelivered: boolean;
-  latitude: number;
-  longitude: number;
+  shopLatitude: number;
+  shopLongitude: number;
+  destinationLatitude: number;
+  destinationLongitude: number;
+  driverLatitude: number;
+  driverLongitude: number;
 }
 
 // Fix Leaflet icon issues
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
@@ -41,7 +43,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
   const [showToast, setShowToast] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>('');
 
-  // Get current location every second and send to backend
+  // Get current location every 5 seconds and send to backend
   useEffect(() => {
     const intervalId = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
@@ -62,7 +64,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
         },
         { enableHighAccuracy: true }
       );
-    }, 1000);
+    }, 5000); // Changed from 1s to 5s for better performance
 
     return () => clearInterval(intervalId);
   }, [driverId]);
@@ -76,7 +78,6 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
         return res.json();
       })
       .then((data) => {
-        console.log('Fetched delivery:', data);
         setDelivery(data);
         setLoading(false);
       })
@@ -152,12 +153,10 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
   return (
     <div className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
       {/* Top navigation bar */}
-      <nav   className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
+      <nav className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              
-            </div>
+            <div className="flex items-center"></div>
             <div className="hidden md:block">
               <div className="flex items-center space-x-4">
                 <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full flex items-center text-sm">
@@ -251,7 +250,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
               </div>
 
               {/* Map container */}
-              {isValidCoords(location) && isValidCoords(delivery) ? (
+              {isValidCoords(location) ? (
                 <div className="rounded-xl overflow-hidden shadow-md border border-gray-100 mb-6">
                   <div className="bg-gray-50 border-b px-4 py-3 flex justify-between items-center">
                     <div className="flex items-center">
@@ -268,42 +267,23 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                   </div>
                   <div className="h-96 w-full">
                     <MapContainer
-                      center={[location!.latitude, location!.longitude]}
+                      center={[location?.latitude || 0, location?.longitude || 0]}
                       zoom={14}
                       scrollWheelZoom={true}
                       className="h-full w-full"
                     >
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      <Marker position={[location!.latitude, location!.longitude]}>
-                        <Popup>
-                          <div className="text-center p-1">
-                            <p className="font-medium text-gray-800">Your Current Location</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {location!.latitude.toFixed(6)}, {location!.longitude.toFixed(6)}
-                            </p>
-                          </div>
-                        </Popup>
+                      <Marker position={[delivery.shopLatitude, delivery.shopLongitude]}>
+                        <Popup>Shop Location</Popup>
                       </Marker>
-                      <Marker position={[delivery.latitude, delivery.longitude]}>
-                        <Popup>
-                          <div className="text-center p-1">
-                            <p className="font-medium text-gray-800">Delivery Destination</p>
-                            <p className="text-sm text-gray-600 mt-1">Order: {delivery.orderId}</p>
-                          </div>
-                        </Popup>
+                      <Marker position={[delivery.destinationLatitude, delivery.destinationLongitude]}>
+                        <Popup>Customer (Delivery Destination)</Popup>
                       </Marker>
-                      <Polyline
-                        positions={[
-                          [location!.latitude, location!.longitude],
-                          [delivery.latitude, delivery.longitude],
-                        ]}
-                        pathOptions={{
-                          color: 'blue',
-                          weight: 4,
-                          opacity: 0.7,
-                          dashArray: '5, 5',
-                        }}
-                      />
+                      {location && (
+                        <Marker position={[location.latitude, location.longitude]}>
+                          <Popup>Driver Location</Popup>
+                        </Marker>
+                      )}
                     </MapContainer>
                   </div>
                 </div>
@@ -361,8 +341,6 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
           )}
         </div>
       </main>
-
-      
 
       {/* Toast notification */}
       {showToast && (
