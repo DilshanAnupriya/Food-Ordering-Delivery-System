@@ -6,6 +6,8 @@ import SubNav from "../components/layout/SubNav.tsx";
 import Footer from "../components/layout/Footer.tsx";
 import Discount from "../components/layout/Discount.tsx";
 import Category from "../components/layout/Category.tsx";
+import Poster from "../components/layout/Poster.tsx";
+import PartnerCard from "../components/layout/PartnerCard.tsx";
 
 function Home() {
     return (
@@ -16,6 +18,8 @@ function Home() {
             <Discount/>
             <Category />
             <Hero1 />
+            <Poster/>
+            <PartnerCard/>
             <Footer/>
 
         </>
