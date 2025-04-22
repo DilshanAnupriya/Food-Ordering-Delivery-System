@@ -42,7 +42,7 @@ const OrderForm: React.FC = () => {
   }, [orderId, isEditMode]);
 
   const calculateTotals = () => {
-    const subtotal = order.orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const subtotal = order.orderItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
     const tax = subtotal * 0.1; // Example tax rate: 10%
     const deliveryFee = 5; // Example fixed delivery fee
     const totalAmount = subtotal + tax + deliveryFee;
@@ -64,7 +64,7 @@ const OrderForm: React.FC = () => {
     const { name, value } = e.target;
     setOrder({
       ...order,
-      [name]: name === 'userId' || name === 'restaurantId' ? parseInt(value) : value
+      [name]: name === 'userId' || name === 'restaurantId' ? parseInt(value) || 0 : value
     });
   };
 
@@ -72,22 +72,24 @@ const OrderForm: React.FC = () => {
     const updatedItems = [...order.orderItems];
     
     if (field === 'quantity' || field === 'unitPrice') {
-      const numValue = parseFloat(value);
+      // Fix for NaN - use parseFloat and handle empty values
+      const numValue = value === '' ? 0 : parseFloat(value);
+      
       updatedItems[index] = {
         ...updatedItems[index],
-        [field]: numValue
+        [field]: isNaN(numValue) ? 0 : numValue
       };
       
       // Recalculate total price for this item
       if (field === 'quantity' || field === 'unitPrice') {
-        const quantity = field === 'quantity' ? numValue : updatedItems[index].quantity;
-        const unitPrice = field === 'unitPrice' ? numValue : updatedItems[index].unitPrice;
+        const quantity = field === 'quantity' ? (isNaN(numValue) ? 0 : numValue) : updatedItems[index].quantity;
+        const unitPrice = field === 'unitPrice' ? (isNaN(numValue) ? 0 : numValue) : updatedItems[index].unitPrice;
         updatedItems[index].totalPrice = quantity * unitPrice;
       }
     } else {
       updatedItems[index] = {
         ...updatedItems[index],
-        [field]: field === 'menuItemId' ? parseInt(value) : value
+        [field]: field === 'menuItemId' ? parseInt(value) || 0 : value
       };
     }
     
@@ -153,7 +155,7 @@ const OrderForm: React.FC = () => {
             <input
               type="number"
               name="userId"
-              value={order.userId}
+              value={order.userId || ''}
               onChange={handleChange}
               required
               className="w-full p-2 border rounded"
@@ -164,7 +166,7 @@ const OrderForm: React.FC = () => {
             <input
               type="number"
               name="restaurantId"
-              value={order.restaurantId}
+              value={order.restaurantId || ''}
               onChange={handleChange}
               required
               className="w-full p-2 border rounded"
@@ -243,7 +245,7 @@ const OrderForm: React.FC = () => {
                   <label className="block text-gray-700 text-sm mb-1">Menu Item ID</label>
                   <input
                     type="number"
-                    value={item.menuItemId}
+                    value={item.menuItemId || ''}
                     onChange={(e) => handleItemChange(index, 'menuItemId', e.target.value)}
                     required
                     className="w-full p-2 border rounded"
@@ -254,7 +256,7 @@ const OrderForm: React.FC = () => {
                   <input
                     type="number"
                     min="1"
-                    value={item.quantity}
+                    value={item.quantity || ''}
                     onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
                     required
                     className="w-full p-2 border rounded"
@@ -266,7 +268,7 @@ const OrderForm: React.FC = () => {
                     type="number"
                     step="0.01"
                     min="0"
-                    value={item.unitPrice}
+                    value={item.unitPrice || ''}
                     onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
                     required
                     className="w-full p-2 border rounded"
@@ -277,7 +279,7 @@ const OrderForm: React.FC = () => {
                   <input
                     type="number"
                     step="0.01"
-                    value={item.totalPrice}
+                    value={item.totalPrice || ''}
                     readOnly
                     className="w-full p-2 border rounded bg-gray-100"
                   />
