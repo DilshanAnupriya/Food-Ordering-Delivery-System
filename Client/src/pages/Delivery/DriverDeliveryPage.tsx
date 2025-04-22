@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import { Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 export interface Location {
@@ -291,6 +292,18 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                           </div>
                         </Popup>
                       </Marker>
+                      <Polyline
+                        positions={[
+                          [location!.latitude, location!.longitude],
+                          [delivery.latitude, delivery.longitude],
+                        ]}
+                        pathOptions={{
+                          color: 'blue',
+                          weight: 4,
+                          opacity: 0.7,
+                          dashArray: '5, 5',
+                        }}
+                      />
                     </MapContainer>
                   </div>
                 </div>
