@@ -65,7 +65,7 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
     const fetchDeliveryInfo = () => {
       setLoading(true);
       // Replace with your actual API endpoint
-      fetch(`http://localhost:8082/api/v1/delivery/track/${orderId}`)
+      fetch(`http://localhost:8082/api/v1/delivery/${orderId}`)
         .then((res) => {
           if (!res.ok) throw new Error('Failed to fetch delivery tracking data');
           return res.json();
