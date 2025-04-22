@@ -4,6 +4,10 @@ import { motion } from 'framer-motion';
 
 interface restaurantProps {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes
@@ -47,11 +51,17 @@ const Hero1 = () => {
            </motion.div>
                <RestaurantCard
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                name="Mac Donoald's"
                img='src/assets/mac.png'/>
 
 
        </>
+=======
+                   name="Mac Donoald's"
+                   img='src/assets/mac.png'/>
+                </>
+>>>>>>> Stashed changes
 =======
                    name="Mac Donoald's"
                    img='src/assets/mac.png'/>

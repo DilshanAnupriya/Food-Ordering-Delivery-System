@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import React, { Component } from 'react'
 import { motion } from 'framer-motion';
 import { styles } from '../styles';
@@ -22,6 +23,8 @@ const SectionWrapper = (Component,idName)=> function HOC(){
 
 export default SectionWrapper
 =======
+=======
+>>>>>>> Stashed changes
 import React from "react";
 import { motion } from "framer-motion";
 import { staggerContainer } from "../util/motion.ts";
@@ -49,4 +52,7 @@ const SectionWrapper = <P extends object>(
 };
 
 export default SectionWrapper;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
