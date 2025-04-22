@@ -35,14 +35,13 @@ interface DriverDeliveryPageProps {
   driverId?: string;
 }
 
-const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver132' }) => {
+const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver12' }) => {
   const [location, setLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState<boolean>(false);
-  const [toastMessage, setToastMessage] = useState<string>('');
   const [markingDelivered, setMarkingDelivered] = useState<boolean>(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState<boolean>(false);
 
   // Get current location every 5 seconds and send to backend
   useEffect(() => {
@@ -103,26 +102,19 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
         throw new Error(`Failed to update delivery status: ${response.status}`);
       }
   
-      // ✅ Immediately update state
+      // Update state and show success popup
       setDelivery(prev => prev ? { ...prev, isDelivered: true } : null);
+      setShowSuccessPopup(true);
   
-      // ✅ Show success message
-      showToastNotification('✅ Successfully delivered!');
+      // Hide the success popup after 5 seconds
+      setTimeout(() => setShowSuccessPopup(false), 5000);
   
     } catch (err) {
       console.error('Error in markAsDelivered:', err);
       setDelivery(prev => prev ? { ...prev, isDelivered: false } : null);
-      showToastNotification('❌ Failed to mark as delivered.');
     } finally {
       setMarkingDelivered(false);
     }
-  };
-  
-
-  const showToastNotification = (message: string) => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
   };
 
   const isValidCoords = (coord: Location | null): boolean =>
@@ -206,7 +198,25 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
           ) : delivery ? (
             <div className="p-6">
               {/* Order information card */}
-              <div className="mb-6 bg-white rounded-lg border border-gray-100 shadow-sm p-5">
+              <div className="mb-6 bg-white rounded-lg border border-gray-100 shadow-sm p-5 relative">
+                {/* Success Popup - Only shown in order information container */}
+                {showSuccessPopup && (
+                  <div className="absolute top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-10 flex items-center animate-fade-in">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Delivery successfully completed!</span>
+                    <button 
+                      onClick={() => setShowSuccessPopup(false)}
+                      className="ml-4 text-green-700 hover:text-green-900"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center">
                   <div>
                     <h2 className="text-lg font-semibold text-gray-800 mb-2">Order Information</h2>
@@ -338,12 +348,6 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                     <p className="text-orange-700">
                       Please confirm delivery completion by clicking the "Mark as Delivered" button once the order has been successfully handed over to the customer.
                     </p>
-                    <div className="mt-3 text-sm text-orange-600 flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
-                      Take a photo of the delivery if necessary
-                    </div>
                   </div>
                 </div>
               </div>
@@ -367,26 +371,6 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
           )}
         </div>
       </main>
-
-      {/* Toast notification */}
-      {showToast && (
-        <div className="fixed bottom-6 right-6 bg-white shadow-lg rounded-lg px-4 py-3 flex items-center transition-opacity duration-300">
-          {toastMessage.includes('success') ? (
-            <div className="bg-green-100 rounded-full p-2 mr-3">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          ) : (
-            <div className="bg-red-100 rounded-full p-2 mr-3">
-              <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          )}
-          <span className="text-gray-700">{toastMessage}</span>
-        </div>
-      )}
     </div>
   );
 };
