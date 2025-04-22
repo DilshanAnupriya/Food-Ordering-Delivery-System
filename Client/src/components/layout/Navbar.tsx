@@ -2,49 +2,52 @@ import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   return (
-    <nav className="bg-white shadow-md px-6 py-4">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <nav className="pl-1  py-4">
+      <div className="max-w-7xl mx-auto flex items-center ">
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <span className="text-2xl font-bold text-orange-500">Order●</span>
+          <span className="text-4xl font-bold text-orange-500">Order●</span>
         </Link>
-
+        <div className="flex items-center justify-end  w-full">
         {/* Navigation Links */}
         <div className="hidden md:flex items-center space-x-8">
           <Link 
             to="/" 
-            className="text-gray-700 hover:text-orange-500 transition-colors"
+            className="text-gray-700 bg-[#FC8A06] px-6 py-1 rounded-2xl hover:text-white transition-colors text-[14px]"
           >
             Home
           </Link>
           <Link 
             to="/browse-menu" 
-            className="text-gray-700 hover:text-orange-500 transition-colors"
+            className="text-gray-700 hover:text-orange-500 transition-colors text-[14px]"
           >
             Browse Menu
           </Link>
           <Link 
             to="/contact" 
-            className="text-gray-700 hover:text-orange-500 transition-colors"
+            className="text-gray-700 hover:text-orange-500 transition-colors text-[14px]"
           >
-            Contact Us
+            Restaurants
           </Link>
+          <Link
+              to="/contact"
+              className="text-gray-700 hover:text-orange-500 transition-colors text-[14px]"
+          >
+            Special Offers
+          </Link>
+
         </div>
 
         {/* Auth Buttons */}
-        <div className="flex items-center space-x-4">
-          <Link 
-            to="/login" 
-            className="px-4 py-2 text-gray-700 hover:text-orange-500 transition-colors"
-          >
-            Login
-          </Link>
+        <div className="flex items-center pl-5 ">
+
           <Link 
             to="/signup" 
-            className="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors"
+            className="px-4 py-2 bg-[#03081F] text-white rounded-full hover:bg-orange-500 transition-colors text-[15px]"
           >
             Sign Up
           </Link>
+        </div>
         </div>
       </div>
     </nav>

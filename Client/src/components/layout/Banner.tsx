@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 
 const Banner = () => {
   return (
-    <div className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
+    <div className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden rounded-2xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        <div className="grid md:grid-cols-2 gap-8 items-center">
+        <div className="grid md:grid-cols-2 gap-8 items-center ">
           {/* Left Content */}
           <div className="text-white space-y-6 z-10">
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">
@@ -32,31 +32,24 @@ const Banner = () => {
           </div>
 
           {/* Right Content - Order Cards */}
-          <div className="relative">
-            <div className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4">
-              <div className="bg-white p-4 rounded-lg shadow-lg w-64">
-                <h3 className="font-medium text-gray-800">Order</h3>
-                <p className="text-sm text-gray-600">Your order is being prepared</p>
-              </div>
-            </div>
-            
-            <div className="bg-white p-4 rounded-lg shadow-lg w-64 ml-auto mb-4">
-              <h3 className="font-medium text-gray-800">Order</h3>
-              <p className="text-sm text-gray-600">Delivery in progress</p>
-            </div>
-            
-            <div className="absolute bottom-0 right-0 transform translate-x-1/3 translate-y-1/4">
-              <div className="bg-white p-4 rounded-lg shadow-lg w-64">
-                <h3 className="font-medium text-gray-800">Order</h3>
-                <p className="text-sm text-gray-600">Ready for pickup</p>
-              </div>
-            </div>
+          <div className="absolute ml-[700px]  mt-[70px] bg-[url('src/assets/Image1.png')] w-[600px] h-[400px]"></div>
+          {/*<div className="absolute w-70 h-80 ml-[620px]  mt-[130px] bg-[url('src/assets/image2.png')] bg-cover"></div>*/}
+          <div className="absolute w-100 h-80 ml-[500px]  mt-[89px] bg-[url('src/assets/image3.png')] bg-cover"></div>
+          <div className="absolute w-60 h-25 ml-[820px]  mt-[220px] bg-[url('src/assets/Group2.png')] bg-cover"></div>
+          <div className="absolute w-60 h-25 ml-[830px]  mt-[-220px] bg-[url('src/assets/Group3.png')] bg-cover">
+            <h3 className="absolute mt-16 ml-5 text-[9px] font-bold">We’ve Received your order!</h3>
+            <h3 className="absolute mt-19 ml-5 text-[9px] ">Awaiting Restaurant acceptance</h3>
+          </div>
+          <div className="absolute w-60 h-25 ml-[860px]  mt-[10px] bg-[url('src/assets/Group4.png')] bg-cover">
+            <h3 className="absolute mt-17 ml-5 text-[9px] font-bold">Order Accepted! </h3>
+            <h3 className="absolute mt-20 ml-5 text-[9px] ">Your order will be delivered shortly</h3>
           </div>
         </div>
+
       </div>
       
       {/* Background Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-transparent opacity-90"></div>
+      <div className=""></div>
     </div>
   );
 };
