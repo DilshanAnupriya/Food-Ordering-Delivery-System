@@ -35,7 +35,7 @@ interface DriverDeliveryPageProps {
   driverId?: string;
 }
 
-const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver12' }) => {
+const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver132' }) => {
   const [location, setLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -91,36 +91,33 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
 
   const markAsDelivered = async () => {
     if (markingDelivered || !delivery) return;
-    
+  
     try {
       setMarkingDelivered(true);
-      
+  
       const response = await fetch(`http://localhost:8082/api/v1/delivery/mark-delivered/${driverId}`, {
-        method: 'POST'
+        method: 'POST',
       });
-      
+  
       if (!response.ok) {
         throw new Error(`Failed to update delivery status: ${response.status}`);
       }
-      
-      // Update the local state immediately for better UX
+  
+      // ✅ Immediately update state
       setDelivery(prev => prev ? { ...prev, isDelivered: true } : null);
-      showToastNotification('Delivery marked as completed successfully!');
-      
-      // Optional: Fetch the latest data from server to confirm
-      const updatedDelivery = await response.json();
-      setDelivery(updatedDelivery);
-      
+  
+      // ✅ Show success message
+      showToastNotification('✅ Successfully delivered!');
+  
     } catch (err) {
       console.error('Error in markAsDelivered:', err);
-      // Revert the local state if the API call failed
       setDelivery(prev => prev ? { ...prev, isDelivered: false } : null);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update delivery status. Please try again.';
-      showToastNotification(errorMessage);
+      showToastNotification('❌ Failed to mark as delivered.');
     } finally {
       setMarkingDelivered(false);
     }
   };
+  
 
   const showToastNotification = (message: string) => {
     setToastMessage(message);
