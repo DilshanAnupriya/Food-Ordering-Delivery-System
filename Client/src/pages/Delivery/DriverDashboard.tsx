@@ -14,7 +14,7 @@ const DriverDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const navigate = useNavigate();
 
-  const driverId = 'driver14'; 
+  const driverId = 'driver23'; 
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -47,7 +47,7 @@ const DriverDashboard: React.FC = () => {
   const profileInitial = "J";
 
   return (
-    <div className="min-h-screen bg-white p-6">
+    <div className="min-h-screen bg-gray-800 p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
@@ -61,10 +61,10 @@ const DriverDashboard: React.FC = () => {
             </div>
           </div>
           <div className="ml-4 flex flex-col items-start space-y-1">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-white">
               John Doe
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-white">
               Driver ID: <strong>{driverId}</strong>
             </p>
           </div>
@@ -72,19 +72,19 @@ const DriverDashboard: React.FC = () => {
 
         <div className="flex space-x-4">
           <button
-            className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
+            className="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition-colors"
             onClick={() => handleNavigate('/driver/home')}
           >
             Home
           </button>
           <button
-            className="bg-white text-yellow-500 border border-yellow-500 px-4 py-2 rounded-md hover:bg-yellow-50 transition-colors"
+            className="bg-orange-500 text-white border border-yellow-500 px-4 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition-colors"
             onClick={() => handleNavigate('/driver/profile')}
           >
             Profile
           </button>
           <button
-            className="bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition-colors"
+            className="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition-colors"
             onClick={() => handleNavigate('/pages/Delivery/DeliveryHomePage')}
           >
             Deliveries
@@ -94,9 +94,9 @@ const DriverDashboard: React.FC = () => {
 
       {/* Map Section */}
       <div
-        className="bg-gray-900 p-5 rounded-lg mb-6 shadow-md text-white"
+        className="bg-white p-5 rounded-lg mb-6 shadow-md text-white"
       >
-        <h2 className="text-lg font-semibold mb-4 text-yellow-400">
+        <h2 className="text-lg font-semibold mb-4 text-orange-500">
           Current Location
         </h2>
         {location ? (
@@ -120,9 +120,9 @@ const DriverDashboard: React.FC = () => {
 
       {/* Deliveries Summary */}
       <div
-        className="bg-gray-900 p-5 rounded-lg shadow-md text-white"
+        className="bg-white p-5 rounded-lg shadow-md text-white"
       >
-        <h2 className="text-lg font-semibold mb-4 text-yellow-400">
+        <h2 className="text-lg font-semibold mb-4 text-orange-500">
           Completed Deliveries
         </h2>
         {orders.length === 0 ? (
