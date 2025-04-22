@@ -38,6 +38,10 @@ public class OrderModel {
     @NotNull(message = "Delivery address cannot be null")
     private String deliveryAddress;
 
+    // New geolocation fields
+    private Double latitude;
+    private Double longitude;
+
     @NotNull(message = "Contact phone cannot be null")
     private String contactPhone;
 

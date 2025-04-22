@@ -106,6 +106,12 @@ public class OrderService {
             throw new OrderException("Delivery address cannot be empty", HttpStatus.BAD_REQUEST);
         }
 
+        // Validate coordinates if provided
+        if ((order.getLatitude() != null && order.getLongitude() == null) ||
+                (order.getLatitude() == null && order.getLongitude() != null)) {
+            throw new OrderException("Both latitude and longitude must be provided or none", HttpStatus.BAD_REQUEST);
+        }
+
         if (order.getContactPhone() == null || order.getContactPhone().trim().isEmpty()) {
             throw new OrderException("Contact phone cannot be empty", HttpStatus.BAD_REQUEST);
         }
@@ -137,6 +143,15 @@ public class OrderService {
 
         if (updatedOrder.getDeliveryAddress() != null) {
             existingOrder.setDeliveryAddress(updatedOrder.getDeliveryAddress());
+        }
+
+        // Update geolocation fields
+        if (updatedOrder.getLongitude() != null) {
+            existingOrder.setLongitude(updatedOrder.getLongitude());
+        }
+
+        if (updatedOrder.getLatitude() != null) {
+            existingOrder.setLatitude(updatedOrder.getLatitude());
         }
 
         if (updatedOrder.getContactPhone() != null) {
@@ -243,6 +258,12 @@ public class OrderService {
         statusInfo.append("Order #").append(orderId).append("\n");
         statusInfo.append("Status: ").append(order.getStatus()).append("\n");
         statusInfo.append("Last Updated: ").append(order.getLastUpdated()).append("\n");
+
+        // Include location information if available
+        if (order.getLatitude() != null && order.getLongitude() != null) {
+            statusInfo.append("Delivery Location: ").append(order.getLatitude()).append(", ")
+                    .append(order.getLongitude()).append("\n");
+        }
 
         switch (order.getStatus()) {
             case PLACED:

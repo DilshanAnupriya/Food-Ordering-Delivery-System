@@ -19,7 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/orders")
-@CrossOrigin(origins = "*") 
+@CrossOrigin(origins = "http://localhost:5173")
 public class OrderController {
 
     @Autowired
@@ -91,6 +91,22 @@ public class OrderController {
         }
     }
 
+    // Update geolocation
+    @PatchMapping("/{orderId}/location")
+    public ResponseEntity<OrderModel> updateOrderLocation(@PathVariable Long orderId,
+                                                          @RequestBody Map<String, Double> locationRequest) {
+        if (!locationRequest.containsKey("latitude") || !locationRequest.containsKey("longitude")) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        OrderModel existingOrder = orderService.getOrderById(orderId);
+        existingOrder.setLatitude(locationRequest.get("latitude"));
+        existingOrder.setLongitude(locationRequest.get("longitude"));
+
+        OrderModel updatedOrder = orderService.updateOrder(orderId, existingOrder);
+        return ResponseEntity.ok(updatedOrder);
+    }
+
     // Track order status
     @GetMapping("/{orderId}/track")
     public ResponseEntity<Map<String, String>> trackOrderStatus(@PathVariable Long orderId) {
@@ -98,6 +114,22 @@ public class OrderController {
         Map<String, String> response = new HashMap<>();
         response.put("statusInfo", statusInfo);
         return ResponseEntity.ok(response);
+    }
+
+    // Get order location
+    @GetMapping("/{orderId}/location")
+    public ResponseEntity<Map<String, Double>> getOrderLocation(@PathVariable Long orderId) {
+        OrderModel order = orderService.getOrderById(orderId);
+
+        if (order.getLatitude() == null || order.getLongitude() == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        Map<String, Double> location = new HashMap<>();
+        location.put("latitude", order.getLatitude());
+        location.put("longitude", order.getLongitude());
+
+        return ResponseEntity.ok(location);
     }
 
     // Delete order
