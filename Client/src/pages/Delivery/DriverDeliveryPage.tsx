@@ -35,13 +35,14 @@ interface DriverDeliveryPageProps {
   driverId?: string;
 }
 
-const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver16' }) => {
+const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver12' }) => {
   const [location, setLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>('');
+  const [markingDelivered, setMarkingDelivered] = useState<boolean>(false);
 
   // Get current location every 5 seconds and send to backend
   useEffect(() => {
@@ -52,7 +53,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
           setLocation({ latitude, longitude });
 
           fetch('http://localhost:8082/api/v1/delivery/update-location', {
-            method: 'POST',
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ driverId, latitude, longitude }),
           })
@@ -64,7 +65,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
         },
         { enableHighAccuracy: true }
       );
-    }, 5000); // Changed from 1s to 5s for better performance
+    }, 5000);
 
     return () => clearInterval(intervalId);
   }, [driverId]);
@@ -88,24 +89,37 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
       });
   }, [driverId]);
 
-  const markAsDelivered = (): void => {
-    fetch(`http://localhost:8082/api/v1/delivery/mark-delivered/${driverId}`, {
-      method: 'POST',
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to update delivery status');
-        return res.json();
-      })
-      .then(() => {
-        if (delivery) {
-          setDelivery({ ...delivery, isDelivered: true });
-          showToastNotification('Delivery successfully completed!');
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to mark as delivered:', err);
-        showToastNotification('Failed to update delivery status. Please try again.');
+  const markAsDelivered = async () => {
+    if (markingDelivered || !delivery) return;
+    
+    try {
+      setMarkingDelivered(true);
+      
+      const response = await fetch(`http://localhost:8082/api/v1/delivery/mark-delivered/${driverId}`, {
+        method: 'POST'
       });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update delivery status: ${response.status}`);
+      }
+      
+      // Update the local state immediately for better UX
+      setDelivery(prev => prev ? { ...prev, isDelivered: true } : null);
+      showToastNotification('Delivery marked as completed successfully!');
+      
+      // Optional: Fetch the latest data from server to confirm
+      const updatedDelivery = await response.json();
+      setDelivery(updatedDelivery);
+      
+    } catch (err) {
+      console.error('Error in markAsDelivered:', err);
+      // Revert the local state if the API call failed
+      setDelivery(prev => prev ? { ...prev, isDelivered: false } : null);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update delivery status. Please try again.';
+      showToastNotification(errorMessage);
+    } finally {
+      setMarkingDelivered(false);
+    }
   };
 
   const showToastNotification = (message: string) => {
@@ -238,12 +252,24 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                   {!delivery.isDelivered && (
                     <button
                       onClick={markAsDelivered}
-                      className="mt-6 md:mt-0 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 flex items-center"
+                      disabled={markingDelivered}
+                      className={`mt-6 md:mt-0 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 flex items-center ${markingDelivered ? 'opacity-75 cursor-not-allowed' : ''}`}
                     >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Mark as Delivered
+                      {markingDelivered ? (
+                        <>
+                          <svg className="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Mark as Delivered
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
@@ -334,7 +360,10 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">No Active Deliveries</h3>
               <p className="text-gray-600 text-center">You currently don't have any active deliveries assigned.</p>
-              <button className="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
                 Refresh
               </button>
             </div>
