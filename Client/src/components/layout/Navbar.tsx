@@ -35,6 +35,18 @@ const Navbar = () => {
           >
             Special Offers
           </Link>
+          <Link
+              to="/contact"
+              className="text-gray-700 hover:text-orange-500 transition-colors text-[14px]"
+          >
+            Contact Us
+          </Link>
+          <Link
+              to="/contact"
+              className="text-gray-700 hover:text-orange-500 transition-colors text-[14px]"
+          >
+            Order Tracker
+          </Link>
 
         </div>
 

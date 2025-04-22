@@ -4,6 +4,8 @@ import  SectionWrapper  from "../hoc/SectionWrapper";
 import NavigationBar from "../components/layout/Navbar.tsx";
 import SubNav from "../components/layout/SubNav.tsx";
 import Footer from "../components/layout/Footer.tsx";
+import Discount from "../components/layout/Discount.tsx";
+import Category from "../components/layout/Category.tsx";
 
 function Home() {
     return (
@@ -11,6 +13,8 @@ function Home() {
             <SubNav/>
             <NavigationBar />
             <Banner />
+            <Discount/>
+            <Category />
             <Hero1 />
             <Footer/>
 
