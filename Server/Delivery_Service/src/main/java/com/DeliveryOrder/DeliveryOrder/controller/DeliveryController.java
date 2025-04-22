@@ -29,12 +29,22 @@ public class DeliveryController {
         return ResponseEntity.ok("Location updated successfully");
     }
 
+//    @PostMapping("/create")
+//    public ResponseEntity<String> createDelivery(@RequestParam String orderId,
+//                                                 @RequestParam double latitude,
+//                                                 @RequestParam double longitude) {
+//        deliveryService.createDelivery(orderId, latitude, longitude);
+//        return ResponseEntity.ok("Delivery created and assigned to nearest available driver");
+//    }
+
     @PostMapping("/create")
     public ResponseEntity<String> createDelivery(@RequestParam String orderId,
-                                                 @RequestParam double latitude,
-                                                 @RequestParam double longitude) {
-        deliveryService.createDelivery(orderId, latitude, longitude);
-        return ResponseEntity.ok("Delivery created and assigned to nearest available driver");
+                                                 @RequestParam double shopLatitude,
+                                                 @RequestParam double shopLongitude,
+                                                 @RequestParam double destinationLatitude,
+                                                 @RequestParam double destinationLongitude) {
+        deliveryService.createDelivery(orderId, shopLatitude, shopLongitude, destinationLatitude, destinationLongitude);
+        return ResponseEntity.ok("Delivery created!");
     }
 
     @PostMapping("/mark-delivered/{driverId}")

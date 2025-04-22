@@ -21,10 +21,15 @@ public class Delivery {
     @Column(nullable = false)
     private String driverId;
 
-    private double latitude;
+    private double shopLatitude;
+    private double shopLongitude;
 
+    // Customer’s delivery destination
+    private double destinationLatitude;
+    private double destinationLongitude;
 
-    private double longitude;
-
+    // Driver's current location
+    private double driverLatitude;
+    private double driverLongitude;
     private boolean isDelivered;
 }

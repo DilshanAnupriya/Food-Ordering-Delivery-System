@@ -31,14 +31,14 @@ public class DeliveryService {
         driverLocationRepo.save(driverLoc);
 
         deliveryRepo.findByDriverId(location.getDriverId()).ifPresent(delivery -> {
-            delivery.setLatitude(location.getLatitude());
-            delivery.setLongitude(location.getLongitude());
+            delivery.setDriverLatitude(location.getLatitude());
+            delivery.setDriverLongitude(location.getLongitude());
             deliveryRepo.save(delivery);
         });
     }
 
     @Transactional
-    public void createDelivery(String orderId, double lat, double lon) {
+    public void createDelivery(String orderId, double shopLat, double shopLon, double customerLat, double customerLon) {
         List<DriverLocation> availableDrivers = driverLocationRepo.findByIsAvailableTrue();
 
         if (availableDrivers.isEmpty()) {
@@ -49,7 +49,7 @@ public class DeliveryService {
         double minDist = Double.MAX_VALUE;
 
         for (DriverLocation d : availableDrivers) {
-            double dist = calculateDistance(lat, lon, d.getLatitude(), d.getLongitude());
+            double dist = calculateDistance(shopLat, shopLon, d.getLatitude(), d.getLongitude());
             if (dist < minDist) {
                 minDist = dist;
                 nearest = d;
@@ -57,7 +57,11 @@ public class DeliveryService {
         }
 
         if (nearest != null) {
-            Delivery delivery = new Delivery(null, orderId, nearest.getDriverId(), lat, lon, false);
+            Delivery delivery = new Delivery(null, orderId, nearest.getDriverId(),
+                    customerLat, customerLon, // destination
+                    nearest.getLatitude(), nearest.getLongitude(), // initial driver location
+                    shopLat, shopLon, // shop location
+                    false);
             deliveryRepo.save(delivery);
 
             nearest.setAvailable(false);
@@ -74,8 +78,8 @@ public class DeliveryService {
                 null,
                 delivery.getOrderId(),
                 delivery.getDriverId(),
-                delivery.getLatitude(),
-                delivery.getLongitude(),
+                delivery.getDestinationLatitude(),
+                delivery.getDestinationLongitude(),
                 true,
                 LocalDateTime.now()
         );
