@@ -66,7 +66,7 @@ const TrendingRestaurants = () => {
     return (
         <>
             <motion.div variants={textVariant(0.3)}>
-                <h2 className="text-black font-black md:text-[30px] sm:text-[50px] xs:text-[40px] text-[18px] pt-10 ">
+                <h2 className="text-black font-black md:text-[28px] sm:text-[50px] xs:text-[40px] text-[15px] pt-10 ">
                     Popular Restaurants
                 </h2>
             </motion.div>
