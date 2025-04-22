@@ -3,14 +3,6 @@ import {textVariant} from "../../util/motion.ts";
 import { motion } from 'framer-motion';
 
 interface restaurantProps {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
-=======
-
->>>>>>> Stashed changes
     name: string;
     img: string;
 }
@@ -50,23 +42,10 @@ const Hero1 = () => {
                <h2 className="text-black font-black md:text-[30px] sm:text-[50px] xs:text-[40px] text-[18px] pt-10 pl-2">Popular Restaurants</h2>
            </motion.div>
                <RestaurantCard
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
                name="Mac Donoald's"
                img='src/assets/mac.png'/>
+           </>
 
-
-       </>
-=======
-                   name="Mac Donoald's"
-                   img='src/assets/mac.png'/>
-                </>
->>>>>>> Stashed changes
-=======
-                   name="Mac Donoald's"
-                   img='src/assets/mac.png'/>
-                </>
->>>>>>> Stashed changes
     );
 };
 
