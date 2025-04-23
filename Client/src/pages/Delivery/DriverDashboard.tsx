@@ -6,6 +6,7 @@ import CompletedDeliveryCard from './CompletedDeliveryCard';
 
 interface Order {
   id: string;
+  orderId?: string;
   status: string;
   destination: string;
   deliveryDate?: string;
@@ -14,6 +15,8 @@ interface Order {
 const DriverDashboard: React.FC = () => {
   const [location, setLocation] = useState<[number, number] | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const navigate = useNavigate();
 
   const driverId = 'driver132'; 
@@ -34,7 +37,6 @@ const DriverDashboard: React.FC = () => {
         const data = await res.json();
         
         // Process the data to ensure delivery dates are available
-        // In a real scenario, this would come from your API
         const processedOrders = data.map((order: any) => ({
           ...order,
           // If your API returns dates, use those. Otherwise, we're adding mock dates for demonstration
@@ -42,6 +44,7 @@ const DriverDashboard: React.FC = () => {
         }));
         
         setOrders(processedOrders);
+        setFilteredOrders(processedOrders);
       } catch (error) {
         console.error('Error fetching deliveries:', error);
       }
@@ -49,6 +52,23 @@ const DriverDashboard: React.FC = () => {
 
     fetchCompletedDeliveries();
   }, []);
+
+  // Filter orders whenever searchTerm changes
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredOrders(orders);
+    } else {
+      const filtered = orders.filter(order => {
+        const displayId = order.orderId || order.id;
+        return displayId.toLowerCase().includes(searchTerm.toLowerCase());
+      });
+      setFilteredOrders(filtered);
+    }
+  }, [searchTerm, orders]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -135,24 +155,45 @@ const DriverDashboard: React.FC = () => {
           <h2 className="text-lg font-semibold text-orange-500">
             Completed Deliveries
           </h2>
-          <span className="bg-orange-500 text-white text-xs font-medium px-3 py-1 rounded-full">
-            {orders.length} total
-          </span>
+          
+          <div className="flex items-center space-x-4">
+            {/* Search Bar - Now on the right side */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                className="block w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                placeholder="Search by Order ID"
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
+            </div>
+            
+            <span className="bg-orange-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+              {filteredOrders.length} of {orders.length} total
+            </span>
+          </div>
         </div>
         
-        {orders.length === 0 ? (
+        {filteredOrders.length === 0 ? (
           <div className="bg-gray-100 p-8 rounded-lg text-center">
             <div className="inline-flex rounded-full bg-gray-200 p-4 mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
             </div>
-            <p className="text-gray-500">No completed deliveries yet.</p>
+            <p className="text-gray-500">
+              {searchTerm ? "No deliveries match your search." : "No completed deliveries yet."}
+            </p>
           </div>
         ) : (
           <div className="relative">
             <div className="flex overflow-x-auto pb-2 space-x-4 scrollbar-thin scrollbar-thumb-orange-500 scrollbar-track-gray-100">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <CompletedDeliveryCard key={order.id} order={order} />
               ))}
             </div>
