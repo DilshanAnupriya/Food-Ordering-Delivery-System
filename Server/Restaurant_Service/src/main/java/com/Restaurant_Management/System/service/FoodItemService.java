@@ -7,6 +7,8 @@ import com.Restaurant_Management.System.dto.response.RestaurantResponseDto;
 import com.Restaurant_Management.System.dto.response.paginate.FoodItemResponsePaginateDto;
 import com.Restaurant_Management.System.dto.response.paginate.RestaurantResponsePaginateDto;
 
+import java.util.List;
+
 public interface FoodItemService  {
 
     public void foodItemSave(FoodItemsRequestDto dto);
@@ -14,4 +16,5 @@ public interface FoodItemService  {
     public FoodItemResponseDto foodItemFindById(String id);
     public void foodItemDeleteById(String id);
     public FoodItemResponsePaginateDto findAllFoodItem(String searchText, int page, int size);
+    public List<String> getAllCategories();
 }

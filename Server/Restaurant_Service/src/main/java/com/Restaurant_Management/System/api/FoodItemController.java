@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/v1/foods")
 @RequiredArgsConstructor
@@ -90,5 +92,17 @@ public class FoodItemController {
         );
     }
 
+    @GetMapping("/categories")
+    public  ResponseEntity<StandardResponseDto> getAllCategories(){
+        return new ResponseEntity<>(
+
+                com.Restaurant_Management.System.util.StandardResponseDto.builder()
+                        .code(200)
+                        .message("Food Categories")
+                        .data(foodItemService.getAllCategories())
+                        .build(),
+                HttpStatus.OK
+        );
+    }
 
 }

@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -73,6 +74,11 @@ public class FoodItemServiceImpl implements FoodItemService {
                         .map(this::toFoodItemResponseDto)
                         .collect(Collectors.toList()))
                 .build();
+    }
+
+    @Override
+    public List<String> getAllCategories() {
+        return foodItemRepo.findAllCategories();
     }
 
 
