@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
+import CompletedDeliveryCard from './CompletedDeliveryCard';
 
 interface Order {
   id: string;
   status: string;
   destination: string;
+  deliveryDate?: string;
 }
 
 const DriverDashboard: React.FC = () => {
@@ -14,7 +16,7 @@ const DriverDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const navigate = useNavigate();
 
-  const driverId = 'driver12'; 
+  const driverId = 'driver132'; 
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -30,7 +32,16 @@ const DriverDashboard: React.FC = () => {
       try {
         const res = await fetch(`http://localhost:8082/api/v1/delivery/completed-deliveries/${driverId}`);
         const data = await res.json();
-        setOrders(data);
+        
+        // Process the data to ensure delivery dates are available
+        // In a real scenario, this would come from your API
+        const processedOrders = data.map((order: any) => ({
+          ...order,
+          // If your API returns dates, use those. Otherwise, we're adding mock dates for demonstration
+          deliveryDate: order.deliveryDate || order.completedAt || new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
+        }));
+        
+        setOrders(processedOrders);
       } catch (error) {
         console.error('Error fetching deliveries:', error);
       }
@@ -117,30 +128,38 @@ const DriverDashboard: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Deliveries Summary */}
-      <div
-        className="bg-white p-5 rounded-lg shadow-md text-white"
-      >
-        <h2 className="text-lg font-semibold mb-4 text-orange-500">
-          Completed Deliveries
-        </h2>
+      
+      {/* Deliveries Summary - Horizontal Scrollable */}
+      <div className="bg-white p-5 rounded-lg shadow-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-orange-500">
+            Completed Deliveries
+          </h2>
+          <span className="bg-orange-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+            {orders.length} total
+          </span>
+        </div>
+        
         {orders.length === 0 ? (
-          <p>No completed deliveries yet.</p>
+          <div className="bg-gray-100 p-8 rounded-lg text-center">
+            <div className="inline-flex rounded-full bg-gray-200 p-4 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+            </div>
+            <p className="text-gray-500">No completed deliveries yet.</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {orders.map((order) => (
-              <div
-                key={order.id}
-                className="p-4 bg-white text-gray-800 rounded-lg border-2 border-yellow-400 shadow-md"
-              >
-                <p className="font-bold">Order ID: {order.id}</p>
-                <p className="text-lg">{order.destination}</p>
-                <p className="text-green-500 font-semibold">
-                  {order.status}
-                </p>
-              </div>
-            ))}
+          <div className="relative">
+            <div className="flex overflow-x-auto pb-2 space-x-4 scrollbar-thin scrollbar-thumb-orange-500 scrollbar-track-gray-100">
+              {orders.map((order) => (
+                <CompletedDeliveryCard key={order.id} order={order} />
+              ))}
+            </div>
+            
+            {/* Optional shadow indicators for scroll */}
+            <div className="absolute top-0 bottom-0 left-0 w-8 bg-gradient-to-r from-white to-transparent pointer-events-none"></div>
+            <div className="absolute top-0 bottom-0 right-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
           </div>
         )}
       </div>
