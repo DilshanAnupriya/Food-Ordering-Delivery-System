@@ -8,6 +8,8 @@ import Discount from "../components/layout/Discount.tsx";
 import Category from "../components/layout/Category.tsx";
 import Poster from "../components/layout/Poster.tsx";
 import PartnerCard from "../components/layout/PartnerCard.tsx";
+import FAQContent from "../components/layout/AboutUs.tsx";
+import StatsDisplay from "../components/layout/StatsDisplay.tsx";
 
 function Home() {
     return (
@@ -20,6 +22,8 @@ function Home() {
             <Hero1 />
             <Poster/>
             <PartnerCard/>
+            <FAQContent/>
+            <StatsDisplay/>
             <Footer/>
 
         </>
