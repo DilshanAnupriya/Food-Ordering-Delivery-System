@@ -19,7 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/orders")
-@CrossOrigin(origins = "*") // For development, restrict this in production
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class OrderController {
 
     @Autowired
