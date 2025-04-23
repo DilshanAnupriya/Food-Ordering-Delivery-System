@@ -2,9 +2,10 @@ import React from 'react';
 
 interface Order {
   id: string;
+  orderId?: string; // Adding an optional orderId field from database
   status: string;
   destination: string;
-  deliveryDate?: string; // Optional date field
+  deliveryDate?: string;
 }
 
 const CompletedDeliveryCard: React.FC<{ order: Order }> = ({ order }) => {
@@ -17,17 +18,20 @@ const CompletedDeliveryCard: React.FC<{ order: Order }> = ({ order }) => {
       })
     : 'Date not available';
 
+  // Use orderId from database if available, otherwise fallback to id
+  const displayOrderId = order.orderId || order.id;
+
   return (
     <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg shadow-md overflow-hidden flex-shrink-0 w-64 transform hover:scale-105 transition-transform duration-300">
       <div className="bg-yellow-500 h-2 w-full"></div>
       <div className="p-4">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-xs font-semibold text-gray-500">Order ID</span>
+         
           <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs font-medium">
             {order.status}
           </span>
         </div>
-        <p className="font-bold text-gray-800 mb-2 truncate">{order.id}</p>
+        <p className="font-bold text-gray-800 mb-2 truncate">{displayOrderId}</p>
         
         {/* Delivery Date Section */}
         <div className="flex items-center mb-2 border-b border-gray-200 pb-2">
