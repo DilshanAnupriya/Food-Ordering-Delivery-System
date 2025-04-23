@@ -17,6 +17,7 @@ const DriverDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const driverId = 'driver132'; 
@@ -72,6 +73,56 @@ const DriverDashboard: React.FC = () => {
 
   const handleNavigate = (path: string) => {
     navigate(path);
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      setIsDeleting(true);
+      
+      // Find the order to get both id and orderId
+      const orderToDelete = orders.find(o => o.id === orderId);
+      if (!orderToDelete) return;
+      
+      // Use orderId if available, otherwise fall back to id
+      const apiOrderId = orderToDelete.orderId || orderToDelete.id;
+      
+      // Log the URL for debugging
+      const deleteUrl = `http://localhost:8082/api/v1/delivery/completed-deliveries/order/${apiOrderId}`;
+      console.log('Attempting to delete order at URL:', deleteUrl);
+      
+      // Make API call to delete the order
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add any other required headers here
+        },
+        // Add this if your API expects a request body
+        // body: JSON.stringify({ orderId: apiOrderId }),
+      });
+      
+      console.log('Delete response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Error response data:', errorData);
+        throw new Error(`Server returned ${response.status}: ${errorData.message || response.statusText}`);
+      }
+      
+      // Only update the state if the API call was successful
+      setOrders(orders.filter(o => o.id !== orderId));
+      setFilteredOrders(filteredOrders.filter(o => o.id !== orderId));
+      
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      if (error instanceof Error) {
+        alert(`Failed to delete the order: ${error.message}. Check console for details.`);
+      } else {
+        alert('Failed to delete the order: An unknown error occurred. Check console for details.');
+      }
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // First letter of the driver name for the profile icon
@@ -179,6 +230,15 @@ const DriverDashboard: React.FC = () => {
           </div>
         </div>
         
+        {isDeleting && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white p-4 rounded-lg shadow-lg flex items-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-orange-500 mr-3"></div>
+              <p>Deleting order...</p>
+            </div>
+          </div>
+        )}
+        
         {filteredOrders.length === 0 ? (
           <div className="bg-gray-100 p-8 rounded-lg text-center">
             <div className="inline-flex rounded-full bg-gray-200 p-4 mb-4">
@@ -197,10 +257,7 @@ const DriverDashboard: React.FC = () => {
                 <CompletedDeliveryCard 
                   key={order.id} 
                   order={order} 
-                  onDelete={(orderId) => {
-                    setOrders(orders.filter(o => o.id !== orderId));
-                    setFilteredOrders(filteredOrders.filter(o => o.id !== orderId));
-                  }} 
+                  onDelete={handleDeleteOrder} 
                 />
               ))}
             </div>
