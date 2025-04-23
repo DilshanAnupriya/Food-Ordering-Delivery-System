@@ -163,12 +163,17 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
   return (
     <div className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
       {/* Top navigation bar */}
-      <nav className="bg-gradient-to-r from-gray-900 to-gray-800">
+      <nav className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            
+            <div className="flex items-center"></div>
             <div className="hidden md:block">
               <div className="flex items-center space-x-4">
+                <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full flex items-center text-sm">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  Active 
+                </div>
+                <span className="text-gray-600">|</span>
                 <div className="text-white">Order ID: <span className="font-medium">{orderId}</span></div>
               </div>
             </div>
@@ -323,7 +328,7 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
                           color="#3B82F6"
                           weight={4}
                           opacity={0.7}
-                          dashArray="10, 10"
+                          
                         />
                       )}
                     </MapContainer>

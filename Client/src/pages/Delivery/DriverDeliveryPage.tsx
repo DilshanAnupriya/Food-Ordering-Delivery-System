@@ -208,7 +208,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
           {/* Header with gradient background */}
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
             <h1 className="text-2xl font-bold text-white">
-              Driver Delivery Dashboard
+              Driver Delivery Status
             </h1>
             <p className="text-orange-100 mt-1">
               Track and complete your deliveries efficiently
