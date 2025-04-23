@@ -137,4 +137,11 @@ public class DeliveryService {
                 delivery.getDestinationLongitude()
         );
     }
+    @Transactional
+    public void deleteCompletedDeliveryByOrderId(String orderId) {
+        if (!completedDeliveryRepo.existsByOrderId(orderId)) {
+            throw new RuntimeException("Completed delivery with order ID " + orderId + " not found");
+        }
+        completedDeliveryRepo.deleteByOrderId(orderId);
+    }
 }

@@ -71,5 +71,10 @@ public class DeliveryController {
         DeliveryTrackingDTO delivery = deliveryService.getDeliveryByOrderId(orderId);
         return ResponseEntity.ok(delivery);
     }
+    @DeleteMapping("/completed-deliveries/order/{orderId}")
+    public ResponseEntity<String> deleteCompletedDeliveryByOrderId(@PathVariable String orderId) {
+        deliveryService.deleteCompletedDeliveryByOrderId(orderId);
+        return ResponseEntity.ok("Completed delivery for order " + orderId + " deleted successfully");
+    }
 
 }
