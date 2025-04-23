@@ -8,9 +8,14 @@ interface Order {
   deliveryDate?: string;
 }
 
-const CompletedDeliveryCard: React.FC<{ order: Order }> = ({ order }) => {
+interface CompletedDeliveryCardProps {
+  order: Order;
+  onDelete: (orderId: string) => void;
+}
+
+const CompletedDeliveryCard: React.FC<CompletedDeliveryCardProps> = ({ order, onDelete }) => {
   // Format date nicely or use placeholder if missing
-  const formattedDate = order.deliveryDate 
+  const formattedDate = order.deliveryDate
     ? new Date(order.deliveryDate).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -21,15 +26,27 @@ const CompletedDeliveryCard: React.FC<{ order: Order }> = ({ order }) => {
   // Use orderId from database if available, otherwise fallback to id
   const displayOrderId = order.orderId || order.id;
 
+  const handleDelete = () => {
+    onDelete(order.id);
+  };
+
   return (
     <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg shadow-md overflow-hidden flex-shrink-0 w-64 transform hover:scale-105 transition-transform duration-300">
       <div className="bg-yellow-500 h-2 w-full"></div>
       <div className="p-4">
         <div className="flex justify-between items-center mb-2">
-         
           <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs font-medium">
             {order.status}
           </span>
+          <button 
+            onClick={handleDelete}
+            className="text-red-500 hover:text-red-700 transition-colors"
+            aria-label="Delete delivery"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
         <p className="font-bold text-gray-800 mb-2 truncate">{displayOrderId}</p>
         
@@ -45,8 +62,6 @@ const CompletedDeliveryCard: React.FC<{ order: Order }> = ({ order }) => {
             <p className="text-xs font-medium text-gray-800">{formattedDate}</p>
           </div>
         </div>
-        
-        
       </div>
     </div>
   );

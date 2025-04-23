@@ -194,7 +194,14 @@ const DriverDashboard: React.FC = () => {
           <div className="relative">
             <div className="flex overflow-x-auto pb-2 space-x-4 scrollbar-thin scrollbar-thumb-orange-500 scrollbar-track-gray-100">
               {filteredOrders.map((order) => (
-                <CompletedDeliveryCard key={order.id} order={order} />
+                <CompletedDeliveryCard 
+                  key={order.id} 
+                  order={order} 
+                  onDelete={(orderId) => {
+                    setOrders(orders.filter(o => o.id !== orderId));
+                    setFilteredOrders(filteredOrders.filter(o => o.id !== orderId));
+                  }} 
+                />
               ))}
             </div>
             
