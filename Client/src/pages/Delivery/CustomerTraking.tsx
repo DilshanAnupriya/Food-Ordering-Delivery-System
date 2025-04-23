@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -31,13 +31,27 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Custom icons for different markers (removed unused function)
+// Custom icons for different markers
+const createCustomIcon = (color: string) => {
+  return new L.Icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+};
+
+// Create our specific icons
+const driverIcon = createCustomIcon('blue');
+const customerIcon = createCustomIcon('green');
 
 interface CustomerTrackingPageProps {
   orderId?: string;
 }
 
-const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = 'ORD526' }) => {
+const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = 'ORD528' }) => {
   const [customerLocation, setCustomerLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<DeliveryTracking | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -147,14 +161,12 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
   }
 
   return (
-    <div className="bg-gradient-to-r from-blue-900 to-blue-800 min-h-screen">
+    <div className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
       {/* Top navigation bar */}
-      <nav className="bg-gradient-to-r from-blue-900 to-blue-800">
+      <nav className="bg-gradient-to-r from-gray-900 to-gray-800">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <span className="text-white text-xl font-semibold">Delivery Tracker</span>
-            </div>
+            
             <div className="hidden md:block">
               <div className="flex items-center space-x-4">
                 <div className="text-white">Order ID: <span className="font-medium">{orderId}</span></div>
@@ -168,7 +180,8 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           {/* Header with gradient background */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
+          
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
             <h1 className="text-2xl font-bold text-white">
               Track Your Delivery
             </h1>
@@ -279,18 +292,39 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
                     >
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                       
-                      {/* Customer marker */}
+                      {/* Customer marker with green icon */}
                       {isValidCoords(delivery.customerLatitude, delivery.customerLongitude) && (
-                        <Marker position={[delivery.customerLatitude, delivery.customerLongitude]}>
+                        <Marker 
+                          position={[delivery.customerLatitude, delivery.customerLongitude]}
+                          icon={customerIcon}
+                        >
                           <Popup>Your Location</Popup>
                         </Marker>
                       )}
                       
-                      {/* Driver marker */}
+                      {/* Driver marker with blue icon */}
                       {isValidCoords(delivery.driverLatitude, delivery.driverLongitude) && (
-                        <Marker position={[delivery.driverLatitude, delivery.driverLongitude]}>
+                        <Marker 
+                          position={[delivery.driverLatitude, delivery.driverLongitude]}
+                          icon={driverIcon}
+                        >
                           <Popup>Driver: {delivery.driverName}</Popup>
                         </Marker>
+                      )}
+
+                      {/* Polyline between driver and customer */}
+                      {isValidCoords(delivery.driverLatitude, delivery.driverLongitude) && 
+                       isValidCoords(delivery.customerLatitude, delivery.customerLongitude) && (
+                        <Polyline 
+                          positions={[
+                            [delivery.driverLatitude, delivery.driverLongitude],
+                            [delivery.customerLatitude, delivery.customerLongitude]
+                          ]}
+                          color="#3B82F6"
+                          weight={4}
+                          opacity={0.7}
+                          dashArray="10, 10"
+                        />
                       )}
                     </MapContainer>
                   </div>
@@ -298,17 +332,17 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
               )}
               
               {/* Delivery info card */}
-              <div className="p-5 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+              <div className="p-5 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200">
                 <div className="flex items-start">
-                  <div className="bg-blue-100 rounded-full p-2 mr-4">
-                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <div className="bg-orange-100 rounded-full p-2 mr-4">
+                  <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-blue-800 mb-2">Delivery Information</h3>
-                    <p className="text-blue-700">
-                      Your delivery is being tracked in real-time. The map shows both your location and your driver's current location. The page will automatically refresh every few seconds to update the driver's position.
+                    <h3 className="text-lg font-semibold text-orange-800 mb-2">Delivery Information</h3>
+                    <p className="text-orange-700">
+                      Your delivery is being tracked in real-time. The map shows both your location and your driver's current location, connected by a route line. The page will automatically refresh every few seconds to update the driver's position.
                     </p>
                   </div>
                 </div>

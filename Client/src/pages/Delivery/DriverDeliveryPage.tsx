@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -23,6 +23,34 @@ export interface Delivery {
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Custom icons
+const customerIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const shopIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const driverIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -306,16 +334,45 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                       className="h-full w-full"
                     >
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      <Marker position={[delivery.shopLatitude, delivery.shopLongitude]}>
+                      
+                      {/* Shop Marker */}
+                      <Marker 
+                        position={[delivery.shopLatitude, delivery.shopLongitude]} 
+                        icon={shopIcon}
+                      >
                         <Popup>Shop Location</Popup>
                       </Marker>
-                      <Marker position={[delivery.destinationLatitude, delivery.destinationLongitude]}>
+                      
+                      {/* Customer Marker */}
+                      <Marker 
+                        position={[delivery.destinationLatitude, delivery.destinationLongitude]} 
+                        icon={customerIcon}
+                      >
                         <Popup>Customer (Delivery Destination)</Popup>
                       </Marker>
+                      
+                      {/* Driver Marker */}
                       {location && (
-                        <Marker position={[location.latitude, location.longitude]}>
+                        <Marker 
+                          position={[location.latitude, location.longitude]} 
+                          icon={driverIcon}
+                        >
                           <Popup>Driver Location</Popup>
                         </Marker>
+                      )}
+                      
+                      {/* Polyline connecting the points */}
+                      {location && (
+                        <Polyline
+                          positions={[
+                            [delivery.shopLatitude, delivery.shopLongitude],
+                            [location.latitude, location.longitude],
+                            [delivery.destinationLatitude, delivery.destinationLongitude]
+                          ]}
+                          color="orange"
+                          weight={3}
+                          opacity={0.7}
+                        />
                       )}
                     </MapContainer>
                   </div>
