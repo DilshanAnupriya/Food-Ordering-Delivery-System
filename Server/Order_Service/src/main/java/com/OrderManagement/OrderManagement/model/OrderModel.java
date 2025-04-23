@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
 
+
 @Entity
 @Table(name = "orders")
 @Getter
@@ -36,6 +37,10 @@ public class OrderModel {
 
     @NotNull(message = "Delivery address cannot be null")
     private String deliveryAddress;
+
+    // New geolocation fields
+    private Double latitude;
+    private Double longitude;
 
     @NotNull(message = "Contact phone cannot be null")
     private String contactPhone;
