@@ -35,7 +35,7 @@ const customerIcon = new L.Icon({
 });
 
 const shopIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
   shadowUrl: markerShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
@@ -322,8 +322,18 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                       <span className="font-medium text-gray-700">Delivery Route</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
-                      <span>Live tracking</span>
+                      <div className="flex items-center mr-4">
+                        <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                        <span>Customer</span>
+                      </div>
+                      <div className="flex items-center mr-4">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                        <span>You</span>
+                      </div>
+                      <div className="flex items-center ">
+                        <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                        <span>Shop</span>
+                      </div>
                     </div>
                   </div>
                   <div className="h-96 w-full">
@@ -340,7 +350,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                         position={[delivery.shopLatitude, delivery.shopLongitude]} 
                         icon={shopIcon}
                       >
-                        <Popup>Shop Location</Popup>
+                        <Popup>Resturaent Location</Popup>
                       </Marker>
                       
                       {/* Customer Marker */}
@@ -348,7 +358,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                         position={[delivery.destinationLatitude, delivery.destinationLongitude]} 
                         icon={customerIcon}
                       >
-                        <Popup>Customer (Delivery Destination)</Popup>
+                        <Popup>Customer Location</Popup>
                       </Marker>
                       
                       {/* Driver Marker */}
@@ -357,7 +367,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                           position={[location.latitude, location.longitude]} 
                           icon={driverIcon}
                         >
-                          <Popup>Driver Location</Popup>
+                          <Popup>Your Location</Popup>
                         </Marker>
                       )}
                       
@@ -369,7 +379,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                             [location.latitude, location.longitude],
                             [delivery.destinationLatitude, delivery.destinationLongitude]
                           ]}
-                          color="orange"
+                          color="blue"
                           weight={3}
                           opacity={0.7}
                         />
