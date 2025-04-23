@@ -51,7 +51,7 @@ interface CustomerTrackingPageProps {
   orderId?: string;
 }
 
-const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = 'ORD528' }) => {
+const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = 'ORD529' }) => {
   const [customerLocation, setCustomerLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<DeliveryTracking | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
