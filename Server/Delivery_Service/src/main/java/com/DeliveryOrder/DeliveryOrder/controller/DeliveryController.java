@@ -2,6 +2,7 @@ package com.DeliveryOrder.DeliveryOrder.controller;
 
 import com.DeliveryOrder.DeliveryOrder.model.CompletedDelivery;
 import com.DeliveryOrder.DeliveryOrder.model.Delivery;
+import com.DeliveryOrder.DeliveryOrder.model.DeliveryTrackingDTO;
 import com.DeliveryOrder.DeliveryOrder.model.LocationDTO;
 import com.DeliveryOrder.DeliveryOrder.service.DeliveryService;
 import lombok.RequiredArgsConstructor;
@@ -64,4 +65,11 @@ public class DeliveryController {
         List<CompletedDelivery> deliveries = deliveryService.getCompletedDeliveriesByDriver(driverId);
         return ResponseEntity.ok(deliveries);
     }
+    @GetMapping("/{orderId}")
+    public ResponseEntity<DeliveryTrackingDTO> getDeliveryByOrderId(@PathVariable String orderId) {
+        // You need to implement this method in your service
+        DeliveryTrackingDTO delivery = deliveryService.getDeliveryByOrderId(orderId);
+        return ResponseEntity.ok(delivery);
+    }
+
 }

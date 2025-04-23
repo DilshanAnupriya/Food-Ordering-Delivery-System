@@ -1,9 +1,6 @@
 package com.DeliveryOrder.DeliveryOrder.service;
 
-import com.DeliveryOrder.DeliveryOrder.model.CompletedDelivery;
-import com.DeliveryOrder.DeliveryOrder.model.Delivery;
-import com.DeliveryOrder.DeliveryOrder.model.DriverLocation;
-import com.DeliveryOrder.DeliveryOrder.model.LocationDTO;
+import com.DeliveryOrder.DeliveryOrder.model.*;
 import com.DeliveryOrder.DeliveryOrder.repository.CompletedDeliveryRepository;
 import com.DeliveryOrder.DeliveryOrder.repository.DeliveryRepository;
 import com.DeliveryOrder.DeliveryOrder.repository.DriverLocationRepository;
@@ -111,5 +108,33 @@ public class DeliveryService {
 
     public List<CompletedDelivery> getCompletedDeliveriesByDriver(String driverId) {
         return completedDeliveryRepo.findByDriverId(driverId);
+    }
+
+    public DeliveryTrackingDTO getDeliveryByOrderId(String orderId) {
+        Delivery delivery = deliveryRepo.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("No active delivery found for this order ID"));
+
+        // Map your Delivery entity to a DeliveryTracking DTO that matches the frontend needs
+        return mapToDeliveryTracking(delivery);
+    }
+
+    // Helper method to map the entity to the frontend DTO
+    private DeliveryTrackingDTO mapToDeliveryTracking(Delivery delivery) {
+        // You might also need to fetch driver name from a user service if available
+        String driverName = "Driver " + delivery.getDriverId().substring(0, 4); // Placeholder
+
+        // Calculate estimated arrival time (you could add logic for this)
+        LocalDateTime estimatedArrival = LocalDateTime.now().plusMinutes(15); // Placeholder
+
+        return new DeliveryTrackingDTO(
+                delivery.getOrderId(),
+                false, // isDelivered
+                estimatedArrival.toString(),
+                driverName,
+                delivery.getDriverLatitude(),
+                delivery.getDriverLongitude(),
+                delivery.getDestinationLatitude(),
+                delivery.getDestinationLongitude()
+        );
     }
 }
