@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { textVariant } from "../../util/motion.ts";
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 interface TrendingRestaurant {
     restaurantName: string;
@@ -88,4 +89,7 @@ const TrendingRestaurants = () => {
     );
 };
 
-export default TrendingRestaurants;
+
+const Hero1 = SectionWrapper(TrendingRestaurants);
+
+export default Hero1;

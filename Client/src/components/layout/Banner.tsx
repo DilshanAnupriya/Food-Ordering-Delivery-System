@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 const Banner = () => {
   return (
@@ -54,4 +55,8 @@ const Banner = () => {
   );
 };
 
-export default Banner;
+
+const BannerWrapper = SectionWrapper(Banner);
+
+export default BannerWrapper;
+

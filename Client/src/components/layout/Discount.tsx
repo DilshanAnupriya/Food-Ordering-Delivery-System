@@ -2,6 +2,7 @@
 import { textVariant } from "../../util/motion.ts";
 import { motion } from 'framer-motion';
 import {Link} from "react-router-dom";
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 
 const Nav = ()=>{
@@ -98,4 +99,7 @@ const Discount = () => {
     );
 };
 
-export default Discount;
+
+const DiscountWrapper = SectionWrapper(Discount);
+
+export default DiscountWrapper;
