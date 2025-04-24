@@ -54,7 +54,7 @@ const Navbar = () => {
         <div className="flex items-center pl-5 ">
 
           <Link 
-            to="/signup" 
+            to="/register" 
             className="px-4 py-2 bg-[#03081F] text-white rounded-full hover:bg-orange-500 transition-colors text-[15px]"
           >
             Sign Up
