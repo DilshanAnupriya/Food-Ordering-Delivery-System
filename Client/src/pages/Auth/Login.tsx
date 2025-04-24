@@ -1,33 +1,34 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/auth/auth';
+import { useAuth } from '../../services/auth/authContext';
 
 const Login = () => {
     const navigate = useNavigate();
+    const { checkAuthStatus } = useAuth();
     const [formData, setFormData] = useState({
         username: '',
         password: ''
     });
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsLoading(true);
         setError('');
-        setIsSubmitting(true);
         
         try {
             await authService.login({
                 username: formData.username.trim(),
                 password: formData.password
             });
-            
-            // Redirect to home page on success
-            navigate('/');
+            checkAuthStatus(); // Update auth context after successful login
+            navigate('/'); // Navigate to home page
         } catch (err: any) {
             setError(err.message || 'Login failed. Please try again.');
         } finally {
-            setIsSubmitting(false);
+            setIsLoading(false);
         }
     };
 
@@ -101,10 +102,10 @@ const Login = () => {
 
                         <button
                             type="submit"
-                            disabled={isSubmitting}
+                            disabled={isLoading}
                             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-orange-300"
                         >
-                            {isSubmitting ? 'Signing in...' : 'Sign in'}
+                            {isLoading ? 'Signing in...' : 'Sign in'}
                         </button>
                     </form>
                 </div>
