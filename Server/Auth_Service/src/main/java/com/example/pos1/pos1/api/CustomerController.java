@@ -21,7 +21,7 @@ public class CustomerController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     public ResponseEntity<StandardResponseDto> addCustomer(
-           @RequestBody CustomerDto dto
+            @RequestBody CustomerDto dto
     ) {
         customerService.customerSave(dto);
         return new ResponseEntity<>(

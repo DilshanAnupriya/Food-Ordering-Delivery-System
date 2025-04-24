@@ -14,7 +14,7 @@ const ContactUs = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const response = await axios.post('http://localhost:8080/api/contact', formData);
+            const response = await axios.post('http://localhost:8082/api/v1/contactus/create', formData);
             setMessage('Thank you for your message! We will get back to you soon.');
             setFormData({ name: '', email: '', comment: '' });
         } catch (error) {
