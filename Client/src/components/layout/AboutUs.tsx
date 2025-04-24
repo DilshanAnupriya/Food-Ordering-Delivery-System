@@ -1,6 +1,7 @@
 import  {JSX} from "react";
 
 import { useState } from 'react';
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 interface CardContent {
     title: string;
@@ -13,7 +14,7 @@ interface TabData {
     cards: CardContent[];
 }
 
-export default function FAQContent() {
+ function FAQContent() {
     const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
 
     const tabsData: TabData[] = [
@@ -294,3 +295,7 @@ export default function FAQContent() {
         </div>
     );
 }
+const FAQContentWrapper = SectionWrapper(FAQContent);
+
+export default FAQContentWrapper;
+

@@ -1,6 +1,7 @@
 import {motion} from "framer-motion";
 import {textVariant} from "../../util/motion.ts";
 import {useEffect, useState} from "react";
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 interface Category {
     name: string;
@@ -109,4 +110,8 @@ const Category = () => {
     )
 }
 
-export default Category
+
+const CategoryWrapper = SectionWrapper(Category);
+
+export default CategoryWrapper;
+

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 interface StatProps {
     value: number;
@@ -58,7 +59,7 @@ const StatCounter: React.FC<StatProps> = ({ value, label, suffix = '+', duration
     );
 };
 
-const StatsDisplay: React.FC = () => {
+const StatsDisplayBar: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
     const statsRef = useRef<HTMLDivElement>(null);
 
@@ -105,5 +106,8 @@ const StatsDisplay: React.FC = () => {
         </div>
     );
 };
+
+
+const StatsDisplay = SectionWrapper(StatsDisplayBar);
 
 export default StatsDisplay;

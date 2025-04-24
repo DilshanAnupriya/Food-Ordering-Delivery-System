@@ -1,5 +1,6 @@
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
-const SubNav = () => {
+const SubNavBar = () => {
     return (
         <nav className="bg-[#FAFAFA]  pl-6 py-0">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -41,5 +42,8 @@ const SubNav = () => {
         </nav>
     );
 };
+
+
+const SubNav = SectionWrapper(SubNavBar);
 
 export default SubNav;
