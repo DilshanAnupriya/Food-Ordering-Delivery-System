@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import Footer from "../../components/layout/Footer";
+import NavigationBar from "../../components/layout/Navbar";
+import SubNav from "../../components/layout/SubNav";
+
 
 export interface Location {
   latitude: number;
@@ -111,19 +115,7 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
     return () => clearInterval(intervalId);
   }, [orderId, customerLocation]);
 
-  // Calculate estimated time remaining
-  const getTimeRemaining = () => {
-    if (!delivery || !delivery.estimatedArrival) return 'Calculating...';
-    
-    const arrivalTime = new Date(delivery.estimatedArrival).getTime();
-    const now = new Date().getTime();
-    const diffMs = arrivalTime - now;
-    
-    if (diffMs <= 0) return 'Arriving now';
-    
-    const diffMins = Math.floor(diffMs / 60000);
-    return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'}`;
-  };
+ 
 
   const isValidCoords = (lat: number, lng: number): boolean =>
     Boolean(
@@ -161,10 +153,16 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
   }
 
   return (
-    <div className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
+    <div className="bg-gradient-to-r white relative overflow-hidden">
+      <div className="w-full">
+          <SubNav />
+       </div>
+       <div className="w-full">
+          <NavigationBar />
+       </div>
       {/* Top navigation bar */}
-      <nav className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4">
+      <nav className="max-w-7xl bg-black mx-auto px-4 py-1">
+      <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center"></div>
             <div className="hidden md:block">
@@ -183,7 +181,7 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="bg-orange-50 rounded-xl shadow-md overflow-hidden">
           {/* Header with gradient background */}
           
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
@@ -220,15 +218,7 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
                         <span className="font-medium text-gray-700 mr-2">Driver:</span>
                         <span className="text-gray-900">{delivery.driverName}</span>
                       </div>
-                      <div className="flex items-center">
-                        <div className="bg-gray-100 rounded-full p-1 mr-3">
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <span className="font-medium text-gray-700 mr-2">Estimated arrival:</span>
-                        <span className="text-gray-900">{getTimeRemaining()}</span>
-                      </div>
+                     
                       <div className="flex items-center">
                         <div className="bg-gray-100 rounded-full p-1 mr-3">
                           <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -372,6 +362,7 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

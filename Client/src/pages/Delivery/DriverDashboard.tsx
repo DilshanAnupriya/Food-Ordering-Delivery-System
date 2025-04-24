@@ -3,6 +3,9 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import CompletedDeliveryCard from './CompletedDeliveryCard';
+import Footer from "../../components/layout/Footer";
+import NavigationBar from "../../components/layout/Navbar";
+import SubNav from "../../components/layout/SubNav";
 
 interface Order {
   id: string;
@@ -78,12 +81,22 @@ const DriverDashboard: React.FC = () => {
   const profileInitial = "J";
 
   return (
-    <div className="min-h-screen bg-gray-800 p-6">
+    
+    <div>
+      <div className="w-full">
+          <SubNav />
+       </div>
+       <div className="w-full">
+          <NavigationBar />
+       </div>
+       <div></div>
+    <div className="max-w-7xl mx-auto px-4 py-8" >
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between  h-20 w- bg-black items-center mb-7">
+        
         <div className="flex items-center">
           {/* Attractive Profile Icon */}
-          <div className="relative">
+          <div className="relative ml-4" >
             <div className="h-16 w-16 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg border-2 border-white">
               <span className="text-2xl font-bold text-white">{profileInitial}</span>
             </div>
@@ -91,7 +104,7 @@ const DriverDashboard: React.FC = () => {
               <span className="text-white text-xs">✓</span>
             </div>
           </div>
-          <div className="ml-4 flex flex-col items-start space-y-1">
+          <div className="ml-4 flex flex-col  b items-start space-y-1">
             <h1 className="text-2xl font-bold text-white">
               John Doe
             </h1>
@@ -101,13 +114,8 @@ const DriverDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex space-x-4">
-          <button
-            className="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition-colors"
-            onClick={() => handleNavigate('/driver/home')}
-          >
-            Home
-          </button>
+        <div className="flex space-x-4 bg">
+          
           <button
             className="bg-orange-500 text-white border border-yellow-500 px-4 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition-colors"
             onClick={() => handleNavigate('/driver/profile')}
@@ -115,7 +123,7 @@ const DriverDashboard: React.FC = () => {
             Profile
           </button>
           <button
-            className="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition-colors"
+            className="bg-orange-500 text-white px-4 py-2 rounded-md mr-4 hover:bg-yellow-400 hover:text-black transition-colors"
             onClick={() => handleNavigate('/pages/Delivery/DeliveryHomePage')}
           >
             Deliveries
@@ -125,7 +133,7 @@ const DriverDashboard: React.FC = () => {
 
       {/* Map Section */}
       <div
-        className="bg-white p-5 rounded-lg mb-6 shadow-md text-white"
+        className="bg-orange-50 p-5 rounded-lg mb-6 shadow-md text-white"
       >
         <h2 className="text-lg font-semibold mb-4 text-orange-500">
           Current Location
@@ -150,7 +158,7 @@ const DriverDashboard: React.FC = () => {
       </div>
       
       {/* Deliveries Summary - Horizontal Scrollable */}
-      <div className="bg-white p-5 rounded-lg shadow-md">
+      <div className="bg-orange-50 p-5 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-orange-500">
             Completed Deliveries
@@ -207,7 +215,12 @@ const DriverDashboard: React.FC = () => {
           </div>
         )}
       </div>
+   
+   
     </div>
+      <Footer />
+      </div>
+     
   );
 };
 

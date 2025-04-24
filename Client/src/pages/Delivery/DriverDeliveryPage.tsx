@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import Footer from "../../components/layout/Footer";
+import NavigationBar from "../../components/layout/Navbar";
+import SubNav from "../../components/layout/SubNav";
 
 export interface Location {
   latitude: number;
@@ -156,6 +159,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
 
   if (error) {
     return (
+      
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
           <div className="flex justify-center mb-6">
@@ -182,9 +186,19 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
   }
 
   return (
-    <div className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
-      {/* Top navigation bar */}
-      <nav className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden">
+    
+    
+   
+    <div className="bg-gradient-to-r from-white to-white w-full relative overflow-hidden">
+       <div className="w-full">
+          <SubNav />
+       </div>
+       <div className="w-full">
+          <NavigationBar />
+       </div>
+  
+    
+       <nav className="max-w-7xl bg-black mx-auto px-4 py-1">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center"></div>
@@ -204,7 +218,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="bg-orange-50 rounded-xl shadow-md overflow-hidden">
           {/* Header with gradient background */}
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
             <h1 className="text-2xl font-bold text-white">
@@ -437,8 +451,11 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
             </div>
           )}
         </div>
+       
       </main>
+      <Footer />
     </div>
+    
   );
 };
 
