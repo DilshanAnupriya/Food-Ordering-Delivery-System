@@ -5,6 +5,9 @@ import Checkout from './pages/Payment/Checkout';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import { AuthProvider } from './services/auth/authContext';
+import Restaurants from './pages/Restaurant/Restaurants';
+import Restaurant from './pages/Restaurant/Restaurant';
+import RestaurantCreate from './pages/Restaurant/RestaurantCreate';
 
 function App() {
     return (
@@ -12,10 +15,13 @@ function App() {
             <Router>
                 <Routes>
                     <Route path="/contact" element={<ContactUs />} />
-                    <Route path="/" element={<Home/>} />
+                    <Route path="/" element={<Home />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/restaurants" element={<Restaurants />} />
+                    <Route path="/restaurant/:id" element={<Restaurant />} />
+                    <Route path="/restaurant/create" element={<RestaurantCreate />} />
                 </Routes>
             </Router>
         </AuthProvider>

@@ -1,4 +1,5 @@
 import React from "react";
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 interface JodCardProps {
     img: string;
@@ -33,7 +34,7 @@ const JobCard: React.FC<JodCardProps> = ({img,headTxt,subheadTxt})=>{
 }
 
 
-const PartnerCard = () => {
+const PartnerCardSection = () => {
     return (
         <>
             <div className='flex  gap-5'>
@@ -48,5 +49,8 @@ const PartnerCard = () => {
         </>
     )
 }
+
+
+const PartnerCard = SectionWrapper(PartnerCardSection);
 
 export default PartnerCard;

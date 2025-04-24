@@ -1,6 +1,7 @@
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 
-const Poster = () => {
+const PosterSection = () => {
     return (
         <>
             <div className="mt-15">
@@ -13,5 +14,8 @@ const Poster = () => {
         </>
     )
 }
+
+
+const Poster = SectionWrapper(PosterSection);
 
 export default Poster;

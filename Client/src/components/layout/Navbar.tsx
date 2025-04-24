@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../services/auth/authContext';
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
-const Navbar = () => {
+const ManiNavbar = () => {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -14,7 +15,7 @@ const Navbar = () => {
     <nav className="pl-1 py-4">
       <div className="max-w-7xl mx-auto flex items-center">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
+        <Link to="/order" className="flex items-center">
           <span className="text-4xl font-bold text-orange-500">Order●</span>
         </Link>
         <div className="flex items-center justify-end w-full">
@@ -33,7 +34,7 @@ const Navbar = () => {
               Browse Menu
             </Link>
             <Link 
-              to="/contact" 
+              to="/restaurants"
               className="text-gray-700 hover:text-orange-500 transition-colors text-[14px]"
             >
               Restaurants
@@ -99,5 +100,7 @@ const Navbar = () => {
     </nav>
   );
 };
+
+const Navbar = SectionWrapper(ManiNavbar);
 
 export default Navbar;
