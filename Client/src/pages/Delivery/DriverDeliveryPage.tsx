@@ -63,7 +63,7 @@ interface DriverDeliveryPageProps {
   driverId?: string;
 }
 
-const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver12' }) => {
+const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver132' }) => {
   const [location, setLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
