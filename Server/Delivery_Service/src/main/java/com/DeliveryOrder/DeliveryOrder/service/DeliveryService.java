@@ -1,9 +1,6 @@
 package com.DeliveryOrder.DeliveryOrder.service;
 
-import com.DeliveryOrder.DeliveryOrder.model.CompletedDelivery;
-import com.DeliveryOrder.DeliveryOrder.model.Delivery;
-import com.DeliveryOrder.DeliveryOrder.model.DriverLocation;
-import com.DeliveryOrder.DeliveryOrder.model.LocationDTO;
+import com.DeliveryOrder.DeliveryOrder.model.*;
 import com.DeliveryOrder.DeliveryOrder.repository.CompletedDeliveryRepository;
 import com.DeliveryOrder.DeliveryOrder.repository.DeliveryRepository;
 import com.DeliveryOrder.DeliveryOrder.repository.DriverLocationRepository;
@@ -31,14 +28,14 @@ public class DeliveryService {
         driverLocationRepo.save(driverLoc);
 
         deliveryRepo.findByDriverId(location.getDriverId()).ifPresent(delivery -> {
-            delivery.setLatitude(location.getLatitude());
-            delivery.setLongitude(location.getLongitude());
+            delivery.setDriverLatitude(location.getLatitude());
+            delivery.setDriverLongitude(location.getLongitude());
             deliveryRepo.save(delivery);
         });
     }
 
     @Transactional
-    public void createDelivery(String orderId, double lat, double lon) {
+    public void createDelivery(String orderId, double shopLat, double shopLon, double customerLat, double customerLon) {
         List<DriverLocation> availableDrivers = driverLocationRepo.findByIsAvailableTrue();
 
         if (availableDrivers.isEmpty()) {
@@ -49,7 +46,7 @@ public class DeliveryService {
         double minDist = Double.MAX_VALUE;
 
         for (DriverLocation d : availableDrivers) {
-            double dist = calculateDistance(lat, lon, d.getLatitude(), d.getLongitude());
+            double dist = calculateDistance(shopLat, shopLon, d.getLatitude(), d.getLongitude());
             if (dist < minDist) {
                 minDist = dist;
                 nearest = d;
@@ -57,7 +54,11 @@ public class DeliveryService {
         }
 
         if (nearest != null) {
-            Delivery delivery = new Delivery(null, orderId, nearest.getDriverId(), lat, lon, false);
+            Delivery delivery = new Delivery(null, orderId, nearest.getDriverId(),
+                    customerLat, customerLon, // destination
+                    nearest.getLatitude(), nearest.getLongitude(), // initial driver location
+                    shopLat, shopLon, // shop location
+                    false);
             deliveryRepo.save(delivery);
 
             nearest.setAvailable(false);
@@ -74,8 +75,8 @@ public class DeliveryService {
                 null,
                 delivery.getOrderId(),
                 delivery.getDriverId(),
-                delivery.getLatitude(),
-                delivery.getLongitude(),
+                delivery.getDestinationLatitude(),
+                delivery.getDestinationLongitude(),
                 true,
                 LocalDateTime.now()
         );
@@ -103,5 +104,44 @@ public class DeliveryService {
     public Delivery getDeliveryByDriver(String driverId) {
         return deliveryRepo.findByDriverId(driverId)
                 .orElseThrow(() -> new RuntimeException("No active delivery assigned to this driver"));
+    }
+
+    public List<CompletedDelivery> getCompletedDeliveriesByDriver(String driverId) {
+        return completedDeliveryRepo.findByDriverId(driverId);
+    }
+
+    public DeliveryTrackingDTO getDeliveryByOrderId(String orderId) {
+        Delivery delivery = deliveryRepo.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("No active delivery found for this order ID"));
+
+        // Map your Delivery entity to a DeliveryTracking DTO that matches the frontend needs
+        return mapToDeliveryTracking(delivery);
+    }
+
+    // Helper method to map the entity to the frontend DTO
+    private DeliveryTrackingDTO mapToDeliveryTracking(Delivery delivery) {
+        // You might also need to fetch driver name from a user service if available
+        String driverName = "Driver " + delivery.getDriverId().substring(0, 4); // Placeholder
+
+        // Calculate estimated arrival time (you could add logic for this)
+        LocalDateTime estimatedArrival = LocalDateTime.now().plusMinutes(15); // Placeholder
+
+        return new DeliveryTrackingDTO(
+                delivery.getOrderId(),
+                false, // isDelivered
+                estimatedArrival.toString(),
+                driverName,
+                delivery.getDriverLatitude(),
+                delivery.getDriverLongitude(),
+                delivery.getDestinationLatitude(),
+                delivery.getDestinationLongitude()
+        );
+    }
+    @Transactional
+    public void deleteCompletedDeliveryByOrderId(String orderId) {
+        if (!completedDeliveryRepo.existsByOrderId(orderId)) {
+            throw new RuntimeException("Completed delivery with order ID " + orderId + " not found");
+        }
+        completedDeliveryRepo.deleteByOrderId(orderId);
     }
 }
