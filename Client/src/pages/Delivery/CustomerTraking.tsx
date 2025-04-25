@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Footer from "../../components/layout/Footer";
 import NavigationBar from "../../components/layout/Navbar";
-// import SubNav from "../../components/layout/SubNav";
+import SubNav from "../../components/layout/SubNav";
 
 
 export interface Location {
@@ -154,9 +154,9 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
 
   return (
     <div className="bg-gradient-to-r white relative overflow-hidden">
-      {/* <div className="w-full">
+      <div className="w-full">
           <SubNav />
-       </div> */}
+       </div>
        <div className="w-full">
           <NavigationBar />
        </div>
