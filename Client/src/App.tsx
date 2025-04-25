@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'; // ✅ import Routes!
-
 import Home from './pages/Home';
 import Restaurants from './pages/Restaurant/Restaurants';
 import Restaurant from "./pages/Restaurant/Restaurant.tsx";

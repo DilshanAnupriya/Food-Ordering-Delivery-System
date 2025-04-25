@@ -14,7 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -127,7 +130,7 @@ public class OrderService {
                 .orElseThrow(() -> new OrderException("Order not found with ID: " + orderId, HttpStatus.NOT_FOUND));
 
         // Only allow updates if order is in PLACED status
-        if (existingOrder.getStatus() != OrderStatus.PLACED) {
+        if (existingOrder.getStatus() != OrderStatus.PLACED && existingOrder.getStatus() != updatedOrder.getStatus()) {
             throw new OrderException("Cannot update order that is already " + existingOrder.getStatus(),
                     HttpStatus.BAD_REQUEST);
         }
@@ -158,8 +161,42 @@ public class OrderService {
             existingOrder.setContactPhone(updatedOrder.getContactPhone());
         }
 
+        // Allow status updates
+        if (updatedOrder.getStatus() != null) {
+            existingOrder.setStatus(updatedOrder.getStatus());
+        }
+
+        // Handle order items properly to avoid orphan removal issues
         if (updatedOrder.getOrderItems() != null && !updatedOrder.getOrderItems().isEmpty()) {
-            existingOrder.setOrderItems(updatedOrder.getOrderItems());
+            // Create a map of existing items by ID for quick lookup
+            Map<Long, OrderItem> existingItemsMap = existingOrder.getOrderItems().stream()
+                    .filter(item -> item.getId() != null)
+                    .collect(Collectors.toMap(OrderItem::getId, item -> item));
+
+            // Create a new list to hold the updated order items
+            List<OrderItem> updatedItems = new ArrayList<>();
+
+            for (OrderItem updatedItem : updatedOrder.getOrderItems()) {
+                if (updatedItem.getId() != null && existingItemsMap.containsKey(updatedItem.getId())) {
+                    // Update existing item
+                    OrderItem existingItem = existingItemsMap.get(updatedItem.getId());
+                    existingItem.setMenuItemId(updatedItem.getMenuItemId());
+                    existingItem.setItemName(updatedItem.getItemName());
+                    existingItem.setQuantity(updatedItem.getQuantity());
+                    existingItem.setUnitPrice(updatedItem.getUnitPrice());
+                    existingItem.setTotalPrice(updatedItem.getTotalPrice());
+                    updatedItems.add(existingItem);
+                } else {
+                    // Add new item
+                    updatedItem.setOrder(existingOrder);
+                    updatedItems.add(updatedItem);
+                }
+            }
+
+            // Clear and set new items to avoid orphan removal issues
+            existingOrder.getOrderItems().clear();
+            existingOrder.getOrderItems().addAll(updatedItems);
+
             calculateOrderTotals(existingOrder);
         }
 
@@ -209,11 +246,13 @@ public class OrderService {
     }
 
     private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
-        // Implement status transition rules
+        // Only prevent changes to orders that are already in terminal states
         if (currentStatus == OrderStatus.DELIVERED || currentStatus == OrderStatus.CANCELLED) {
             throw new OrderException("Cannot change status of an order that is already " + currentStatus,
                     HttpStatus.BAD_REQUEST);
         }
+
+
 
         // Prevent skipping statuses (implement proper sequence)
         switch (currentStatus) {
