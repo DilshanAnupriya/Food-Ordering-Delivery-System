@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import CompletedDeliveryCard from './CompletedDeliveryCard';
 import Footer from "../../components/layout/Footer";
 import NavigationBar from "../../components/layout/Navbar";
-import SubNav from "../../components/layout/SubNav";
+// import SubNav from "../../components/layout/SubNav";
 
 interface Order {
   id: string;
@@ -83,13 +83,13 @@ const DriverDashboard: React.FC = () => {
   return (
     
     <div>
-      <div className="w-full">
+      {/* <div className="w-full">
           <SubNav />
-       </div>
+       </div> */}
        <div className="w-full">
           <NavigationBar />
        </div>
-       <div></div>
+      
     <div className="max-w-7xl mx-auto px-4 py-8" >
       {/* Header */}
       <div className="flex justify-between  h-20 w- bg-black items-center mb-7">
