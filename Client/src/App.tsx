@@ -11,8 +11,8 @@ function App() {
             <Routes> {/* ✅ wrap routes here */}
                 <Route path="/" element={<Home />} />
                 <Route path="/restaurants" element={<Restaurants />} />
-                <Route path="/restaurant/:id" element={<Restaurant />} />
                 <Route path="/restaurant/create" element={<RestaurantCreate />} />
+                <Route path="/restaurant/:id" element={<Restaurant />} />
             </Routes>
         </Router>
     );
