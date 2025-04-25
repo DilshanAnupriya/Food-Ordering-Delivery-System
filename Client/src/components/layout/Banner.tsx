@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
+
 const Banner = () => {
   return (
     <div className="bg-gradient-to-r from-gray-900 to-gray-800 relative overflow-hidden rounded-2xl">
@@ -33,15 +34,15 @@ const Banner = () => {
           </div>
 
           {/* Right Content - Order Cards */}
-          <div className="absolute ml-[700px]  mt-[70px] bg-[url('src/assets/Image1.png')] w-[600px] h-[400px]"></div>
+          <div className="absolute ml-[700px]  mt-[70px] bg-[url('/assets/Image1.png')] w-[600px] h-[400px]"></div>
           {/*<div className="absolute w-70 h-80 ml-[620px]  mt-[130px] bg-[url('src/assets/image2.png')] bg-cover"></div>*/}
-          <div className="absolute w-100 h-80 ml-[500px]  mt-[89px] bg-[url('src/assets/image3.png')] bg-cover"></div>
-          <div className="absolute w-60 h-25 ml-[820px]  mt-[220px] bg-[url('src/assets/Group2.png')] bg-cover"></div>
-          <div className="absolute w-60 h-25 ml-[830px]  mt-[-220px] bg-[url('src/assets/Group3.png')] bg-cover">
+          <div className="absolute w-100 h-80 ml-[500px]  mt-[89px] bg-[url('/assets/image3.png')] bg-cover"></div>
+          <div className="absolute w-60 h-25 ml-[820px]  mt-[220px] bg-[url('/assets/Group2.png')] bg-cover"></div>
+          <div className="absolute w-60 h-25 ml-[830px]  mt-[-220px] bg-[url('/assets/Group3.png')] bg-cover">
             <h3 className="absolute mt-16 ml-5 text-[9px] font-bold">We’ve Received your order!</h3>
             <h3 className="absolute mt-19 ml-5 text-[9px] ">Awaiting Restaurant acceptance</h3>
           </div>
-          <div className="absolute w-60 h-25 ml-[860px]  mt-[10px] bg-[url('src/assets/Group4.png')] bg-cover">
+          <div className="absolute w-60 h-25 ml-[860px]  mt-[10px] bg-[url('/assets/Group4.png')] bg-cover">
             <h3 className="absolute mt-17 ml-5 text-[9px] font-bold">Order Accepted! </h3>
             <h3 className="absolute mt-20 ml-5 text-[9px] ">Your order will be delivered shortly</h3>
           </div>

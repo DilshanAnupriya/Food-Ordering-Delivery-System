@@ -17,4 +17,6 @@ public interface FoodItemService  {
     public void foodItemDeleteById(String id);
     public FoodItemResponsePaginateDto findAllFoodItem(String searchText, int page, int size);
     public List<String> getAllCategories();
+    public FoodItemResponsePaginateDto getFoodItemByRestaurantAndCategory(String searchText, int page, int size,String restaurantId, String category);
+
 }
