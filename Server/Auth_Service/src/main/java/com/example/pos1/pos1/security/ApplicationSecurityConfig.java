@@ -20,10 +20,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
 
 import javax.crypto.SecretKey;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -46,22 +44,14 @@ public class ApplicationSecurityConfig extends WebSecurityConfiguration {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http, AuthenticationManager authenticationManager
     ) throws Exception {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
-        corsConfiguration.setAllowedOrigins(List.of("*")); //*,www.abc.com,
-        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "DELETE", "OPTION", "PUT", "PATCH"));
-        corsConfiguration.setAllowCredentials(false);
-        corsConfiguration.setExposedHeaders(List.of("Authorization"));
-
         http.csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(request -> corsConfiguration))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager, jwtConfig, secretKey))
                 .addFilterAfter(new JwtTokeVerifier(jwtConfig, secretKey), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/users/visitor/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/customers/visitor/**").permitAll()
-                        .anyRequest().authenticated()  // Added this line to authenticate all other requests
+                        .anyRequest().authenticated() // Authenticate all other requests
                 );
         return http.build();
     }
