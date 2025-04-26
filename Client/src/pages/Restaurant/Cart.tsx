@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import SubNav from "../../components/layout/SubNav.tsx";
 import Navbar from "../../components/layout/Navbar.tsx";
 import Footer from "../../components/layout/Footer.tsx";
+import Banner from "../../components/layout/Banner.tsx";
 
 const CartPage = () => {
     const [cart, setCart] = useState(null);
@@ -238,19 +239,20 @@ const CartPage = () => {
         <>
             <SubNav/>
             <Navbar/>
-        <div className="container mx-auto p-4">
+        <div className="xl:px-[97px] 2xl:px-[320px] bg-gradient-to-r from-gray-900 to-gray-800 mx-auto p-4 bg-orange-10 pb-[50px] 2xl:pb-[90px] pt-20">
             <ToastContainer position="top-right" autoClose={3000} />
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Your Cart</h1>
-                <button
-                    onClick={confirmClearCart}
-                    className="text-red-600 hover:text-red-800 font-medium"
-                >
-                    Clear Cart
-                </button>
-            </div>
 
-            <div className="bg-white rounded-lg shadow-md">
+
+            <div className=" bg-white rounded-lg shadow-md">
+                <div className="flex justify-between items-center mb-6 px-[20px] pt-10">
+                    <h1 className="text-4xl font-bold">My Cart</h1>
+                    <button
+                        onClick={confirmClearCart}
+                        className="text-white bg-red-500  px-3 py-2 rounded-2xl hover:text-red-800 text-sm"
+                    >
+                        Clear Cart
+                    </button>
+                </div>
                 <div className="p-6 border-b">
                     <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
                         <div className="col-span-6">Item</div>
@@ -316,7 +318,7 @@ const CartPage = () => {
                     </div>
                 ))}
 
-                <div className="p-6">
+                <div className="pt-8 pr-6 pb-6">
                     <div className="flex justify-end">
                         <div className="w-64">
                             <div className="flex justify-between py-2 border-b">
