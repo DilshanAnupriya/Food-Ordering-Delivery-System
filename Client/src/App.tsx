@@ -9,6 +9,7 @@ import Restaurants from './pages/Restaurant/Restaurants';
 import Restaurant from './pages/Restaurant/Restaurant';
 import RestaurantCreate from './pages/Restaurant/RestaurantCreate';
 
+
 function App() {
     return (
         <AuthProvider>
@@ -22,6 +23,7 @@ function App() {
                     <Route path="/restaurants" element={<Restaurants />} />
                     <Route path="/restaurant/:id" element={<Restaurant />} />
                     <Route path="/restaurant/create" element={<RestaurantCreate />} />
+
                 </Routes>
             </Router>
         </AuthProvider>

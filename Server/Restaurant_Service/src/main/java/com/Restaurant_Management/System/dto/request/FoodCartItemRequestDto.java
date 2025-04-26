@@ -12,6 +12,7 @@ import lombok.*;
 public class FoodCartItemRequestDto {
     private String foodItemId;
     private String foodName;
+    private String foodImage;
     private double price;
     private int quantity;
 }
