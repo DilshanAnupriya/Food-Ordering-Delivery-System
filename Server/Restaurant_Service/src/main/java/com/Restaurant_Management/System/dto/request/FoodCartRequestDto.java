@@ -10,6 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@Builder
 public class FoodCartRequestDto {
     private String userId;
     private List<FoodCartItemRequestDto> cartItems;

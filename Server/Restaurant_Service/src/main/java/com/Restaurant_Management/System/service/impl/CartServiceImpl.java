@@ -58,6 +58,26 @@ public class CartServiceImpl implements CartService {
         cartRepo.save(cart);
     }
 
+
+    @Override
+    public void addFoodItemsToExistingCart(String userId, List<FoodCartItemRequestDto> foodItems) {
+        // Find existing cart by userId
+        Cart cart = cartRepo.findCartByUserId(userId)
+                .orElseThrow(() -> new EntryNotFoundException("Cart not found for user: " + userId));
+
+        // Create a FoodCartRequestDto to reuse existing logic
+        FoodCartRequestDto requestDto = FoodCartRequestDto.builder()
+                .userId(userId)
+                .cartItems(foodItems)
+                .build();
+
+        // Update the cart with new items
+        updateCartItems(cart, requestDto);
+
+        // Save the updated cart
+        cartRepo.save(cart);
+    }
+
     @Override
     public CartResponseDto getCartByUserId(String userId) {
         Cart cart = cartRepo.findCartByUserId(userId)
@@ -66,6 +86,17 @@ public class CartServiceImpl implements CartService {
         return toCartResponseDto(cart);
     }
 
+    @Override
+    public void clearCart(String userId) {
+        Cart cart = cartRepo.findByUserId(userId);
+        if (cart == null) {
+            throw new RuntimeException("Cart not found for user: " + userId);
+        }
+
+        cart.getCartItems().clear();
+        cart.setTotalPrice(0.0);
+        cartRepo.save(cart);
+    }
     @Override
     public void updateCartItemQuantity(String userId, String foodId, int quantity, boolean increase) {
         Cart cart = cartRepo.findCartByUserId(userId)

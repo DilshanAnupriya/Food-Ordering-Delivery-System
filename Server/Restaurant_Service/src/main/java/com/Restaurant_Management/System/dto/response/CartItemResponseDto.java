@@ -12,6 +12,7 @@ public class CartItemResponseDto {
 
     private String foodItemId;
     private String foodName;
+    private String foodImage;
     private int quantity;
     private double price;
 }
