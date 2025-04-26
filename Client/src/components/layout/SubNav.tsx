@@ -32,7 +32,7 @@ const SubNavBar = () => {
                 {/* Auth Buttons */}
                 <div className="flex items-center h-full  ">
                   <div className="flex items-center justify-between w-16 h-13 bg-green-600  rounded-bl-lg border-r-[1px] border-white ">
-                      <Link to='/cart'>
+                      <Link to='/cart/:id'>
                       <img
                           src={Cart}
                           alt="terminal"

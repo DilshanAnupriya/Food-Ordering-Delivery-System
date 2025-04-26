@@ -1,10 +1,18 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {jwtDecode} from 'jwt-decode';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: any | null;
   logout: () => void;
   checkAuthStatus: () => void;
+}
+
+interface DecodedToken {
+  sub: string; // usually email
+  userId?: string; // check if this exists
+  role?: string;
+  exp?: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,7 +25,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem('token');
     if (token) {
       setIsAuthenticated(true);
-      // You can also fetch user data here if needed
+      const decoded = jwtDecode<DecodedToken>(token);
+      console.log("Decoded JWT:", decoded); // 🔍 Inspect what's inside
+      setUser(decoded); // This user object will be available via useAuth()
     } else {
       setIsAuthenticated(false);
       setUser(null);
@@ -35,9 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, logout, checkAuthStatus }}>
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider value={{ isAuthenticated, user, logout, checkAuthStatus }}>
+        {children}
+      </AuthContext.Provider>
   );
 }
 
