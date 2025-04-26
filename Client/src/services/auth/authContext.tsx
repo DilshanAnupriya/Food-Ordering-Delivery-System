@@ -26,16 +26,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) {
       setIsAuthenticated(true);
       const decoded = jwtDecode<DecodedToken>(token);
-      console.log("Decoded JWT:", decoded); // 🔍 Inspect what's inside
-      setUser(decoded); // This user object will be available via useAuth()
+      console.log("Decoded JWT:", decoded);
+      setUser(decoded);
+
+      // Save userId separately
+      if (decoded && decoded.userId) {
+        localStorage.setItem('userId', decoded.userId);
+      } else if (decoded && decoded.sub) {
+        localStorage.setItem('userId', decoded.sub); // fallback to email
+      }
     } else {
       setIsAuthenticated(false);
       setUser(null);
+      localStorage.removeItem('userId'); // Clean up just in case
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userId'); // 👈
     setIsAuthenticated(false);
     setUser(null);
   };
