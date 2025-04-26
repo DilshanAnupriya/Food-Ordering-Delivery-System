@@ -7,7 +7,7 @@ const Checkout = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Load your Stripe public key (Replace with your actual key)
-  const stripePromise = loadStripe("your-public-stripe-key");
+  const stripePromise = loadStripe("pk_test_51RDK3f05Jvg5zM6NtWwccOGgYNKOZNvDn3KRtP7ESmO0nzE9xTZSegnjI7HdkT2D14qCKnfKf93MSrZu5mhc9RU000SRF52DTx");
 
   const handleCheckout = async () => {
     setIsLoading(true);
