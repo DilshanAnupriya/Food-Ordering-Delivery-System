@@ -6,7 +6,6 @@ export enum OrderStatus {
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED'
 }
-
 export interface OrderItem {
   id?: number;
   menuItemId: number;

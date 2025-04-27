@@ -129,8 +129,9 @@ public class OrderService {
         OrderModel existingOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderException("Order not found with ID: " + orderId, HttpStatus.NOT_FOUND));
 
-        // Only allow updates if order is in PLACED status
-        if (existingOrder.getStatus() != OrderStatus.PLACED && existingOrder.getStatus() != updatedOrder.getStatus()) {
+        // Check if order is in a terminal state
+        if ((existingOrder.getStatus() == OrderStatus.DELIVERED || existingOrder.getStatus() == OrderStatus.CANCELLED)
+                && existingOrder.getStatus() != updatedOrder.getStatus()) {
             throw new OrderException("Cannot update order that is already " + existingOrder.getStatus(),
                     HttpStatus.BAD_REQUEST);
         }
@@ -161,8 +162,9 @@ public class OrderService {
             existingOrder.setContactPhone(updatedOrder.getContactPhone());
         }
 
-        // Allow status updates
-        if (updatedOrder.getStatus() != null) {
+        // Allow status updates if valid
+        if (updatedOrder.getStatus() != null && existingOrder.getStatus() != updatedOrder.getStatus()) {
+            validateStatusTransition(existingOrder.getStatus(), updatedOrder.getStatus());
             existingOrder.setStatus(updatedOrder.getStatus());
         }
 

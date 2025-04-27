@@ -1,68 +1,61 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { orderService } from '../../services/Orders/orderService'; 
-import { Order, OrderStatus } from '../../types/Order/order';
+import { Order } from '../../types/Order/order';
 import Footer from '../../components/layout/Footer';
 import SubNav from '../../components/layout/SubNav';
 import NavigationBar from '../../components/layout/Navbar';
+import OrderStatusUpdate from '../../components/order/OrderStatusUpdate'; // Import the new component
 
 const OrderDetail: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [status, setStatus] = useState<OrderStatus | ''>('');
   const [statusInfo, setStatusInfo] = useState<string>('');
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        setLoading(true);
-        const data = await orderService.getOrderById(parseInt(orderId!));
-        setOrder(data);
-        setStatus(data.status);
-
-        // Get tracking info
-        const trackInfo = await orderService.trackOrderStatus(parseInt(orderId!));
-        setStatusInfo(trackInfo.statusInfo);
-      } catch (error) {
-        console.error('Error fetching order:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (orderId) {
-      fetchOrder();
-    }
-  }, [orderId]);
-
-  const handleStatusUpdate = async () => {
-    if (!status || !order) return;
+  const fetchOrderData = async () => {
     try {
-      const updatedOrder = await orderService.updateOrderStatus(order.orderId!, status as OrderStatus);
-      setOrder(updatedOrder);
-      alert('Order status updated successfully');
-      
-      // Refresh tracking info
+      setLoading(true);
+      const data = await orderService.getOrderById(parseInt(orderId!));
+      setOrder(data);
+
+      // Get tracking info
       const trackInfo = await orderService.trackOrderStatus(parseInt(orderId!));
       setStatusInfo(trackInfo.statusInfo);
     } catch (error) {
-      console.error('Error updating order status:', error);
-      alert('Failed to update order status');
+      console.error('Error fetching order:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (orderId) {
+      fetchOrderData();
+    }
+  }, [orderId]);
+
+  // This function will be passed to OrderStatusUpdate as a callback
+  const handleStatusUpdateComplete = () => {
+    fetchOrderData(); // Refresh the order data after status update
+  };
+
   const handleDelete = async () => {
-    if (!order) return;
+    if (!order || !orderId) return;
+    
     if (window.confirm('Are you sure you want to delete this order?')) {
       try {
-        await orderService.deleteOrder(order.orderId!);
+        setDeleteLoading(true);
+        await orderService.deleteOrder(parseInt(orderId));
         alert('Order deleted successfully');
         navigate('/orders');
       } catch (error) {
         console.error('Error deleting order:', error);
         alert('Failed to delete order');
+      } finally {
+        setDeleteLoading(false);
       }
     }
   };
@@ -78,18 +71,19 @@ const OrderDetail: React.FC = () => {
       <div className="w-full">
         < NavigationBar/>
       </div>
-      <div className="max-w- 7xl mx-auto px-30 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6"> 
         <h1 className="text-2xl font-bold">Order {order.orderId}</h1>
         <div className="space-x-2">
           <Link to="/orders" className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
             Back to Orders
           </Link>
-          <Link to={`/orders/${order.orderId}/edit`} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Edit Order
-          </Link>
-          <button onClick={handleDelete} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-            Delete Order
+          <button 
+            onClick={handleDelete} 
+            disabled={deleteLoading}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:bg-red-300"
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete Order'}
           </button>
         </div>
       </div>
@@ -145,30 +139,14 @@ const OrderDetail: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Update Status</label>
-            <div className="flex items-center space-x-2">
-              <select 
-                value={status}
-                onChange={(e) => setStatus(e.target.value as OrderStatus)}
-                className="border p-2 rounded w-full"
-              >
-                <option value="">Select Status</option>
-                {Object.values(OrderStatus).map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-              <button 
-                onClick={handleStatusUpdate}
-                disabled={!status || status === order.status}
-                className={`px-4 py-2 rounded ${!status || status === order.status ? 'bg-gray-300 text-gray-500' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-              >
-                Update
-              </button>
-            </div>
-          </div>
+          {/* Replace the old status update UI with the new component */}
+          <OrderStatusUpdate 
+            orderId={order.orderId!} 
+            currentStatus={order.status} 
+            onStatusUpdate={handleStatusUpdateComplete} 
+          />
 
-          <div>
+          <div className="mt-4">
             <p className="text-gray-700 mb-2">Tracking Information</p>
             <div className="bg-gray-50 p-3 rounded">
               {statusInfo}
