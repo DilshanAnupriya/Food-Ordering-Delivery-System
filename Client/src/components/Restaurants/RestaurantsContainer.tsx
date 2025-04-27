@@ -4,7 +4,7 @@ import { fetchRestaurants, Restaurant } from '../../services/Restaurants/LoadAll
 import { SearchAndFilter } from './SearchAndFilter.tsx';
 import { RestaurantCard } from './RestaurantCard.tsx';
 import { EmptyState } from './EmptyState.tsx';
-import { Pagination } from './Pagination.tsx';
+import WrapperPagination from './Pagination.tsx';
 import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 
@@ -126,7 +126,7 @@ const RestaurantsContainer: React.FC = () => {
 
             {/* Always show pagination component */}
             <div id="pagination-container" className="mt-8">
-                <Pagination
+                <WrapperPagination
                     page={page}
                     size={size}
                     totalItems={totalItems}

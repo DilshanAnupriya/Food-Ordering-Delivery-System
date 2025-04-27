@@ -3,6 +3,7 @@ package com.example.pos1.pos1.security;
 import com.example.pos1.pos1.jwt.JwtConfig;
 import com.example.pos1.pos1.jwt.JwtTokeVerifier;
 import com.example.pos1.pos1.jwt.JwtUsernameAndPasswordAuthenticationFilter;
+import com.example.pos1.pos1.repo.ApplicationUserRepo;
 import com.example.pos1.pos1.service.impl.ApplicationUserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,10 +21,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
 
 import javax.crypto.SecretKey;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -33,35 +32,29 @@ public class ApplicationSecurityConfig extends WebSecurityConfiguration {
     private final ApplicationUserServiceImpl userService;
     private final SecretKey secretKey;
     private final JwtConfig jwtConfig;
+    private final ApplicationUserRepo userRepository;
 
     @Autowired
-    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder, ApplicationUserServiceImpl userService, SecretKey secretKey, JwtConfig jwtConfig) {
+    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder, ApplicationUserServiceImpl userService, SecretKey secretKey, JwtConfig jwtConfig,ApplicationUserRepo userRepository) {
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
         this.secretKey = secretKey;
         this.jwtConfig = jwtConfig;
+        this.userRepository = userRepository;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http, AuthenticationManager authenticationManager
     ) throws Exception {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
-        corsConfiguration.setAllowedOrigins(List.of("*")); //*,www.abc.com,
-        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "DELETE", "OPTION", "PUT", "PATCH"));
-        corsConfiguration.setAllowCredentials(false);
-        corsConfiguration.setExposedHeaders(List.of("Authorization"));
-
         http.csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(request -> corsConfiguration))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager, jwtConfig, secretKey))
+                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager, jwtConfig, secretKey, userRepository))
                 .addFilterAfter(new JwtTokeVerifier(jwtConfig, secretKey), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/users/visitor/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/customers/visitor/**").permitAll()
-                        .anyRequest().authenticated()  // Added this line to authenticate all other requests
+                        .anyRequest().authenticated() // Authenticate all other requests
                 );
         return http.build();
     }
