@@ -13,6 +13,7 @@ import com.Restaurant_Management.System.repo.FoodItemRepo;
 import com.Restaurant_Management.System.repo.RestaurantRepo;
 import com.Restaurant_Management.System.service.FoodItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -80,6 +81,27 @@ public class FoodItemServiceImpl implements FoodItemService {
     public List<String> getAllCategories() {
         return foodItemRepo.findAllCategories();
     }
+
+    @Override
+    public FoodItemResponsePaginateDto getFoodItemByRestaurantAndCategory(String searchText, int page, int size, String restaurantId, String category) {
+        String categoryPattern = "%" + category + "%";
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        List<FoodItemResponseDto> foodItems = foodItemRepo
+                .findFoodItemsByRestaurantIdAndCategory(restaurantId, categoryPattern, pageRequest)
+                .stream()
+                .map(this::toFoodItemResponseDto)
+                .collect(Collectors.toList());
+
+        long count = foodItemRepo.countAllFoodItemsByRestaurantIdAndCategory(restaurantId, categoryPattern);
+
+        return FoodItemResponsePaginateDto.builder()
+                .dataCount(count)
+                .dataList(foodItems)
+                .build();
+    }
+
+
 
 
     private FoodItem toFoodItem(FoodItemsRequestDto dto) {

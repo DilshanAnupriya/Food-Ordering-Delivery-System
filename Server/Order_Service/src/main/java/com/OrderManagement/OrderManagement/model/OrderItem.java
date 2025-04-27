@@ -39,4 +39,7 @@ public class OrderItem {
     @NotNull(message = "Total price cannot be null")
     @Positive(message = "Total price must be positive")
     private BigDecimal totalPrice;
+
+    public void setOrder(OrderModel existingOrder) {
+    }
 }

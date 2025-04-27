@@ -20,6 +20,8 @@ public class CartItems {
 
     private String foodName;
 
+    private String foodImage;
+
 
     @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)

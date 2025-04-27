@@ -22,4 +22,18 @@ public interface FoodItemRepo extends JpaRepository<FoodItem, String> {
 
     @Query(value = "SELECT DISTINCT category FROM food_items", nativeQuery = true)
     List<String> findAllCategories();
+
+    @Query(
+            value = "SELECT * FROM food_items WHERE restaurant_id = ?1 AND category LIKE ?2",
+            countQuery = "SELECT COUNT(*) FROM food_items WHERE restaurant_id = ?1 AND category LIKE ?2",
+            nativeQuery = true
+    )
+    Page<FoodItem> findFoodItemsByRestaurantIdAndCategory(String restaurantId,String category, Pageable pageable);
+
+
+    @Query(nativeQuery = true, value = "SELECT COUNT(*) FROM food_items WHERE restaurant_id = ?1 AND category LIKE ?2")
+    long countAllFoodItemsByRestaurantIdAndCategory(String restaurantId, String category);
+
+
+
 }

@@ -12,6 +12,7 @@ import DriverDashboard from './pages/Delivery/DriverDashboard';
 import DriverDeliveryPageWrapper from './pages/Delivery/DriverDeliveryPageWrapper';
 import CustomerTrackingPage from './pages/Delivery/CustomerTraking';  
 import AdminDashboard from './pages/AdminDashboard.tsx'; 
+import CartPage from "./pages/Restaurant/Cart.tsx";
 
 function App() {
     return (
@@ -30,8 +31,7 @@ function App() {
                     <Route path="/driver-dashboard" element={<DriverDashboard />} />
                     <Route path="/customer-tracking" element={<CustomerTrackingPage />} />
                     <Route path="/AdminDashboard" element={<AdminDashboard />} />
-
-                    
+                    <Route path="/cart/:id" element={<CartPage />} />
                 </Routes>
             </Router>
         </AuthProvider>

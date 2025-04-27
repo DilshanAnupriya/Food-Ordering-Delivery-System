@@ -1,19 +1,21 @@
 // components/Restaurants/Pagination.tsx
 import React from 'react';
+import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
 interface PaginationProps {
-    page: number;
-    size: number;
-    totalItems: number;
-    onPageChange: (page: number) => void;
+    page: number,
+    size: number,
+    totalItems: number,
+    onPageChange: (page: number) => void,
+
 }
 
-export const Pagination: React.FC<PaginationProps> = ({
-                                                          page,
-                                                          size ,
-                                                          totalItems,
-                                                          onPageChange
-                                                      }) => {
+const Pagination: React.FC<PaginationProps> = ({
+                                                   page,
+                                                   size,
+                                                   totalItems,
+                                                   onPageChange,
+                                               }) => {
     // Calculate total pages
     const totalPages = Math.ceil(totalItems / size);
 
@@ -49,9 +51,9 @@ export const Pagination: React.FC<PaginationProps> = ({
     // Removed the early return that was hiding pagination when totalPages <= 1
 
     return (
-        <div className="mt-8 flex justify-between items-center">
+        <div className="mt-8 flex justify-between items-center mb-10">
             <div className="text-sm text-gray-600">
-                Showing {totalItems > 0 ? page * size + 1 : 0} - {Math.min((page + 1) * size, totalItems)} of {totalItems} restaurants
+                Showing {totalItems > 0 ? page * size + 1 : 0} - {Math.min((page + 1) * size, totalItems)} of {totalItems}
             </div>
             <div className="flex space-x-1">
                 {/* First page button */}
@@ -104,3 +106,6 @@ export const Pagination: React.FC<PaginationProps> = ({
         </div>
     );
 };
+
+const WrapperPagination = SectionWrapper(Pagination);
+export default WrapperPagination;

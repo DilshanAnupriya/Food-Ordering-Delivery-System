@@ -104,5 +104,22 @@ public class FoodItemController {
                 HttpStatus.OK
         );
     }
+    @GetMapping("/{restaurantId}/{category}")
+    public ResponseEntity<StandardResponseDto> getFoodItemsByRestaurantAndCategory(
+            @RequestParam String searchText,
+            @RequestParam int page,
+            @RequestParam int size,
+            @PathVariable("restaurantId") String restaurantId,
+            @PathVariable("category") String category
+    ) {
+        return new ResponseEntity<>(
+                StandardResponseDto.builder()
+                        .code(200)
+                        .message("Food items by restaurant and category")
+                        .data(foodItemService.getFoodItemByRestaurantAndCategory(searchText,page,size,restaurantId, category))
+                        .build(),
+                HttpStatus.OK
+        );
+    }
 
 }
