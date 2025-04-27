@@ -102,15 +102,19 @@ const OrderList: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (loading) return <div className="text-center mt-10">Loading orders...</div>;
+    if (loading) return (
+      <div className="flex justify-center items-center h-40">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
     
     if (searchError) {
       return (
-        <div className="text-center mt-10">
-          <p className="text-red-500">{searchError}</p>
+        <div className="text-center mt-10 p-6 bg-white rounded-lg shadow-md">
+          <p className="text-red-500 font-medium">{searchError}</p>
           <button 
             onClick={clearSearch}
-            className="mt-4 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+            className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-md hover:bg-orange-600 transition-colors duration-300 font-medium focus:outline-none focus:ring-2 focus:ring-orange-300"
           >
             Clear Search
           </button>
@@ -119,21 +123,25 @@ const OrderList: React.FC = () => {
     }
     
     if (!orderData || orderData.orders.length === 0) {
-      return <div className="text-center mt-10">No orders found.</div>;
+      return (
+        <div className="text-center mt-10 p-6 bg-white rounded-lg shadow-md">
+          <p className="text-gray-600 font-medium">No orders found.</p>
+        </div>
+      );
     }
 
     return (
       <>
         {/* Search indicator */}
         {isSearching && (
-          <div className="max-w-7xl mx-auto px-4 mb-4">
-            <div className="flex items-center justify-between bg-blue-50 p-2 rounded">
-              <span className="text-blue-700">
-                Showing results for: <strong>"{searchTerm}"</strong>
+          <div className="max-w-7xl mx-auto px-4 mb-6">
+            <div className="flex items-center justify-between bg-blue-50 p-3 rounded-md shadow-sm border border-blue-100">
+              <span className="text-blue-800 font-medium">
+                Showing results for: <strong className="font-semibold">"{searchTerm}"</strong>
               </span>
               <button 
                 onClick={clearSearch}
-                className="text-blue-700 hover:underline"
+                className="text-blue-700 hover:text-blue-900 font-medium transition-colors duration-200"
               >
                 Clear Search
               </button>
@@ -141,110 +149,146 @@ const OrderList: React.FC = () => {
           </div>
         )}
       
-        {/* Centered Table */}
+        {/* Table */}
         <div className="overflow-x-auto max-w-7xl mx-auto w-full px-4">
-          <table className="min-w-full bg-white border border-gray-200">
-            <thead>
-              <tr>
-                <th 
-                  className="py-2 px-4 border-b cursor-pointer" 
-                  onClick={() => handleSort('orderId')}
-                >
-                  Order ID {sortBy === 'orderId' && (direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th 
-                  className="py-2 px-4 border-b cursor-pointer" 
-                  onClick={() => handleSort('orderDate')}
-                >
-                  Date {sortBy === 'orderDate' && (direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th className="py-2 px-4 border-b">Customer</th>
-                <th 
-                  className="py-2 px-4 border-b cursor-pointer" 
-                  onClick={() => handleSort('status')}
-                >
-                  Status {sortBy === 'status' && (direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th 
-                  className="py-2 px-4 border-b cursor-pointer" 
-                  onClick={() => handleSort('totalAmount')}
-                >
-                  Total {sortBy === 'totalAmount' && (direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th className="py-2 px-4 border-b">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orderData.orders.map((order) => (
-                <tr key={order.orderId} className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">{order.orderId}</td>
-                  <td className="py-2 px-4 border-b">
-                    {new Date(order.orderDate!).toLocaleDateString()}
-                  </td>
-                  <td className="py-2 px-4 border-b">User #{order.userId}</td>
-                  <td className="py-2 px-4 border-b">
-                    <span 
-                      className={`px-2 py-1 rounded text-xs font-semibold
-                        ${order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' : ''}
-                        ${order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' : ''}
-                        ${order.status === 'PLACED' ? 'bg-blue-100 text-blue-800' : ''}
-                        ${order.status === 'CONFIRMED' ? 'bg-purple-100 text-purple-800' : ''}
-                        ${order.status === 'PREPARING' ? 'bg-yellow-100 text-yellow-800' : ''}
-                        ${order.status === 'OUT_FOR_DELIVERY' ? 'bg-orange-100 text-orange-800' : ''}
-                      `}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="py-2 px-4 border-b">${order.totalAmount.toFixed(2)}</td>
-                  <td className="py-2 px-4 border-b">
-                    <Link 
-                      to={`/orders/${order.orderId}`} 
-                      className="text-blue-500 hover:underline mr-2"
-                    >
-                      View
-                    </Link>
-                    <Link 
-                      to={`/orders/${order.orderId}/edit`} 
-                      className="text-green-500 hover:underline mr-2"
-                    >
-                      Edit
-                    </Link>
-                    <button 
-                      onClick={async () => {
-                        if (window.confirm('Are you sure you want to delete this order?')) {
-                          await orderService.deleteOrder(order.orderId!);
-                          fetchOrders();
-                        }
-                      }} 
-                      className="text-red-500 hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </td>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-300">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200" 
+                    onClick={() => handleSort('orderId')}
+                  >
+                    <div className="flex items-center">
+                      Order ID
+                      {sortBy === 'orderId' && (
+                        <span className="ml-1">{direction === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200" 
+                    onClick={() => handleSort('orderDate')}
+                  >
+                    <div className="flex items-center">
+                      Date
+                      {sortBy === 'orderDate' && (
+                        <span className="ml-1">{direction === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200" 
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center">
+                      Status
+                      {sortBy === 'status' && (
+                        <span className="ml-1">{direction === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200" 
+                    onClick={() => handleSort('totalAmount')}
+                  >
+                    <div className="flex items-center">
+                      Total
+                      {sortBy === 'totalAmount' && (
+                        <span className="ml-1">{direction === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {orderData.orders.map((order) => (
+                  <tr key={order.orderId} className="hover:bg-gray-50 transition-colors duration-150">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(order.orderDate!).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">User #{order.userId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span 
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                          ${order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' : ''}
+                          ${order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' : ''}
+                          ${order.status === 'PLACED' ? 'bg-blue-100 text-blue-800' : ''}
+                          ${order.status === 'CONFIRMED' ? 'bg-purple-100 text-purple-800' : ''}
+                          ${order.status === 'PREPARING' ? 'bg-yellow-100 text-yellow-800' : ''}
+                          ${order.status === 'OUT_FOR_DELIVERY' ? 'bg-orange-100 text-orange-800' : ''}
+                        `}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.totalAmount.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-3">
+                        <Link 
+                          to={`/orders/${order.orderId}`} 
+                          className="text-blue-600 hover:text-blue-900 transition-colors duration-200"
+                        >
+                          View
+                        </Link>
+                        <Link 
+                          to={`/orders/${order.orderId}/edit`} 
+                          className="text-green-600 hover:text-green-900 transition-colors duration-200"
+                        >
+                          Edit
+                        </Link>
+                        <button 
+                          onClick={async () => {
+                            if (window.confirm('Are you sure you want to delete this order?')) {
+                              await orderService.deleteOrder(order.orderId!);
+                              fetchOrders();
+                            }
+                          }} 
+                          className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4 mb-8 max-w-7xl mx-auto px-4">
-          <div className="text-gray-700">
+        <div className="flex justify-between items-center mt-6 mb-8 max-w-7xl mx-auto px-4">
+          <div className="text-gray-200 font-medium">
             Showing page {orderData.currentPage + 1} of {orderData.totalPages}
           </div>
           <div className="flex space-x-2">
             <button 
               onClick={() => handlePageChange(page - 1)} 
               disabled={page === 0}
-              className={`px-3 py-1 border rounded ${page === 0 ? 'bg-gray-200 text-gray-500' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              className={`px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors duration-200 ${
+                page === 0 
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
             >
               Previous
             </button>
             <button 
               onClick={() => handlePageChange(page + 1)} 
               disabled={page >= orderData.totalPages - 1}
-              className={`px-3 py-1 border rounded ${page >= orderData.totalPages - 1 ? 'bg-gray-200 text-gray-500' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              className={`px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors duration-200 ${
+                page >= orderData.totalPages - 1 
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
             >
               Next
             </button>
@@ -255,37 +299,41 @@ const OrderList: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r white relative overflow-hidden min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       <div className="w-full">
         <SubNav/> 
       </div>
-      <div className="w-full">
+      <div className="w-full shadow-md">
         <NavigationBar/>
       </div>
-      {/* Gap above search bar */}
-      <div className="mt-8" />
-      <div className="flex justify-between items-center mb-6 max-w-7xl mx-auto px-4">
-        <h1 className="text-2xl font-bold text-orange-500">Order List</h1>
-        <div className="flex">
-          <form onSubmit={handleSearch} className="flex">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={handleSearchInputChange}
-              placeholder="Search by order ID, user ID, status..."
-              className="border rounded-l px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            <button 
-              type="submit"
-              className="bg-orange-500 text-white px-4 py-2 rounded-r hover:bg-orange-600"
-            >
-              Search
-            </button>
-          </form>
+      
+      <div className="container mx-auto py-8 bg-gray-700">
+        <div className="flex justify-between items-center mb-8 max-w-7xl mx-auto px-4">
+          <h1 className="text-2xl font-bold text-white">
+            <span className="border-b-4 border-orange-500 pb-1">Order Management</span>
+          </h1>
+          <div className="flex">
+            <form onSubmit={handleSearch} className="flex">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchInputChange}
+                placeholder="Search orders..."
+                className="border border-gray-300 rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-64 shadow-sm text-white"
+              />
+              <button 
+                type="submit"
+                className="bg-orange-500 text-white px-6 py-2 rounded-r-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors duration-300 font-medium shadow-sm"
+              >
+                Search
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
 
-      {renderContent()}
+        {renderContent()}
+      </div>
+      
       <Footer />
     </div>
   );
