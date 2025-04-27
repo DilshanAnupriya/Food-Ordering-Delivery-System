@@ -51,14 +51,18 @@ const OrderForm = () => {
   const [multipleOrders, setMultipleOrders] = useState(false);
   const [completedOrders, setCompletedOrders] = useState([]);
 
+  const userId = user?.userId;
+  console.log(userId);
+
   const [order, setOrder] = useState({
-    userId: user?.userId || 0,
+    userId: user?.userId || user?.id || 0,
+    userName: user?.name || user?.userName || user?.fullName || '',
     restaurantId: 0,
     status: OrderStatus.PLACED,
     deliveryAddress: '',
     longitude: null,
     latitude: null,
-    contactPhone: '',
+    contactPhone: user?.phone || user?.contactPhone || user?.phoneNumber || '',
     subtotal: 0,
     deliveryFee: 5, // Default delivery fee
     tax: 0,
@@ -73,6 +77,7 @@ const OrderForm = () => {
     // Handle params from URL
     const queryParams = new URLSearchParams(location.search);
     const restaurantId = queryParams.get('restaurantId');
+
 
     // Fetch cart data from sessionStorage (set in CartPage during checkout)
     const storedCartData = sessionStorage.getItem('cartRestaurantGroups');
@@ -108,7 +113,7 @@ const OrderForm = () => {
     }
 
     setupLocation();
-  }, [location.search, isEditMode, navigate, user]);
+  }, [location.search, isEditMode, navigate, user?.userId]);
 
   const fetchOrder = async () => {
     if (isEditMode) {
@@ -136,11 +141,9 @@ const OrderForm = () => {
       navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            // @ts-ignore
             setPosition([latitude, longitude]);
 
             // Set order's latitude and longitude
-            // @ts-ignore
             setOrder(prev => ({
               ...prev,
               latitude,
@@ -178,10 +181,9 @@ const OrderForm = () => {
       totalPrice: item.price * item.quantity
     }));
 
-    // Update order with restaurant specific data
+    // Update order with restaurant specific data, preserving user data
     setOrder(prev => ({
       ...prev,
-      userId: user?.userId || 0,
       restaurantId: parseInt(restaurantId),
       orderItems: orderItems,
       subtotal: restaurantData.totalPrice,
@@ -403,17 +405,47 @@ const OrderForm = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="bg-gray-200 rounded-lg shadow-md p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label className="block text-gray-700 mb-2">User ID</label>
-                <input
-                    type="number"
-                    name="userId"
-                    value={order.userId || ''}
-                    readOnly
-                    className="w-full p-2 border rounded bg-gray-100"
-                />
+            {/* User Information Section */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4">Customer Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-gray-700 mb-2">User ID</label>
+                  <input
+                      type="text"
+                      name="userId"
+                      value={userId}
+                      readOnly
+                      className="w-full p-2 border rounded bg-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2">Contact Phone</label>
+                  <input
+                      type="text"
+                      name="contactPhone"
+                      value={order.contactPhone}
+                      onChange={handleChange}
+                      required
+                      className="w-full p-2 border rounded"
+                      placeholder="Enter your phone number"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2">Status</label>
+                  <input
+                      type="text"
+                      value={OrderStatus.PLACED}
+                      readOnly
+                      className="w-full p-2 border rounded bg-gray-100"
+                  />
+                </div>
               </div>
+            </div>
+
+            {/* Restaurant Info */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4">Restaurant Information</h2>
               <div>
                 <label className="block text-gray-700 mb-2">Restaurant</label>
                 <input
@@ -426,27 +458,6 @@ const OrderForm = () => {
                     type="hidden"
                     name="restaurantId"
                     value={order.restaurantId || ''}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Status</label>
-                <input
-                    type="text"
-                    value={OrderStatus.PLACED}
-                    readOnly
-                    className="w-full p-2 border rounded bg-gray-100"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Contact Phone</label>
-                <input
-                    type="text"
-                    name="contactPhone"
-                    value={order.contactPhone}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-2 border rounded"
-                    placeholder="Enter your phone number"
                 />
               </div>
             </div>

@@ -14,6 +14,7 @@ public class FoodCartItemRequestDto {
     private String foodName;
     private String foodImage;
     private String restaurantId;
+    private String restaurantName;
     private double price;
     private int quantity;
 }

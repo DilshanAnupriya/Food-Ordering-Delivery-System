@@ -6,6 +6,7 @@ interface AuthContextType {
   user: any | null;
   logout: () => void;
   checkAuthStatus: () => void;
+  getToken: () => string | null;
 }
 
 interface DecodedToken {
@@ -49,12 +50,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const getToken = () => {
+    return localStorage.getItem('token');
+  };
+
   useEffect(() => {
     checkAuthStatus();
   }, []);
 
   return (
-      <AuthContext.Provider value={{ isAuthenticated, user, logout, checkAuthStatus }}>
+      <AuthContext.Provider value={{ isAuthenticated, user, logout, checkAuthStatus,getToken }}>
         {children}
       </AuthContext.Provider>
   );

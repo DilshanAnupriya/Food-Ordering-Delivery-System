@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
 import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 import { motion } from 'framer-motion'; // For animations
 import axios from 'axios';
+import {useEffect, useState} from "react";
 
 // Define FoodItem interface
 interface FoodItem {
@@ -25,6 +25,7 @@ interface CartItem {
     foodName: string;
     foodImage?: string;
     restaurantId: string;
+    restaurantName: string;
     price: number;
     quantity: number;
 }
@@ -110,6 +111,8 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
 
     const addToCart = async (item: FoodItem) => {
         const currentUserId = localStorage.getItem('userId');
+        const restaurantId = item.restaurantId;
+        console.log(restaurantId)
         const token = localStorage.getItem('token');
 
         if (!currentUserId || !token) {
@@ -123,12 +126,15 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
                 foodItemId: item.foodItemId,
                 foodName: item.name,
                 foodImage: item.imageUrl,
-                restaurantId: item.restaurantId,
+                restaurantId: restaurantId,
+                restaurantName: item.restaurantName,
                 price: item.discount > 0
                     ? parseFloat(calculateFinalPrice(item.price, item.discount))
                     : item.price,
                 quantity: 1
             };
+            console.log(cartItem.foodName);
+            console.log(cartItem.restaurantId)
 
             // Show button animation
             setAddedItemId(item.foodItemId);
@@ -140,6 +146,7 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
             let hasExistingCart = false;
             try {
                 const cartResponse = await axiosInstance.get(`/api/v1/cart/${currentUserId}`);
+                console.log(cartResponse);
                 hasExistingCart = !!(cartResponse.data && cartResponse.data.cartItems);
             } catch (err) {
                 hasExistingCart = false;
@@ -162,7 +169,7 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
 
             setCartItems(prev => [...prev, cartItem]);
             setUserId(currentUserId);
-
+            console.log(cartItems);
         } catch (error) {
             console.error('Error adding item to cart:', error);
             if (axios.isAxiosError(error) && error.response?.status === 401) {

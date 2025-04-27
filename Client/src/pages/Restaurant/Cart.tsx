@@ -259,18 +259,19 @@ const CartPage = () => {
         );
     };
 
-    // Function to proceed to checkout with selected restaurant items
     const proceedToCheckout = () => {
         // Store restaurant groups data in sessionStorage
         sessionStorage.setItem('cartRestaurantGroups', JSON.stringify(restaurantGroups));
 
-        // If there's only one restaurant, navigate directly to that restaurant's order form
+        // Get all restaurant IDs
         const restaurantIds = Object.keys(restaurantGroups);
+
+        // If there's only one restaurant, navigate directly to that restaurant's order form
         if (restaurantIds.length === 1) {
             navigate(`/orders/new?restaurantId=${restaurantIds[0]}`);
         } else {
-            // If multiple restaurants, navigate to a selection page
-            navigate('/orders/new');
+            // If multiple restaurants, still pass the first restaurant ID as default
+            navigate(`/orders/new?restaurantId=${restaurantIds[0]}`);
         }
     };
 
