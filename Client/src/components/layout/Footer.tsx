@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Logo and Company Info */}
             <div className="flex flex-col space-y-4">
-              <h1 className="text-4xl font-bold">Order<span className="text-gray-400">.uk</span></h1>
+              <h1 className="text-4xl font-bold">Order<span className=" text-orange-500">.Lk</span></h1>
 
               {/* App Store Buttons */}
               <div className="flex space-x-2">
