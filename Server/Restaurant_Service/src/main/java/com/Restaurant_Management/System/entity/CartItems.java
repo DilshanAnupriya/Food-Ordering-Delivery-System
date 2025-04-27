@@ -22,7 +22,7 @@ public class CartItems {
 
     private String foodImage;
 
-
+    private String restaurantId;
     @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart foodCart;

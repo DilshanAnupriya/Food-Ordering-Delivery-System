@@ -8,7 +8,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import SubNav from "../../components/layout/SubNav.tsx";
 import Navbar from "../../components/layout/Navbar.tsx";
 import Footer from "../../components/layout/Footer.tsx";
-import Banner from "../../components/layout/Banner.tsx";
 
 const CartPage = () => {
     const [cart, setCart] = useState(null);
@@ -16,7 +15,9 @@ const CartPage = () => {
     const [error, setError] = useState(null);
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
-    const { id } = useParams(); // Not using this anymore since we'll navigate to /cart directly
+
+    // Group cart items by restaurant
+    const [restaurantGroups, setRestaurantGroups] = useState({});
 
     const fetchCart = async () => {
         try {
@@ -34,6 +35,24 @@ const CartPage = () => {
             const response = await getCartByUserId(userId);
             if (response.code === 200) {
                 setCart(response.data);
+                // Group items by restaurant ID
+                const groupedItems = {};
+
+                response.data.cartItems.forEach(item => {
+                    const restaurantId = item.restaurantId;
+                    if (!groupedItems[restaurantId]) {
+                        groupedItems[restaurantId] = {
+                            items: [],
+                            totalPrice: 0,
+                            restaurantName: item.restaurantName || `Restaurant ${restaurantId}`
+                        };
+                    }
+                    groupedItems[restaurantId].items.push(item);
+                    groupedItems[restaurantId].totalPrice += item.price * item.quantity;
+                });
+
+                setRestaurantGroups(groupedItems);
+                console.log('Grouped by restaurant:', groupedItems);
             } else {
                 setError('Failed to fetch cart');
             }
@@ -60,12 +79,28 @@ const CartPage = () => {
                 const parsedUser = JSON.parse(storedUser);
                 if (parsedUser?.userId) {
                     // Temporarily use stored user for this request
-                    const tempUser = { ...user, userId: parsedUser.userId };
                     setLoading(true);
                     getCartByUserId(parsedUser.userId)
                         .then(response => {
                             if (response.code === 200) {
                                 setCart(response.data);
+
+                                // Group items by restaurant ID
+                                const groupedItems = {};
+                                response.data.cartItems.forEach(item => {
+                                    const restaurantId = item.restaurantId;
+                                    if (!groupedItems[restaurantId]) {
+                                        groupedItems[restaurantId] = {
+                                            items: [],
+                                            totalPrice: 0,
+                                            restaurantName: item.restaurantName || `Restaurant ${restaurantId}`
+                                        };
+                                    }
+                                    groupedItems[restaurantId].items.push(item);
+                                    groupedItems[restaurantId].totalPrice += item.price * item.quantity;
+                                });
+
+                                setRestaurantGroups(groupedItems);
                             } else {
                                 setError('Failed to fetch cart');
                             }
@@ -74,7 +109,7 @@ const CartPage = () => {
                             setError(`Error loading cart: ${err.message || 'Unknown error'}`);
                             // If we get authentication errors, redirect to login
                             if (err.response?.status === 401) {
-                                navigate('/login', { state: { from:`/cart/${user.id}` } });
+                                navigate('/login', { state: { from: '/cart' } });
                             }
                         })
                         .finally(() => setLoading(false));
@@ -83,7 +118,7 @@ const CartPage = () => {
             }
 
             // If we reach here, user is not authenticated and no valid stored data
-            navigate('/login', { state: { from: `/cart/${user.id}` } });
+            navigate('/login', { state: { from: '/cart' } });
         }
     }, [user, isAuthenticated, navigate]);
 
@@ -107,6 +142,23 @@ const CartPage = () => {
                 cartItems: updatedItems,
                 totalPrice: newTotal
             });
+
+            // Re-group items by restaurant
+            const groupedItems = {};
+            updatedItems.forEach(item => {
+                const restaurantId = item.restaurantId;
+                if (!groupedItems[restaurantId]) {
+                    groupedItems[restaurantId] = {
+                        items: [],
+                        totalPrice: 0,
+                        restaurantName: item.restaurantName || `Restaurant ${restaurantId}`
+                    };
+                }
+                groupedItems[restaurantId].items.push(item);
+                groupedItems[restaurantId].totalPrice += item.price * item.quantity;
+            });
+
+            setRestaurantGroups(groupedItems);
 
             // Call API to update backend
             await updateCartItemQuantity(userId, foodId, 1, increase);
@@ -135,6 +187,23 @@ const CartPage = () => {
                 totalPrice: newTotal
             });
 
+            // Re-group items by restaurant
+            const groupedItems = {};
+            updatedItems.forEach(item => {
+                const restaurantId = item.restaurantId;
+                if (!groupedItems[restaurantId]) {
+                    groupedItems[restaurantId] = {
+                        items: [],
+                        totalPrice: 0,
+                        restaurantName: item.restaurantName || `Restaurant ${restaurantId}`
+                    };
+                }
+                groupedItems[restaurantId].items.push(item);
+                groupedItems[restaurantId].totalPrice += item.price * item.quantity;
+            });
+
+            setRestaurantGroups(groupedItems);
+
             // Call API to remove item
             await removeCartItem(userId, foodId);
             toast.success(`${removedItem?.foodName || 'Item'} removed from cart`);
@@ -151,13 +220,13 @@ const CartPage = () => {
         if (!userId) return;
 
         try {
-            // No need for window.confirm, we'll use toast instead
             await clearCart(userId);
             setCart({
                 ...cart,
                 cartItems: [],
                 totalPrice: 0
             });
+            setRestaurantGroups({});
             toast.success("Cart cleared successfully");
         } catch (err) {
             setError(`Failed to clear cart: ${err.message || 'Unknown error'}`);
@@ -188,6 +257,21 @@ const CartPage = () => {
             </div>,
             { autoClose: false, closeButton: false }
         );
+    };
+
+    // Function to proceed to checkout with selected restaurant items
+    const proceedToCheckout = () => {
+        // Store restaurant groups data in sessionStorage
+        sessionStorage.setItem('cartRestaurantGroups', JSON.stringify(restaurantGroups));
+
+        // If there's only one restaurant, navigate directly to that restaurant's order form
+        const restaurantIds = Object.keys(restaurantGroups);
+        if (restaurantIds.length === 1) {
+            navigate(`/orders/new?restaurantId=${restaurantIds[0]}`);
+        } else {
+            // If multiple restaurants, navigate to a selection page
+            navigate('/orders/new');
+        }
     };
 
     if (loading) {
@@ -239,111 +323,131 @@ const CartPage = () => {
         <>
             <SubNav/>
             <Navbar/>
-        <div className="xl:px-[97px] 2xl:px-[320px] bg-gradient-to-r from-gray-900 to-gray-800 mx-auto p-4 bg-orange-10 pb-[50px] 2xl:pb-[90px] pt-20">
-            <ToastContainer position="top-right" autoClose={3000} />
+            <div className="xl:px-[97px] 2xl:px-[320px] bg-gradient-to-r from-gray-900 to-gray-800 mx-auto p-4 bg-orange-10 pb-[50px] 2xl:pb-[90px] pt-20">
+                <ToastContainer position="top-right" autoClose={3000} />
 
-
-            <div className=" bg-white rounded-lg shadow-md">
-                <div className="flex justify-between items-center mb-6 px-[20px] pt-10">
-                    <h1 className="text-4xl font-bold">My Cart</h1>
-                    <button
-                        onClick={confirmClearCart}
-                        className="text-white bg-red-500  px-3 py-2 rounded-2xl hover:text-red-800 text-sm"
-                    >
-                        Clear Cart
-                    </button>
-                </div>
-                <div className="p-6 border-b">
-                    <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
-                        <div className="col-span-6">Item</div>
-                        <div className="col-span-2 text-center">Price</div>
-                        <div className="col-span-2 text-center">Quantity</div>
-                        <div className="col-span-2 text-right">Subtotal</div>
+                <div className="bg-white rounded-lg shadow-md">
+                    <div className="flex justify-between items-center mb-6 px-[20px] pt-10">
+                        <h1 className="text-4xl font-bold">My Cart</h1>
+                        <button
+                            onClick={confirmClearCart}
+                            className="text-white bg-red-500 px-3 py-2 rounded-2xl hover:text-red-800 text-sm"
+                        >
+                            Clear Cart
+                        </button>
                     </div>
-                </div>
 
-                {cart.cartItems.map((item) => (
-                    <div key={item.foodItemId} className="p-6 border-b">
-                        <div className="grid grid-cols-12 gap-4 items-center">
-                            <div className="col-span-6 flex items-center">
-                                <div className="h-16 w-16 bg-gray-200 rounded-md flex items-center justify-center mr-4">
-                                    {item.foodImage ? (
-                                        <img
-                                            src={item.foodImage}
-                                            alt={item.foodName}
-                                            className="h-full w-full object-cover rounded-md"
-                                        />
-                                    ) : (
-                                        <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    )}
-                                </div>
-                                <div>
-                                    <h3 className="font-medium">{item.foodName}</h3>
-                                    <button
-                                        onClick={() => handleRemoveItem(item.foodItemId)}
-                                        className="text-red-500 text-sm mt-1 hover:underline"
-                                    >
-                                        Remove
-                                    </button>
+                    {/* Restaurant-based grouping */}
+                    {Object.keys(restaurantGroups).map(restaurantId => (
+                        <div key={restaurantId} className="mb-8 border-b pb-6">
+                            <div className="px-6 py-4 bg-gray-100 mb-4">
+                                <h2 className="text-xl font-bold">{restaurantGroups[restaurantId].restaurantName}</h2>
+                            </div>
+
+                            <div className="p-6 border-b">
+                                <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
+                                    <div className="col-span-6">Item</div>
+                                    <div className="col-span-2 text-center">Price</div>
+                                    <div className="col-span-2 text-center">Quantity</div>
+                                    <div className="col-span-2 text-right">Subtotal</div>
                                 </div>
                             </div>
 
-                            <div className="col-span-2 text-center">${item.price.toFixed(2)}</div>
+                            {restaurantGroups[restaurantId].items.map((item) => (
+                                <div key={item.foodItemId} className="p-6 border-b">
+                                    <div className="grid grid-cols-12 gap-4 items-center">
+                                        <div className="col-span-6 flex items-center">
+                                            <div className="h-16 w-16 bg-gray-200 rounded-md flex items-center justify-center mr-4">
+                                                {item.foodImage ? (
+                                                    <img
+                                                        src={item.foodImage}
+                                                        alt={item.foodName}
+                                                        className="h-full w-full object-cover rounded-md"
+                                                    />
+                                                ) : (
+                                                    <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-medium">{item.foodName}</h3>
+                                                <button
+                                                    onClick={() => handleRemoveItem(item.foodItemId)}
+                                                    className="text-red-500 text-sm mt-1 hover:underline"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
 
-                            <div className="col-span-2">
-                                <div className="flex items-center justify-center">
-                                    <button
-                                        onClick={() => handleQuantityUpdate(item.foodItemId, item.quantity, false)}
-                                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
-                                        disabled={item.quantity <= 1}
-                                    >
-                                        <span className="text-gray-600">-</span>
-                                    </button>
-                                    <span className="mx-3">{item.quantity}</span>
-                                    <button
-                                        onClick={() => handleQuantityUpdate(item.foodItemId, item.quantity, true)}
-                                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
-                                    >
-                                        <span className="text-gray-600">+</span>
-                                    </button>
+                                        <div className="col-span-2 text-center">${item.price.toFixed(2)}</div>
+
+                                        <div className="col-span-2">
+                                            <div className="flex items-center justify-center">
+                                                <button
+                                                    onClick={() => handleQuantityUpdate(item.foodItemId, item.quantity, false)}
+                                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                                                    disabled={item.quantity <= 1}
+                                                >
+                                                    <span className="text-gray-600">-</span>
+                                                </button>
+                                                <span className="mx-3">{item.quantity}</span>
+                                                <button
+                                                    onClick={() => handleQuantityUpdate(item.foodItemId, item.quantity, true)}
+                                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                                                >
+                                                    <span className="text-gray-600">+</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-span-2 text-right font-medium">
+                                            ${(item.price * item.quantity).toFixed(2)}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
 
-                            <div className="col-span-2 text-right font-medium">
-                                ${(item.price * item.quantity).toFixed(2)}
+                            <div className="px-6 py-4">
+                                <div className="flex justify-end">
+                                    <div className="w-64">
+                                        <div className="flex justify-between py-2">
+                                            <span className="font-medium">Restaurant Subtotal</span>
+                                            <span>${restaurantGroups[restaurantId].totalPrice.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
 
-                <div className="pt-8 pr-6 pb-6">
-                    <div className="flex justify-end">
-                        <div className="w-64">
-                            <div className="flex justify-between py-2 border-b">
-                                <span className="font-medium">Subtotal</span>
-                                <span>${cart.totalPrice.toFixed(2)}</span>
+                    <div className="pt-8 pr-6 pb-6">
+                        <div className="flex justify-end">
+                            <div className="w-64">
+                                <div className="flex justify-between py-2 border-b">
+                                    <span className="font-medium">Subtotal</span>
+                                    <span>${cart.totalPrice.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between py-2 border-b">
+                                    <span className="font-medium">Tax</span>
+                                    <span>Calculated at checkout</span>
+                                </div>
+                                <div className="flex justify-between py-2 mt-2">
+                                    <span className="font-bold text-lg">Total</span>
+                                    <span className="font-bold text-lg">${cart.totalPrice.toFixed(2)}</span>
+                                </div>
+                                <button
+                                    className="w-full mt-4 bg-green-600 text-white py-3 rounded-md hover:bg-green-700 font-medium"
+                                    onClick={proceedToCheckout}
+                                >
+                                    Proceed to Checkout
+                                </button>
                             </div>
-                            <div className="flex justify-between py-2 border-b">
-                                <span className="font-medium">Tax</span>
-                                <span>Calculated at checkout</span>
-                            </div>
-                            <div className="flex justify-between py-2 mt-2">
-                                <span className="font-bold text-lg">Total</span>
-                                <span className="font-bold text-lg">${cart.totalPrice.toFixed(2)}</span>
-                            </div>
-                            <button
-                                className="w-full mt-4 bg-green-600 text-white py-3 rounded-md hover:bg-green-700 font-medium"
-                                onClick={() => navigate('/checkout')}
-                            >
-                                Proceed to Checkout
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
             <Footer/>
         </>
     );

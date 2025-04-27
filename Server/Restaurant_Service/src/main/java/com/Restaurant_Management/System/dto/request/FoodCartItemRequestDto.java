@@ -13,6 +13,7 @@ public class FoodCartItemRequestDto {
     private String foodItemId;
     private String foodName;
     private String foodImage;
+    private String restaurantId;
     private double price;
     private int quantity;
 }

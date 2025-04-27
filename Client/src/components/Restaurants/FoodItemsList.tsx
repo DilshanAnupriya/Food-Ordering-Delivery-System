@@ -24,6 +24,7 @@ interface CartItem {
     foodItemId: string;
     foodName: string;
     foodImage?: string;
+    restaurantId: string;
     price: number;
     quantity: number;
 }
@@ -122,6 +123,7 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
                 foodItemId: item.foodItemId,
                 foodName: item.name,
                 foodImage: item.imageUrl,
+                restaurantId: item.restaurantId,
                 price: item.discount > 0
                     ? parseFloat(calculateFinalPrice(item.price, item.discount))
                     : item.price,
@@ -265,7 +267,6 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
                                             )}
                                         </div>
 
-                                        {/* Add to Cart button with animation */}
                                         <motion.button
                                             className={`px-4 py-2 rounded-full text-sm ${
                                                 item.available

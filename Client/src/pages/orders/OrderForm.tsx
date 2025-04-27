@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Order, OrderItem, OrderStatus } from '../../types/Order/order';
 import { orderService } from '../../services/Orders/orderService';
+import { getCartByUserId } from '../../services/Restaurants/Cart';
+import { useAuth } from '../../services/auth/authContext';
 import NavigationBar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import SubNav from '../../components/layout/SubNav';
@@ -10,7 +12,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for Leaflet icon issue
-// Removed unnecessary line as _getIconUrl is not a valid property
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -18,11 +19,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Component for location selection
-const LocationMarker: React.FC<{
-  position: [number, number] | null;
-  setPosition: React.Dispatch<React.SetStateAction<[number, number] | null>>;
-  onLocationSelect: (lat: number, lng: number) => void;
-}> = ({ position, setPosition, onLocationSelect }) => {
+const LocationMarker = ({ position, setPosition, onLocationSelect }) => {
   useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
@@ -32,24 +29,30 @@ const LocationMarker: React.FC<{
   });
 
   return position ? (
-    <Marker position={position}>
-      <Popup>Selected delivery location</Popup>
-    </Marker>
+      <Marker position={position}>
+        <Popup>Selected delivery location</Popup>
+      </Marker>
   ) : null;
 };
 
-const OrderForm: React.FC = () => {
-  const { orderId } = useParams<{ orderId: string }>();
+const OrderForm = () => {
+  const { orderId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, isAuthenticated } = useAuth();
   const isEditMode = Boolean(orderId);
-  
-  const [loading, setLoading] = useState<boolean>(isEditMode);
-  const [position, setPosition] = useState<[number, number] | null>(null);
-  // Removed unused locationAddress state
-  const [mapLoaded, setMapLoaded] = useState<boolean>(false);
-  
-  const [order, setOrder] = useState<Order>({
-    userId: 0,
+
+  const [loading, setLoading] = useState(true);
+  const [position, setPosition] = useState(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [cartData, setCartData] = useState(null);
+  const [currentRestaurantIndex, setCurrentRestaurantIndex] = useState(0);
+  const [restaurantIds, setRestaurantIds] = useState([]);
+  const [multipleOrders, setMultipleOrders] = useState(false);
+  const [completedOrders, setCompletedOrders] = useState([]);
+
+  const [order, setOrder] = useState({
+    userId: user?.userId || 0,
     restaurantId: 0,
     status: OrderStatus.PLACED,
     deliveryAddress: '',
@@ -57,78 +60,147 @@ const OrderForm: React.FC = () => {
     latitude: null,
     contactPhone: '',
     subtotal: 0,
-    deliveryFee: 0,
+    deliveryFee: 5, // Default delivery fee
     tax: 0,
     totalAmount: 0,
     orderItems: []
   });
 
   // Reference to the map component
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef(null);
 
   useEffect(() => {
-    const fetchOrder = async () => {
-      if (isEditMode) {
-        try {
-          setLoading(true);
-          const data = await orderService.getOrderById(parseInt(orderId!));
-          setOrder(data);
-          
-          // Set position if latitude and longitude exist
-          if (data.latitude && data.longitude) {
-            setPosition([data.latitude, data.longitude]);
-          }
-        } catch (error) {
-          console.error('Error fetching order:', error);
-          alert('Failed to fetch order details');
-        } finally {
-          setLoading(false);
-        }
+    // Handle params from URL
+    const queryParams = new URLSearchParams(location.search);
+    const restaurantId = queryParams.get('restaurantId');
+
+    // Fetch cart data from sessionStorage (set in CartPage during checkout)
+    const storedCartData = sessionStorage.getItem('cartRestaurantGroups');
+
+    if (storedCartData) {
+      const parsedData = JSON.parse(storedCartData);
+      setCartData(parsedData);
+
+      // Get all restaurant IDs from cart
+      const allRestaurantIds = Object.keys(parsedData);
+      setRestaurantIds(allRestaurantIds);
+
+      // Check if there are multiple restaurants
+      if (allRestaurantIds.length > 1) {
+        setMultipleOrders(true);
       }
-    };
 
-    fetchOrder();
-  }, [orderId, isEditMode]);
+      // If a specific restaurant ID is provided in URL, start with that
+      if (restaurantId && allRestaurantIds.includes(restaurantId)) {
+        const index = allRestaurantIds.indexOf(restaurantId);
+        setCurrentRestaurantIndex(index);
+        loadRestaurantItems(parsedData, restaurantId);
+      } else {
+        // Otherwise, start with the first restaurant in the list
+        loadRestaurantItems(parsedData, allRestaurantIds[0]);
+      }
+    } else if (isEditMode) {
+      fetchOrder();
+    } else {
+      // If no cart data and not in edit mode, redirect to cart
+      alert('No items found in cart. Redirecting to cart page.');
+      navigate('/cart');
+    }
 
-  useEffect(() => {
+    setupLocation();
+  }, [location.search, isEditMode, navigate, user]);
+
+  const fetchOrder = async () => {
+    if (isEditMode) {
+      try {
+        setLoading(true);
+        const data = await orderService.getOrderById(parseInt(orderId));
+        setOrder(data);
+
+        // Set position if latitude and longitude exist
+        if (data.latitude && data.longitude) {
+          setPosition([data.latitude, data.longitude]);
+        }
+      } catch (error) {
+        console.error('Error fetching order:', error);
+        alert('Failed to fetch order details');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const setupLocation = () => {
     // Get user's current location when component mounts
     if (navigator.geolocation && !isEditMode) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setPosition([latitude, longitude]);
-          
-          // Set order's latitude and longitude
-          setOrder(prev => ({
-            ...prev,
-            latitude,
-            longitude
-          }));
-          
-          // Reverse geocode to get address
-          reverseGeocode(latitude, longitude);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          // Default position (if user denies location access)
-          setPosition([40.7128, -74.0060]);  // New York City coordinates
-        }
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            // @ts-ignore
+            setPosition([latitude, longitude]);
+
+            // Set order's latitude and longitude
+            // @ts-ignore
+            setOrder(prev => ({
+              ...prev,
+              latitude,
+              longitude
+            }));
+
+            // Reverse geocode to get address
+            reverseGeocode(latitude, longitude);
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            // Default position (if user denies location access)
+            setPosition([40.7128, -74.0060]);  // New York City coordinates
+          }
       );
     }
-    
-    setMapLoaded(true);
-  }, [isEditMode]);
 
-  const reverseGeocode = async (lat: number, lng: number): Promise<void> => {
+    setMapLoaded(true);
+  };
+
+  const loadRestaurantItems = (cartData, restaurantId) => {
+    const restaurantData = cartData[restaurantId];
+
+    if (!restaurantData) {
+      console.error('Restaurant data not found:', restaurantId);
+      return;
+    }
+
+    // Convert cart items to order items
+    const orderItems = restaurantData.items.map(item => ({
+      menuItemId: item.foodItemId,
+      itemName: item.foodName,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      totalPrice: item.price * item.quantity
+    }));
+
+    // Update order with restaurant specific data
+    setOrder(prev => ({
+      ...prev,
+      userId: user?.userId || 0,
+      restaurantId: parseInt(restaurantId),
+      orderItems: orderItems,
+      subtotal: restaurantData.totalPrice,
+      tax: restaurantData.totalPrice * 0.1, // 10% tax
+      totalAmount: restaurantData.totalPrice + (restaurantData.totalPrice * 0.1) + 5 // subtotal + tax + delivery fee
+    }));
+
+    setLoading(false);
+  };
+
+  const reverseGeocode = async (lat, lng) => {
     try {
       // Using OpenStreetMap Nominatim API for reverse geocoding
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
       );
       const data = await response.json();
-      
+
       if (data.display_name) {
-        // Removed setLocationAddress as it is not defined
         setOrder(prev => ({
           ...prev,
           deliveryAddress: data.display_name
@@ -139,62 +211,43 @@ const OrderForm: React.FC = () => {
     }
   };
 
-  const handleLocationSelect = async (lat: number, lng: number) => {
+  const handleLocationSelect = async (lat, lng) => {
     setOrder(prev => ({
       ...prev,
       latitude: lat,
       longitude: lng
     }));
-    
+
     // Get address from coordinates
     await reverseGeocode(lat, lng);
   };
 
-  const calculateTotals = () => {
-    const subtotal = order.orderItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-    const tax = subtotal * 0.1; 
-    const deliveryFee = 5; 
-    const totalAmount = subtotal + tax + deliveryFee;
-
-    setOrder({
-      ...order,
-      subtotal,
-      tax,
-      deliveryFee,
-      totalAmount
-    });
-  };
-
-  useEffect(() => {
-    calculateTotals();
-  }, [order.orderItems]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // For new orders, keep status as PLACED
     if (!isEditMode && name === 'status') {
       return;
     }
-    
+
     setOrder({
       ...order,
       [name]: name === 'userId' || name === 'restaurantId' ? parseInt(value) || 0 : value
     });
   };
 
-  const handleItemChange = (index: number, field: keyof OrderItem, value: any) => {
+  const handleItemChange = (index, field, value) => {
     const updatedItems = [...order.orderItems];
-    
+
     if (field === 'quantity' || field === 'unitPrice') {
       // Fix for NaN - use parseFloat and handle empty values
       const numValue = value === '' ? 0 : parseFloat(value);
-      
+
       updatedItems[index] = {
         ...updatedItems[index],
         [field]: isNaN(numValue) ? 0 : numValue
       };
-      
+
       // Recalculate total price for this item
       if (field === 'quantity' || field === 'unitPrice') {
         const quantity = field === 'quantity' ? (isNaN(numValue) ? 0 : numValue) : updatedItems[index].quantity;
@@ -207,60 +260,104 @@ const OrderForm: React.FC = () => {
         [field]: field === 'menuItemId' ? parseInt(value) || 0 : value
       };
     }
-    
+
+    // Recalculate totals
+    const subtotal = updatedItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+    const tax = subtotal * 0.1;
+    const totalAmount = subtotal + tax + order.deliveryFee;
+
     setOrder({
       ...order,
-      orderItems: updatedItems
+      orderItems: updatedItems,
+      subtotal,
+      tax,
+      totalAmount
     });
   };
 
-  const addItem = () => {
-    const newItem: OrderItem = {
-      menuItemId: 0,
-      itemName: '',
-      quantity: 1,
-      unitPrice: 0,
-      totalPrice: 0
-    };
-    
-    setOrder({
-      ...order,
-      orderItems: [...order.orderItems, newItem]
-    });
-  };
-
-  const removeItem = (index: number) => {
-    const updatedItems = order.orderItems.filter((_, i) => i !== index);
-    setOrder({
-      ...order,
-      orderItems: updatedItems
-    });
-  };
-
-  const handleAddressChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleAddressChange = (e) => {
     setOrder({
       ...order,
       deliveryAddress: e.target.value
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleGetCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setPosition([latitude, longitude]);
+
+            // Set order's latitude and longitude
+            setOrder(prev => ({
+              ...prev,
+              latitude,
+              longitude
+            }));
+
+            // Reverse geocode to get address
+            reverseGeocode(latitude, longitude);
+
+            // Center map on new position
+            if (mapRef.current) {
+              mapRef.current.flyTo([latitude, longitude], 15);
+            }
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            alert('Unable to get your current location');
+          }
+      );
+    } else {
+      alert('Geolocation is not supported by your browser');
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    if (!order.deliveryAddress || !order.contactPhone) {
+      alert('Please provide delivery address and contact phone');
+      return;
+    }
+
+    if (order.orderItems.length === 0) {
+      alert('Your order must contain at least one item');
+      return;
+    }
+
     try {
-      if (isEditMode) {
-        // For existing orders, we keep the current status
-        await orderService.updateOrder(parseInt(orderId!), order);
-        alert('Order updated successfully');
-      } else {
-        // For new orders, we set the status to PLACED
-        const newOrder = {
-          ...order,
-          status: OrderStatus.PLACED
-        };
-        await orderService.createOrder(newOrder);
-        alert('Order created successfully');
+      // Create the order
+      const createdOrder = await orderService.createOrder({
+        ...order,
+        status: OrderStatus.PLACED
+      });
+
+      // For multiple restaurants, handle next restaurant order
+      if (multipleOrders) {
+        // Store the completed order
+        setCompletedOrders([...completedOrders, createdOrder]);
+
+        // Move to the next restaurant if there are more
+        if (currentRestaurantIndex < restaurantIds.length - 1) {
+          const nextIndex = currentRestaurantIndex + 1;
+          setCurrentRestaurantIndex(nextIndex);
+          loadRestaurantItems(cartData, restaurantIds[nextIndex]);
+
+          // Show progress alert
+          alert(`Order for ${cartData[restaurantIds[currentRestaurantIndex]].restaurantName} created successfully! Now creating order for ${cartData[restaurantIds[nextIndex]].restaurantName}.`);
+          return;
+        }
       }
+
+      // All orders are complete
+      alert('Order(s) created successfully!');
+
+      // Clear cart data from session storage
+      sessionStorage.removeItem('cartRestaurantGroups');
+
+      // Navigate to orders list
       navigate('/orders');
     } catch (error) {
       console.error('Error saving order:', error);
@@ -268,328 +365,291 @@ const OrderForm: React.FC = () => {
     }
   };
 
-  const handleGetCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setPosition([latitude, longitude]);
-          
-          // Set order's latitude and longitude
-          setOrder(prev => ({
-            ...prev,
-            latitude,
-            longitude
-          }));
-          
-          // Reverse geocode to get address
-          reverseGeocode(latitude, longitude);
-          
-          // Center map on new position
-          if (mapRef.current) {
-            if (mapRef.current) {
-              mapRef.current.flyTo([latitude, longitude], 15);
-            }
-          }
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          alert('Unable to get your current location');
-        }
-      );
-    } else {
-      alert('Geolocation is not supported by your browser');
-    }
-  };
+  if (loading) {
+    return (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+    );
+  }
 
-  if (loading) return <div className="text-center mt-10">Loading order data...</div>;
+  // Get current restaurant name
+  const currentRestaurantName = cartData && restaurantIds.length > 0
+      ? cartData[restaurantIds[currentRestaurantIndex]]?.restaurantName || `Restaurant ${order.restaurantId}`
+      : `Restaurant ${order.restaurantId}`;
 
   return (
-    <div className="bg-gradient-to-r white relative overflow-hidden">
-      <div className="w-full">
-         <SubNav/> 
-      </div>
-      <div className="w-full">
-        <NavigationBar/>
-      </div>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">{isEditMode ? 'Edit Order' : 'Create New Order'}</h1>
+      <div className="bg-gradient-to-r white relative overflow-hidden">
+        <div className="w-full">
+          <SubNav/>
         </div>
-
-        <form onSubmit={handleSubmit} className="bg-gray-200 rounded-lg shadow-md p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label className="block text-gray-700 mb-2">User ID</label>
-              <input
-                type="number"
-                name="userId"
-                value={order.userId || ''}
-                onChange={handleChange}
-                required
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-2">Restaurant ID</label>
-              <input
-                type="number"
-                name="restaurantId"
-                value={order.restaurantId || ''}
-                onChange={handleChange}
-                required
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-2">Status</label>
-              {isEditMode ? (
-                <select
-                  name="status"
-                  value={order.status}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded"
-                >
-                  {Object.values(OrderStatus).map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  value={OrderStatus.PLACED}
-                  readOnly
-                  className="w-full p-2 border rounded bg-gray-100"
-                />
-              )}
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-2">Contact Phone</label>
-              <input
-                type="text"
-                name="contactPhone"
-                value={order.contactPhone}
-                onChange={handleChange}
-                required
-                className="w-full p-2 border rounded"
-              />
-            </div>
-          </div>
-
-          {/* Map and location section */}
+        <div className="w-full">
+          <NavigationBar/>
+        </div>
+        <div className="container mx-auto px-4 py-8">
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Delivery Location</h2>
-            
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="md:w-1/2">
-                <div className="mb-4">
-                  <button
-                    type="button"
-                    onClick={handleGetCurrentLocation}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
-                  >
-                    Use My Current Location
-                  </button>
-                  
-                  {/* Map container */}
-                  <div className="border rounded shadow-md" style={{ height: '400px' }}>
-                    {mapLoaded && (
-                      <MapContainer
-                        center={position || [40.7128, -74.0060]} // Default to NYC if no position
-                        zoom={13}
-                        style={{ height: '100%', width: '100%' }}
-                        ref={mapRef}
-                      >
-                        <TileLayer
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        />
-                        <LocationMarker 
-                          position={position}
-                          setPosition={setPosition}
-                          onLocationSelect={handleLocationSelect}
-                        />
-                      </MapContainer>
-                    )}
-                  </div>
-                  
-                  <div className="mt-2 text-sm text-gray-600">
-                    Click on the map to select delivery location or use your current location
-                  </div>
-                </div>
-              </div>
-              
-              <div className="md:w-1/2">
-                <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Delivery Address</label>
-                  <textarea
-                    name="deliveryAddress"
-                    value={order.deliveryAddress}
-                    onChange={handleAddressChange}
-                    required
-                    rows={4}
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-700 mb-2">Latitude</label>
-                    <input
-                      type="text"
-                      readOnly
-                      value={order.latitude !== null ? order.latitude.toFixed(6) : ''}
-                      className="w-full p-2 border rounded bg-gray-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-2">Longitude</label>
-                    <input
-                      type="text"
-                      readOnly
-                      value={order.longitude !== null ? order.longitude.toFixed(6) : ''}
-                      className="w-full p-2 border rounded bg-gray-100"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <h1 className="text-2xl font-bold">
+              {isEditMode ? 'Edit Order' : 'Create New Order'}
+              {multipleOrders && ` (${currentRestaurantIndex + 1}/${restaurantIds.length})`}
+            </h1>
 
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Order Items</h2>
-              <button
-                type="button"
-                onClick={addItem}
-                className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-              >
-                Add Item
-              </button>
-            </div>
-
-            {order.orderItems.length === 0 ? (
-              <div className="text-center py-4 bg-gray-50 rounded">
-                No items added yet. Click "Add Item" to add order items.
-              </div>
-            ) : (
-              order.orderItems.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2 mb-4 p-4 bg-gray-50 rounded">
-                  {/* Preserve the item ID for update operations */}
-                  {item.id && (
-                    <input 
-                      type="hidden" 
-                      name={`orderItems[${index}].id`} 
-                      value={item.id} 
-                    />
-                  )}
-                  <div className="col-span-3">
-                    <label className="block text-gray-700 text-sm mb-1">Item Name</label>
-                    <input
-                      type="text"
-                      value={item.itemName}
-                      onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
-                      required
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-gray-700 text-sm mb-1">Menu Item ID</label>
-                    <input
-                      type="number"
-                      value={item.menuItemId || ''}
-                      onChange={(e) => handleItemChange(index, 'menuItemId', e.target.value)}
-                      required
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-gray-700 text-sm mb-1">Quantity</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity || ''}
-                      onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                      required
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-gray-700 text-sm mb-1">Unit Price</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.unitPrice || ''}
-                      onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
-                      required
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-gray-700 text-sm mb-1">Total Price</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={item.totalPrice || ''}
-                      readOnly
-                      className="w-full p-2 border rounded bg-gray-100"
-                    />
-                  </div>
-                  <div className="col-span-1 flex items-end">
-                    <button
-                      type="button"
-                      onClick={() => removeItem(index)}
-                      className="bg-red-500 text-white p-2 rounded hover:bg-red-600 h-10 w-10 flex items-center justify-center"
-                    >
-                      X
-                    </button>
-                  </div>
+            {multipleOrders && (
+                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p>Creating order {currentRestaurantIndex + 1} of {restaurantIds.length} -
+                    <span className="font-semibold"> {currentRestaurantName}</span>
+                  </p>
                 </div>
-              ))
             )}
           </div>
 
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            <div className="bg-gray-50 p-4 rounded">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="text-gray-700">Subtotal:</div>
-                <div className="text-right">${order.subtotal.toFixed(2)}</div>
-                
-                <div className="text-gray-700">Tax:</div>
-                <div className="text-right">${order.tax.toFixed(2)}</div>
-                
-                <div className="text-gray-700">Delivery Fee:</div>
-                <div className="text-right">${order.deliveryFee.toFixed(2)}</div>
-                
-                <div className="font-semibold">Total:</div>
-                <div className="text-right font-semibold">${order.totalAmount.toFixed(2)}</div>
+          <form onSubmit={handleSubmit} className="bg-gray-200 rounded-lg shadow-md p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block text-gray-700 mb-2">User ID</label>
+                <input
+                    type="number"
+                    name="userId"
+                    value={order.userId || ''}
+                    readOnly
+                    className="w-full p-2 border rounded bg-gray-100"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Restaurant</label>
+                <input
+                    type="text"
+                    value={currentRestaurantName}
+                    readOnly
+                    className="w-full p-2 border rounded bg-gray-100"
+                />
+                <input
+                    type="hidden"
+                    name="restaurantId"
+                    value={order.restaurantId || ''}
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Status</label>
+                <input
+                    type="text"
+                    value={OrderStatus.PLACED}
+                    readOnly
+                    className="w-full p-2 border rounded bg-gray-100"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Contact Phone</label>
+                <input
+                    type="text"
+                    name="contactPhone"
+                    value={order.contactPhone}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-2 border rounded"
+                    placeholder="Enter your phone number"
+                />
               </div>
             </div>
-          </div>
-          
-          <div className="flex space-x-4">
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
-            >
-              {isEditMode ? 'Update Order' : 'Create Order'}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/orders')}
-              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+
+            {/* Map and location section */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4">Delivery Location</h2>
+
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="md:w-1/2">
+                  <div className="mb-4">
+                    <button
+                        type="button"
+                        onClick={handleGetCurrentLocation}
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
+                    >
+                      Use My Current Location
+                    </button>
+
+                    {/* Map container */}
+                    <div className="border rounded shadow-md" style={{ height: '400px' }}>
+                      {mapLoaded && (
+                          <MapContainer
+                              center={position || [40.7128, -74.0060]} // Default to NYC if no position
+                              zoom={13}
+                              style={{ height: '100%', width: '100%' }}
+                              ref={mapRef}
+                          >
+                            <TileLayer
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            />
+                            <LocationMarker
+                                position={position}
+                                setPosition={setPosition}
+                                onLocationSelect={handleLocationSelect}
+                            />
+                          </MapContainer>
+                      )}
+                    </div>
+
+                    <div className="mt-2 text-sm text-gray-600">
+                      Click on the map to select delivery location or use your current location
+                    </div>
+                  </div>
+                </div>
+
+                <div className="md:w-1/2">
+                  <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Delivery Address</label>
+                    <textarea
+                        name="deliveryAddress"
+                        value={order.deliveryAddress}
+                        onChange={handleAddressChange}
+                        required
+                        rows={4}
+                        className="w-full p-2 border rounded"
+                        placeholder="Enter your delivery address"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-700 mb-2">Latitude</label>
+                      <input
+                          type="text"
+                          readOnly
+                          value={order.latitude !== null ? order.latitude.toFixed(6) : ''}
+                          className="w-full p-2 border rounded bg-gray-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 mb-2">Longitude</label>
+                      <input
+                          type="text"
+                          readOnly
+                          value={order.longitude !== null ? order.longitude.toFixed(6) : ''}
+                          className="w-full p-2 border rounded bg-gray-100"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+
+              {order.orderItems.length === 0 ? (
+                  <div className="text-center py-4 bg-gray-50 rounded">
+                    No items loaded. Please return to cart and try again.
+                  </div>
+              ) : (
+                  <div className="bg-white rounded-md shadow-sm overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                      </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                      {order.orderItems.map((item, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">{item.itemName}</div>
+                                  <div className="text-sm text-gray-500">Item ID: {item.menuItemId}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <div className="flex items-center justify-center">
+                                <button
+                                    type="button"
+                                    onClick={() => item.quantity > 1 && handleItemChange(index, 'quantity', item.quantity - 1)}
+                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                                    disabled={item.quantity <= 1}
+                                >
+                                  <span className="text-gray-600">-</span>
+                                </button>
+                                <span className="mx-3">{item.quantity}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleItemChange(index, 'quantity', item.quantity + 1)}
+                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                                >
+                                  <span className="text-gray-600">+</span>
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                              ${item.unitPrice.toFixed(2)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              ${item.totalPrice.toFixed(2)}
+                            </td>
+                          </tr>
+                      ))}
+                      </tbody>
+                    </table>
+                  </div>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+              <div className="bg-gray-50 p-4 rounded">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-gray-700">Subtotal:</div>
+                  <div className="text-right">${order.subtotal.toFixed(2)}</div>
+
+                  <div className="text-gray-700">Tax (10%):</div>
+                  <div className="text-right">${order.tax.toFixed(2)}</div>
+
+                  <div className="text-gray-700">Delivery Fee:</div>
+                  <div className="text-right">${order.deliveryFee.toFixed(2)}</div>
+
+                  <div className="font-semibold border-t pt-2 mt-2">Total:</div>
+                  <div className="text-right font-semibold border-t pt-2 mt-2">${order.totalAmount.toFixed(2)}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                  type="submit"
+                  className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+                  disabled={order.orderItems.length === 0}
+              >
+                {multipleOrders && currentRestaurantIndex < restaurantIds.length - 1
+                    ? `Place Order & Continue (${currentRestaurantIndex + 1}/${restaurantIds.length})`
+                    : 'Place Order'}
+              </button>
+              <button
+                  type="button"
+                  onClick={() => navigate('/cart')}
+                  className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+              >
+                Back to Cart
+              </button>
+            </div>
+
+            {/* Completed orders status */}
+            {completedOrders.length > 0 && (
+                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+                  <h3 className="text-lg font-medium text-green-800 mb-2">Orders Completed</h3>
+                  <ul className="list-disc list-inside">
+                    {completedOrders.map((completedOrder, index) => (
+                        <li key={index} className="text-green-700">
+                          Order #{completedOrder.id || index + 1} for {cartData[completedOrder.restaurantId]?.restaurantName || `Restaurant ${completedOrder.restaurantId}`}
+                        </li>
+                    ))}
+                  </ul>
+                </div>
+            )}
+          </form>
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
   );
 };
 

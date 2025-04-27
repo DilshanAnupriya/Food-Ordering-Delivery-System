@@ -38,7 +38,7 @@ function App() {
                     <Route path="/AdminDashboard" element={<AdminDashboard />} />
                     <Route path="/cart/:id" element={<CartPage />} />
 
-                    <Route path="/cart/:id" element={<CartPage/>}/> {/* Changed from /cart/:id to /cart */}
+
                     <Route path="/orders" element={<OrderList />} />
                     <Route path="/orders/new" element={<OrderForm />} />
                     <Route path="/orders/:orderId" element={<OrderDetail />} />
