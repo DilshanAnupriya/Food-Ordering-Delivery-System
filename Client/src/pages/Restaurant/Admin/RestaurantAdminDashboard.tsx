@@ -324,7 +324,7 @@ const RestaurantDashboard: React.FC = () => {
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                                 className="flex-1 text-gray-600 hover:text-orange-600 flex items-center justify-center gap-1 py-2"
-                                                onClick={() => navigate(`/edit-restaurant/${restaurant.restaurantId}`)}
+                                                onClick={() => navigate(`/update/${restaurant.restaurantId}`)}
                                             >
                                                 <Edit size={16} />
                                                 <span>Edit</span>

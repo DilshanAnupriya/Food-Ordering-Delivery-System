@@ -44,6 +44,7 @@ interface Restaurant {
     description: string;
     active: boolean;
     imageUrl: string;
+    coverImageUrl: string;
     updatedAt: string;
     createdAt: string;
     // Using optional categories field

@@ -7,10 +7,8 @@ import {
     HelpCircle,
     LogOut,
     ChevronDown,
-    X,
     Moon,
     Sun,
-    Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,7 +18,7 @@ interface AdminNavbarProps {
     sidebarOpen?: boolean;
 }
 
-const AdminNavbar: React.FC<AdminNavbarProps> = ({ onToggleSidebar, sidebarOpen }) => {
+const AdminNavbar: React.FC<AdminNavbarProps> = () => {
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
@@ -60,7 +58,6 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ onToggleSidebar, sidebarOpen 
         visible: { opacity: 1, y: 0, scale: 1 }
     };
 
-    console.log(sidebarOpen);
 
     return (
         <nav className="bg-white border-b rounded-3xl border-gray-200 fixed w-[calc(100%-300px)] z-30 mt-2 shadow-sm ml-5">

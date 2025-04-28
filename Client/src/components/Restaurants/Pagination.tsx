@@ -5,8 +5,8 @@ import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 interface PaginationProps {
     page: number,
     size: number,
-    totalItems: number,
     onPageChange: (page: number) => void,
+    totalItems?: number,
 
 }
 
@@ -17,6 +17,7 @@ const Pagination: React.FC<PaginationProps> = ({
                                                    onPageChange,
                                                }) => {
     // Calculate total pages
+    // @ts-ignore
     const totalPages = Math.ceil(totalItems / size);
 
     // Generate page numbers to display
