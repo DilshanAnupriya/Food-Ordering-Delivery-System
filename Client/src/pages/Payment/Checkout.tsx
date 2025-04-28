@@ -7,8 +7,15 @@ const Checkout = ({ userId, orderId }: { userId: number; orderId: number }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [amount, setAmount] = useState<number>(0);
 
-  // Load your Stripe public key
-  const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+  // Load your Stripe public key with error handling
+  const stripePromise = (() => {
+    const key = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    if (!key) {
+      console.error('Stripe public key is not configured');
+      return null;
+    }
+    return loadStripe(key);
+  })();
 
   // Fetch the amount dynamically (e.g., from an API or context)
   useEffect(() => {
@@ -28,6 +35,11 @@ const Checkout = ({ userId, orderId }: { userId: number; orderId: number }) => {
   }, [orderId]);
 
   const handleCheckout = async () => {
+    if (!stripePromise) {
+      setErrorMessage("Payment system is not properly configured. Please contact support.");
+      return;
+    }
+
     setIsLoading(true);
     setErrorMessage(null);
 
@@ -45,10 +57,14 @@ const Checkout = ({ userId, orderId }: { userId: number; orderId: number }) => {
       const stripe = await stripePromise;
       if (stripe) {
         const { sessionUrl } = sessionData;
+        if (!sessionUrl) {
+          throw new Error("Invalid session URL received");
+        }
         window.location.href = sessionUrl; // Redirect to Stripe
       }
     } catch (error) {
-      setErrorMessage("There was an error processing your payment.");
+      console.error("Checkout error:", error);
+      setErrorMessage("There was an error processing your payment. Please try again.");
     } finally {
       setIsLoading(false);
     }
