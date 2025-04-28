@@ -29,6 +29,7 @@ public class RestaurantResponseDto {
     private String description;
     private boolean active;
     private String imageUrl;
+    private String coverImageUrl;
     private LocalDateTime updatedAt;
     private LocalDateTime createdAt;
 }

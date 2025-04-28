@@ -27,7 +27,7 @@ export interface RestaurantResponseData {
     dataList: Restaurant[];
 }
 
-export interface RestaurantStandardResponse extends StandardResponse<RestaurantResponseData> {}
+export type RestaurantStandardResponse = StandardResponse<RestaurantResponseData>
 
 export const fetchRestaurants = async (
     searchText: string,

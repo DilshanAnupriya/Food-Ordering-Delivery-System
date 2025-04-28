@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import AdminNavbar from "../../components/admin/AdminNavbar.tsx";
+import AdminSideBar from "../../components/layout/AdminSideBar.tsx";
+
 
 // Types
 interface RestaurantRequestDto {
@@ -19,6 +23,7 @@ interface RestaurantRequestDto {
     closingTime: string;
     description: string;
     imageUrl: string;
+    coverImageUrl: string;
     active: boolean;
 }
 
@@ -29,6 +34,7 @@ interface StandardResponseDto {
 }
 
 const CreateRestaurantPage: React.FC = () => {
+
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [formData, setFormData] = useState<RestaurantRequestDto>({
         restaurantName: '',
@@ -46,8 +52,31 @@ const CreateRestaurantPage: React.FC = () => {
         closingTime: '',
         description: '',
         imageUrl: '',
+        coverImageUrl: '',
         active: true
     });
+
+    const [activeTab, setActiveTab] = useState<number>(0);
+    const [formProgress, setFormProgress] = useState<number>(0);
+
+    // Update progress bar as fields are filled
+    useEffect(() => {
+        const requiredFields = [
+            'restaurantName',
+            'restaurantAddress',
+            'restaurantPhone',
+            'restaurantEmail',
+            'restaurantType',
+            'city'
+        ];
+
+        const filledFields = requiredFields.filter(field =>
+            formData[field as keyof RestaurantRequestDto] !== '' &&
+            formData[field as keyof RestaurantRequestDto] !== 0
+        );
+
+        setFormProgress((filledFields.length / requiredFields.length) * 100);
+    }, [formData]);
 
     const restaurantTypes = [
         'Italian',
@@ -99,6 +128,7 @@ const CreateRestaurantPage: React.FC = () => {
             closingTime: '',
             description: '',
             imageUrl: '',
+            coverImageUrl: '',
             active: true
         });
     };
@@ -119,8 +149,11 @@ const CreateRestaurantPage: React.FC = () => {
             );
 
             if (response.status === 201) {
+                // Show success toast notification
                 toast.success('Restaurant created successfully!');
                 resetForm();
+                // Navigate to admin restaurant page after successful creation
+                // router.push('/admin-restaurant');
             }
         } catch (error) {
             console.error('Error creating restaurant:', error);
@@ -130,345 +163,673 @@ const CreateRestaurantPage: React.FC = () => {
         }
     };
 
+    const formTabs = [
+        { name: 'Basic Info', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+        { name: 'Details', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+        { name: 'Location', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
+        { name: 'Images', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' }
+    ];
+
+    // Animation variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                type: "spring",
+                stiffness: 100
+            }
+        }
+    };
+
+    // Function to get map preview URL using OpenStreetMap instead of Google Maps
+    // This doesn't require an API key and will work out of the box
+    const getMapPreviewUrl = () => {
+        if (formData.latitude && formData.longitude) {
+            return `https://www.openstreetmap.org/export/embed.html?bbox=${formData.longitude - 0.01}%2C${formData.latitude - 0.01}%2C${formData.longitude + 0.01}%2C${formData.latitude + 0.01}&layer=mapnik&marker=${formData.latitude}%2C${formData.longitude}`;
+        }
+        return '';
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto">
-                <div className="bg-white shadow sm:rounded-lg">
-                    <div className="px-4 py-5 sm:px-6">
-                        <h2 className="text-lg font-medium text-gray-900">Create New Restaurant</h2>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Fill in the details below to create a new restaurant in the system.
+        <>
+
+        <div className="h-screen  bg-gray-50">
+
+            <div className="ml-[250px] mt-2 ">
+                <AdminNavbar/>
+            </div>
+            <AdminSideBar/>
+            <div className="absolute xl:w-[1100px] ml-[280px] mt-[-780px]">
+
+
+            <motion.div
+                className="max-w-5xl mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="bg-white shadow-lg sm:rounded-lg overflow-hidden rounded-2xl w-full mt-3 2xl:w-[1600px] 2xl:ml-[-50px] 2xl:mt-[-150px]  h-[700px]">
+                    {/* Header with progress bar */}
+                    <div className="bg-gradient-to-r from-orange-600 to-orange-400 text-white px-6 py-4 ">
+                        <h2 className="text-2xl font-bold">Create New Restaurant</h2>
+                        <p className="mt-1 text-indigo-100">
+                            Fill in the details below to add a new restaurant to our system
                         </p>
+                        <div className="mt-4 h-2 bg-white rounded-full overflow-hidden">
+                            <motion.div
+                                className="h-full bg-white"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${formProgress}%` }}
+                                transition={{ duration: 0.5 }}
+                            />
+                        </div>
+                        <div className="flex justify-between text-xs mt-1 text-indigo-100">
+                            <span>Progress</span>
+                            <span>{Math.round(formProgress)}% Complete</span>
+                        </div>
                     </div>
 
-                    <div className="border-t border-gray-200">
-                        <form onSubmit={handleSubmit} className="px-4 py-5 sm:p-6">
-                            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                                {/* Restaurant Name */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="restaurantName" className="block text-sm font-medium text-gray-700">
-                                        Restaurant Name<span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="text"
-                                            name="restaurantName"
-                                            id="restaurantName"
-                                            required
-                                            value={formData.restaurantName}
-                                            onChange={handleInputChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
+                    {/* Tabs */}
+                    <div className="border-b border-gray-200">
+                        <nav className="flex -mb-px overflow-x-auto py-2">
+                            {formTabs.map((tab, index) => (
+                                <button
+                                    key={tab.name}
+                                    onClick={() => setActiveTab(index)}
+                                    className={`${
+                                        activeTab === index
+                                            ? 'border-orange-400 text-orange-500'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    } whitespace-nowrap flex items-center px-4 py-2 border-b-2 font-medium text-sm mx-2 transition-all duration-200`}
+                                >
+                                    <svg
+                                        className="mr-2 h-5 w-5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
+                                    </svg>
+                                    {tab.name}
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
 
-                                {/* Restaurant Type */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="restaurantType" className="block text-sm font-medium text-gray-700">
-                                        Restaurant Type<span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="mt-1">
-                                        <select
-                                            id="restaurantType"
-                                            name="restaurantType"
-                                            value={formData.restaurantType}
-                                            onChange={handleInputChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        >
-                                            {restaurantTypes.map((type) => (
-                                                <option key={type} value={type}>
-                                                    {type}
-                                                </option>
+                    <form onSubmit={handleSubmit}>
+                        {/* Basic Info Tab */}
+                        {activeTab === 0 && (
+                            <motion.div
+                                className="px-6 py-4 space-y-6"
+                                variants={containerVariants}
+                                initial="hidden"
+                                animate="visible"
+                            >
+                                <motion.div variants={itemVariants} className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                    {/* Restaurant Name */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="restaurantName" className="block text-sm font-medium text-gray-700">
+                                            Restaurant Name<span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="text"
+                                                name="restaurantName"
+                                                id="restaurantName"
+                                                required
+                                                value={formData.restaurantName}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                placeholder="Enter restaurant name"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Restaurant Type */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="restaurantType" className="block text-sm font-medium text-gray-700">
+                                            Restaurant Type<span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="mt-1">
+                                            <select
+                                                id="restaurantType"
+                                                name="restaurantType"
+                                                required
+                                                value={formData.restaurantType}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                            >
+                                                <option value="">Select type</option>
+                                                {restaurantTypes.map((type) => (
+                                                    <option key={type} value={type}>
+                                                        {type}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Restaurant Address */}
+                                    <div className="sm:col-span-6">
+                                        <label htmlFor="restaurantAddress" className="block text-sm font-medium text-gray-700">
+                                            Address<span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="text"
+                                                name="restaurantAddress"
+                                                id="restaurantAddress"
+                                                required
+                                                value={formData.restaurantAddress}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                placeholder="Enter full address"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* City */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+                                            City<span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="text"
+                                                name="city"
+                                                id="city"
+                                                required
+                                                value={formData.city}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                placeholder="Enter city name"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Phone */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="restaurantPhone" className="block text-sm font-medium text-gray-700">
+                                            Phone Number<span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="tel"
+                                                name="restaurantPhone"
+                                                id="restaurantPhone"
+                                                required
+                                                value={formData.restaurantPhone}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                placeholder="+1 (xxx) xxx-xxxx"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Email */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="restaurantEmail" className="block text-sm font-medium text-gray-700">
+                                            Email<span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="email"
+                                                name="restaurantEmail"
+                                                id="restaurantEmail"
+                                                required
+                                                value={formData.restaurantEmail}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                placeholder="restaurant@example.com"
+                                            />
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                <div className="flex justify-end 2xl:mt-30">
+                                    <motion.button
+                                        type="button"
+                                        onClick={() => setActiveTab(1)}
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Next: Details
+                                        <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Details Tab */}
+                        {activeTab === 1 && (
+                            <motion.div
+                                className="px-6 py-4 space-y-6"
+                                variants={containerVariants}
+                                initial="hidden"
+                                animate="visible"
+                            >
+                                <motion.div variants={itemVariants} className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                    {/* Description */}
+                                    <div className="sm:col-span-6">
+                                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                                            Description
+                                        </label>
+                                        <div className="mt-1">
+                                            <textarea
+                                                id="description"
+                                                name="description"
+                                                rows={3}
+                                                value={formData.description}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                placeholder="Describe your restaurant in detail..."
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Rating */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="rating" className="block text-sm font-medium text-gray-700">
+                                            Rating (1-5)
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="number"
+                                                name="rating"
+                                                id="rating"
+                                                min="1"
+                                                max="5"
+                                                step="0.1"
+                                                value={formData.rating}
+                                                onChange={handleNumberChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                            />
+                                        </div>
+                                        <div className="mt-2 flex items-center">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <svg
+                                                    key={star}
+                                                    className={`h-5 w-5 ${star <= formData.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
                                             ))}
-                                        </select>
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Restaurant Address */}
-                                <div className="sm:col-span-6">
-                                    <label htmlFor="restaurantAddress" className="block text-sm font-medium text-gray-700">
-                                        Address<span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="text"
-                                            name="restaurantAddress"
-                                            id="restaurantAddress"
-                                            required
-                                            value={formData.restaurantAddress}
-                                            onChange={handleInputChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* City */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                                        City<span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="text"
-                                            name="city"
-                                            id="city"
-                                            required
-                                            value={formData.city}
-                                            onChange={handleInputChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Phone */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="restaurantPhone" className="block text-sm font-medium text-gray-700">
-                                        Phone Number<span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="tel"
-                                            name="restaurantPhone"
-                                            id="restaurantPhone"
-                                            required
-                                            value={formData.restaurantPhone}
-                                            onChange={handleInputChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Email */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="restaurantEmail" className="block text-sm font-medium text-gray-700">
-                                        Email<span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="email"
-                                            name="restaurantEmail"
-                                            id="restaurantEmail"
-                                            required
-                                            value={formData.restaurantEmail}
-                                            onChange={handleInputChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Rating */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="rating" className="block text-sm font-medium text-gray-700">
-                                        Rating (1-5)
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="number"
-                                            name="rating"
-                                            id="rating"
-                                            min="1"
-                                            max="5"
-                                            step="0.1"
-                                            value={formData.rating}
-                                            onChange={handleNumberChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Opening Hours */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="openingTime" className="block text-sm font-medium text-gray-700">
-                                        Opening Time
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="time"
-                                            name="openingTime"
-                                            id="openingTime"
-                                            value={formData.openingTime}
-                                            onChange={handleInputChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Closing Hours */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="closingTime" className="block text-sm font-medium text-gray-700">
-                                        Closing Time
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="time"
-                                            name="closingTime"
-                                            id="closingTime"
-                                            value={formData.closingTime}
-                                            onChange={handleInputChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Latitude */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">
-                                        Latitude
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="number"
-                                            name="latitude"
-                                            id="latitude"
-                                            step="0.000001"
-                                            value={formData.latitude}
-                                            onChange={handleNumberChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Longitude */}
-                                <div className="sm:col-span-3">
-                                    <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">
-                                        Longitude
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="number"
-                                            name="longitude"
-                                            id="longitude"
-                                            step="0.000001"
-                                            value={formData.longitude}
-                                            onChange={handleNumberChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Description */}
-                                <div className="sm:col-span-6">
-                                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                                        Description
-                                    </label>
-                                    <div className="mt-1">
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows={3}
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    />
-                                    </div>
-                                </div>
-
-                                {/* Image URL */}
-                                <div className="sm:col-span-6">
-                                    <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">
-                                        Image URL
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
-                                            type="url"
-                                            name="imageUrl"
-                                            id="imageUrl"
-                                            value={formData.imageUrl}
-                                            onChange={handleInputChange}
-                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Checkboxes for availability */}
-                                <div className="sm:col-span-3">
-                                    <div className="flex items-center">
-                                        <input
-                                            id="availability"
-                                            name="availability"
-                                            type="checkbox"
-                                            checked={formData.availability}
-                                            onChange={handleCheckboxChange}
-                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                        />
-                                        <label htmlFor="availability" className="ml-2 block text-sm text-gray-700">
-                                            Restaurant Available
+                                    {/* Opening Hours */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="openingTime" className="block text-sm font-medium text-gray-700">
+                                            Opening Time
                                         </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="time"
+                                                name="openingTime"
+                                                id="openingTime"
+                                                value={formData.openingTime}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="sm:col-span-3">
-                                    <div className="flex items-center">
-                                        <input
-                                            id="orderAvailability"
-                                            name="orderAvailability"
-                                            type="checkbox"
-                                            checked={formData.orderAvailability}
-                                            onChange={handleCheckboxChange}
-                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                        />
-                                        <label htmlFor="orderAvailability" className="ml-2 block text-sm text-gray-700">
-                                            Order Available
+                                    {/* Closing Hours */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="closingTime" className="block text-sm font-medium text-gray-700">
+                                            Closing Time
                                         </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="time"
+                                                name="closingTime"
+                                                id="closingTime"
+                                                value={formData.closingTime}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="sm:col-span-3">
-                                    <div className="flex items-center">
-                                        <input
-                                            id="active"
-                                            name="active"
-                                            type="checkbox"
-                                            checked={formData.active}
-                                            onChange={handleCheckboxChange}
-                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                        />
-                                        <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
-                                            Active
+                                    {/* Checkboxes for availability */}
+                                    <div className="sm:col-span-2">
+                                        <div className="flex items-center">
+                                            <input
+                                                id="availability"
+                                                name="availability"
+                                                type="checkbox"
+                                                checked={formData.availability}
+                                                onChange={handleCheckboxChange}
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 mt-8 "
+                                            />
+                                            <label htmlFor="availability" className="ml-2 block text-sm text-gray-700 pt-8">
+                                                Restaurant Available
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="sm:col-span-2">
+                                        <div className="flex items-center">
+                                            <input
+                                                id="orderAvailability"
+                                                name="orderAvailability"
+                                                type="checkbox"
+                                                checked={formData.orderAvailability}
+                                                onChange={handleCheckboxChange}
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 p-2"
+                                            />
+                                            <label htmlFor="orderAvailability" className="ml-2 block text-sm text-gray-700">
+                                                Order Available
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="sm:col-span-2">
+                                        <div className="flex items-center">
+                                            <input
+                                                id="active"
+                                                name="active"
+                                                type="checkbox"
+                                                checked={formData.active}
+                                                onChange={handleCheckboxChange}
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 ml-[-150px]"
+                                            />
+                                            <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
+                                                Active
+                                            </label>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                <div className="flex justify-between mt-10">
+                                    <motion.button
+                                        type="button"
+                                        onClick={() => setActiveTab(0)}
+                                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                        Previous
+                                    </motion.button>
+                                    <motion.button
+                                        type="button"
+                                        onClick={() => setActiveTab(2)}
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Next: Location
+                                        <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Location Tab */}
+                        {activeTab === 2 && (
+                            <motion.div
+                                className="px-6 py-4 space-y-6"
+                                variants={containerVariants}
+                                initial="hidden"
+                                animate="visible"
+                            >
+                                <motion.div variants={itemVariants} className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                    {/* Latitude */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">
+                                            Latitude
                                         </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="number"
+                                                name="latitude"
+                                                id="latitude"
+                                                step="0.000001"
+                                                value={formData.latitude}
+                                                onChange={handleNumberChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200"
+                                                placeholder="e.g. 40.7128"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            {/* Preview Image */}
-                            {formData.imageUrl && (
-                                <div className="mt-6">
-                                    <p className="text-sm font-medium text-gray-700 mb-2">Image Preview:</p>
-                                    <div className="h-48 w-full overflow-hidden rounded-md bg-gray-100">
-                                        <img
-                                            src={formData.imageUrl}
-                                            alt="Restaurant preview"
-                                            className="h-full w-full object-cover"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).src = '/api/placeholder/400/300';
-                                                (e.target as HTMLImageElement).alt = 'Failed to load image';
-                                            }}
-                                        />
+                                    {/* Longitude */}
+                                    <div className="sm:col-span-3">
+                                        <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">
+                                            Longitude
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="number"
+                                                name="longitude"
+                                                id="longitude"
+                                                step="0.000001"
+                                                value={formData.longitude}
+                                                onChange={handleNumberChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200"
+                                                placeholder="e.g. -74.0060"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            )}
 
-                            <div className="mt-6 flex justify-end space-x-3">
-                                <button
-                                    type="button"
-                                    onClick={resetForm}
-                                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                >
-                                    Reset
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isLoading}
-                                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                                >
-                                    {isLoading ? 'Creating...' : 'Create Restaurant'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                                    {/* Map Preview */}
+                                    <div className="sm:col-span-6">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Location Preview
+                                        </label>
+                                        <div className="h-64 bg-gray-200 rounded-lg overflow-hidden">
+                                            {formData.latitude !== 0 && formData.longitude !== 0 ? (
+                                                <div className="h-full w-full relative">
+                                                    {/* Using OpenStreetMap instead of Google Maps (no API key required) */}
+                                                    <iframe
+                                                        src={getMapPreviewUrl()}
+                                                        width="100%"
+                                                        height="100%"
+                                                        style={{ border: 0 }}
+                                                        loading="lazy"
+                                                        className="absolute inset-0"
+                                                        title="Restaurant location"
+                                                        allowFullScreen
+                                                    ></iframe>
+                                                </div>
+                                            ) : (
+                                                <div className="h-full w-full flex items-center justify-center bg-gray-100 text-gray-500">
+                                                    <div className="text-center">
+                                                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        </svg>
+                                                        <p className="mt-1 text-sm">Enter latitude and longitude to see map preview</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p className="mt-2 text-xs text-gray-500">Tip: You can find coordinates by searching for the location on Google Maps</p>
+                                    </div>
+                                </motion.div>
+
+                                <div className="flex justify-between">
+                                    <motion.button
+                                        type="button"
+                                        onClick={() => setActiveTab(1)}
+                                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                        Previous
+                                    </motion.button>
+                                    <motion.button
+                                        type="button"
+                                        onClick={() => setActiveTab(3)}
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Next: Images
+                                        <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Images Tab */}
+                        {activeTab === 3 && (
+                            <motion.div
+                                className="px-6 py-4 space-y-6"
+                                variants={containerVariants}
+                                initial="hidden"
+                                animate="visible"
+                            >
+                                <motion.div variants={itemVariants} className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                    {/* Logo Image URL */}
+                                    <div className="sm:col-span-6">
+                                        <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">
+                                            Restaurant Logo URL
+                                        </label>
+                                        <div className="mt-1">
+                                            <input
+                                                type="text"
+                                                name="imageUrl"
+                                                id="imageUrl"
+                                                value={formData.imageUrl}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200"
+                                                placeholder="https://example.com/restaurant-logo.jpg"
+                                            />
+                                        </div>
+                                        {formData.imageUrl && (
+                                            <div className="mt-3 p-2 border rounded-md bg-gray-50">
+                                                <p className="text-xs text-gray-500 mb-2">Logo Preview:</p>
+                                                <div className="h-14 w-24 bg-white rounded-md flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={formData.imageUrl}
+                                                        alt="Restaurant logo preview"
+                                                        className="h-full w-full object-contain"
+                                                        onError={(e) => {
+                                                            // Replace with a placeholder if the image fails to load
+                                                            e.currentTarget.src = 'https://via.placeholder.com/150?text=Invalid+URL';
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Cover Image URL */}
+                                    <div className="sm:col-span-6">
+                                        <label htmlFor="coverImageUrl" className="block text-sm font-medium text-gray-700">
+                                            Cover Image URL
+                                        </label>
+                                        <div className="mt-0">
+                                            <input
+                                                type="text"
+                                                name="coverImageUrl"
+                                                id="coverImageUrl"
+                                                value={formData.coverImageUrl}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200"
+                                                placeholder="https://example.com/restaurant-cover.jpg"
+                                            />
+                                        </div>
+                                        {formData.coverImageUrl && (
+                                            <div className="mt-3 p-2 border rounded-md bg-gray-50">
+                                                <p className="text-xs text-gray-500 mb-2">Cover Image Preview:</p>
+                                                <div className="h-30 w-full bg-white rounded-md flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={formData.coverImageUrl}
+                                                        alt="Restaurant cover preview"
+                                                        className="h-full w-full object-cover"
+                                                        onError={(e) => {
+                                                            // Replace with a placeholder if the image fails to load
+                                                            e.currentTarget.src = 'https://via.placeholder.com/800x300?text=Invalid+URL';
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="sm:col-span-6">
+                                        <p className="text-sm text-gray-500">
+                                            Note: For best results, use high-quality images with appropriate dimensions.
+                                            The logo should be square, and the cover image should be in landscape orientation.
+                                        </p>
+                                    </div>
+                                </motion.div>
+
+                                <div className="flex justify-between pt-1">
+                                    <motion.button
+                                        type="button"
+                                        onClick={() => setActiveTab(2)}
+                                        className="inline-flex items-center  px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                        Previous
+                                    </motion.button>
+                                    <motion.button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${isLoading ? 'bg-orange-400' : 'bg-orange-500 hover:bg-orange-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500`}
+                                        whileHover={isLoading ? {} : { scale: 1.05 }}
+                                        whileTap={isLoading ? {} : { scale: 0.95 }}
+                                    >
+                                        {isLoading ? (
+                                            <>
+                                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Creating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Create Restaurant
+                                            </>
+                                        )}
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </form>
                 </div>
+            </motion.div>
+
             </div>
         </div>
+            </>
     );
 };
 

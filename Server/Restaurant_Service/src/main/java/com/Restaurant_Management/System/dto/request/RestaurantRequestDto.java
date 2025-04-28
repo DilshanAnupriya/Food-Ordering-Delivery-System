@@ -27,6 +27,7 @@ public class RestaurantRequestDto {
     private LocalTime closingTime;
     private String description;
     private String imageUrl;
+    private String coverImageUrl;
     private boolean active;
 
 }

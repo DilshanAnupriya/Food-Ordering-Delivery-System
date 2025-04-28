@@ -1,64 +1,216 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import {  UtensilsCrossed, CreditCard, Truck, HelpCircle, LogOut, ShoppingCart } from 'lucide-react';
+import {
+  UtensilsCrossed,
+  CreditCard,
+  Truck,
+  HelpCircle,
+  LogOut,
+  ShoppingCart,
+  ChevronRight,
+  ChevronLeft,
+  Store,
+  Pizza
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminSidebar: React.FC = () => {
   const location = useLocation();
-  
+  const [collapsed, setCollapsed] = useState(false);
+  const [restaurantSubmenuOpen, setRestaurantSubmenuOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setCollapsed(!collapsed);
+    if (collapsed) {
+      // When expanding, keep the submenu state as is
+    } else {
+      // When collapsing, close the submenu
+      setRestaurantSubmenuOpen(false);
+    }
+  };
+
+  const toggleRestaurantSubmenu = (e: React.MouseEvent) => {
+    if (collapsed) return;
+    e.preventDefault();
+    setRestaurantSubmenuOpen(!restaurantSubmenuOpen);
+  };
+
   const navLinkStyle = (isActive: boolean) =>
-    `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
-      isActive ? 'bg-orange-500 text-white' : 'text-gray-700 hover:bg-gray-100'
-    }`;
-    
+      `flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+          isActive ? 'bg-orange-500 text-white' : 'text-gray-700 hover:bg-orange-100'
+      }`;
+
+  const sidebarVariants = {
+    expanded: { width: '240px' },
+    collapsed: { width: '80px' }
+  };
+
+  const submenuVariants = {
+    open: {
+      height: 'auto',
+      opacity: 1,
+      transition: { duration: 0.3 }
+    },
+    closed: {
+      height: 0,
+      opacity: 0,
+      transition: { duration: 0.3 }
+    }
+  };
+
   return (
-    <aside className="fixed top-0 pt-32 left-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-20 overflow-y-auto">
-      
-      
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-6 space-y-2">
-        
-        
-      <NavLink to="/restaurent" className={({ isActive }) => navLinkStyle(isActive)}>
-          <UtensilsCrossed size={20} />
-          Restaurant Admin
-        </NavLink>
-        
-        <NavLink to="/orders" className={({ isActive }) => navLinkStyle(isActive)}>
-          <ShoppingCart size={20} />
-          Orders Admin
-        </NavLink>
-        
-        <NavLink
-          to="/delivery"
-          className={({ isActive }) =>
-            navLinkStyle(isActive || location.pathname.startsWith('/driver'))
-          }
+      <motion.div
+          className="min-h-screen bg-white shadow-lg flex flex-col relative"
+          initial="expanded"
+          animate={collapsed ? "collapsed" : "expanded"}
+          variants={sidebarVariants}
+          transition={{ duration: 0.3 }}
+      >
+        {/* Toggle button */}
+        <button
+            onClick={toggleSidebar}
+            className="absolute -right-3 top-6 bg-orange-500 text-white p-1 rounded-full shadow-lg z-10"
         >
-          <Truck size={20} />
-          Delivery Admin
-        </NavLink>
-        
-        <NavLink to="/payments" className={({ isActive }) => navLinkStyle(isActive)}>
-          <CreditCard size={20} />
-          Payments Admin
-        </NavLink>
-        
-        
-      </nav>
-      
-      {/* Footer Menu Items */}
-      <div className="px-3 py-4 border-t border-gray-200">
-        <button className="flex items-center w-full gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-          <HelpCircle size={20} />
-          Help
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
-        
-        <button className="flex items-center w-full gap-3 px-4 py-3 mt-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-          <LogOut size={20} />
-          Logout
-        </button>
-      </div>
-    </aside>
+
+        {/* Logo Area */}
+        <div className="py-6 flex justify-center items-center border-b border-gray-100">
+          <motion.div
+              animate={{ scale: [0.9, 1] }}
+              transition={{ duration: 0.5 }}
+              className="text-orange-500 font-bold text-xl flex items-center"
+          >
+            <UtensilsCrossed size={24} className="flex-shrink-0" />
+            {!collapsed && <span className="ml-2">FoodApp</span>}
+          </motion.div>
+        </div>
+
+        {/* Main Navigation */}
+        <nav className="flex-1 px-3 py-4 overflow-y-auto">
+          <ul className="space-y-2">
+            {/* Restaurant with submenu */}
+            <li>
+              <div
+                  onClick={toggleRestaurantSubmenu}
+                  className={`${navLinkStyle(
+                      location.pathname === '/restaurant' ||
+                      location.pathname === '/food-items' ||
+                      location.pathname === '/cart'
+                  )} cursor-pointer flex justify-between`}
+              >
+                <div className="flex items-center">
+                  <Store size={20} className="flex-shrink-0" />
+                  {!collapsed && <span className="ml-3">Restaurant</span>}
+                </div>
+                {!collapsed && (
+                    <ChevronRight
+                        size={16}
+                        className={`transition-transform ${restaurantSubmenuOpen ? 'rotate-90' : ''}`}
+                    />
+                )}
+              </div>
+
+              {/* Submenu */}
+              {!collapsed && (
+                  <AnimatePresence>
+                    {restaurantSubmenuOpen && (
+                        <motion.ul
+                            variants={submenuVariants}
+                            initial="closed"
+                            animate="open"
+                            exit="closed"
+                            className="ml-6 mt-2 space-y-1 overflow-hidden"
+                        >
+                          <li>
+                            <NavLink
+                                to="/admin-restaurant"
+                                className={({ isActive }) => navLinkStyle(isActive)}
+                            >
+                              <Store size={18} />
+                              <span>Restaurants</span>
+                            </NavLink>
+                          </li>
+                          <li>
+                            <NavLink
+                                to="/food-items"
+                                className={({ isActive }) => navLinkStyle(isActive)}
+                            >
+                              <Pizza size={18} />
+                              <span>Food Items</span>
+                            </NavLink>
+                          </li>
+                          <li>
+                            <NavLink
+                                to="/cart"
+                                className={({ isActive }) => navLinkStyle(isActive)}
+                            >
+                              <ShoppingCart size={18} />
+                              <span>Cart</span>
+                            </NavLink>
+                          </li>
+                        </motion.ul>
+                    )}
+                  </AnimatePresence>
+              )}
+            </li>
+
+            {/* Other menu items */}
+            <li>
+              <NavLink
+                  to="/orders"
+                  className={({ isActive }) => navLinkStyle(isActive)}
+              >
+                <UtensilsCrossed size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Orders</span>}
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                  to="/delivery"
+                  className={({ isActive }) =>
+                      navLinkStyle(isActive || location.pathname.startsWith('/driver'))
+                  }
+              >
+                <Truck size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Delivery</span>}
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                  to="/payments"
+                  className={({ isActive }) => navLinkStyle(isActive)}
+              >
+                <CreditCard size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Payments</span>}
+              </NavLink>
+            </li>
+          </ul>
+        </nav>
+
+        {/* Footer Menu Items */}
+        <div className="px-3 py-4 border-t border-gray-100">
+          <ul className="space-y-2">
+            <li>
+              <NavLink
+                  to="/help"
+                  className={({ isActive }) => navLinkStyle(isActive)}
+              >
+                <HelpCircle size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Help</span>}
+              </NavLink>
+            </li>
+            <li>
+              <button
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors text-gray-700 hover:bg-red-100 hover:text-red-600 w-full"
+              >
+                <LogOut size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Logout</span>}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </motion.div>
   );
 };
 
