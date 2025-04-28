@@ -57,7 +57,27 @@ export const orderService = {
   // Create new order
   createOrder: async (order: Order) => {
     try {
-      const response = await api.post<Order>('/orders', order);
+      // Format all numeric values with 2 decimal places and ensure proper typing
+      const orderData = {
+        ...order,
+        userId: Number(order.userId),
+        restaurantId: Number(order.restaurantId),
+        subtotal: Number(Number(order.subtotal).toFixed(2)),
+        deliveryFee: Number(Number(order.deliveryFee).toFixed(2)),
+        tax: Number(Number(order.tax).toFixed(2)),
+        totalAmount: Number(Number(order.totalAmount).toFixed(2)),
+        latitude: order.latitude !== null ? Number(Number(order.latitude).toFixed(6)) : null,
+        longitude: order.longitude !== null ? Number(Number(order.longitude).toFixed(6)) : null,
+        orderItems: order.orderItems.map(item => ({
+          ...item,
+          menuItemId: Number(item.menuItemId),
+          quantity: Number(item.quantity),
+          unitPrice: Number(Number(item.unitPrice).toFixed(2)),
+          totalPrice: Number(Number(item.totalPrice).toFixed(2))
+        }))
+      };
+
+      const response = await api.post<Order>('/orders', orderData);
       return response.data;
     } catch (error) {
       console.error('Error creating order:', error);

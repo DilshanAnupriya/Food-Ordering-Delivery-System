@@ -14,7 +14,7 @@ interface ProductRequest {
 export const createCheckoutSession = async (productRequest: ProductRequest) => {
   try {
     const response = await axios.post(
-      "http://localhost:8080/product/v1/checkout", // Your backend API endpoint
+      "http://localhost:8082/api/v1/product/checkout", // Your backend API endpoint
       productRequest
     );
     return response.data;

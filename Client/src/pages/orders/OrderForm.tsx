@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Order, OrderItem, OrderStatus } from '../../types/Order/order';
 import { orderService } from '../../services/Orders/orderService';
-import { getCartByUserId } from '../../services/Restaurants/Cart';
 import { useAuth } from '../../services/auth/authContext';
 import NavigationBar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
@@ -18,8 +17,31 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+interface LocationMarkerProps {
+  position: [number, number] | null;
+  setPosition: (position: [number, number] | null) => void;
+  onLocationSelect: (lat: number, lng: number) => void;
+}
+
+interface CartItem {
+  foodItemId: number;
+  foodName: string;
+  quantity: number;
+  price: number;
+}
+
+interface CartRestaurantGroup {
+  restaurantName: string;
+  items: CartItem[];
+  totalPrice: number;
+}
+
+interface CartData {
+  [key: string]: CartRestaurantGroup;
+}
+
 // Component for location selection
-const LocationMarker = ({ position, setPosition, onLocationSelect }) => {
+const LocationMarker: React.FC<LocationMarkerProps> = ({ position, setPosition, onLocationSelect }) => {
   useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
@@ -29,65 +51,80 @@ const LocationMarker = ({ position, setPosition, onLocationSelect }) => {
   });
 
   return position ? (
-      <Marker position={position}>
-        <Popup>Selected delivery location</Popup>
-      </Marker>
+    <Marker position={position}>
+      <Popup>Selected delivery location</Popup>
+    </Marker>
   ) : null;
 };
 
+interface FormOrder extends Omit<Order, 'id'> {
+  userName: string;
+  orderItems: OrderItem[];
+}
+
 const OrderForm = () => {
-  const { orderId } = useParams();
+  const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const isEditMode = Boolean(orderId);
 
   const [loading, setLoading] = useState(true);
-  const [position, setPosition] = useState(null);
+  const [position, setPosition] = useState<[number, number] | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [cartData, setCartData] = useState(null);
+  const [cartData, setCartData] = useState<CartData | null>(null);
   const [currentRestaurantIndex, setCurrentRestaurantIndex] = useState(0);
-  const [restaurantIds, setRestaurantIds] = useState([]);
+  const [restaurantIds, setRestaurantIds] = useState<string[]>([]);
   const [multipleOrders, setMultipleOrders] = useState(false);
-  const [completedOrders, setCompletedOrders] = useState([]);
+  const [completedOrders, setCompletedOrders] = useState<Order[]>([]);
 
   const userId = user?.userId;
-  console.log(userId);
 
-  const [order, setOrder] = useState({
-    userId: user?.userId || user?.id || 0,
-    userName: user?.name || user?.userName || user?.fullName || '',
+  const [order, setOrder] = useState<FormOrder>({
+    userId: user?.userId || 0,
+    userName: user?.name || '',
     restaurantId: 0,
     status: OrderStatus.PLACED,
     deliveryAddress: '',
     longitude: null,
     latitude: null,
-    contactPhone: user?.phone || user?.contactPhone || user?.phoneNumber || '',
+    contactPhone: user?.phone || '',
     subtotal: 0,
-    deliveryFee: 5, // Default delivery fee
+    deliveryFee: 5,
     tax: 0,
     totalAmount: 0,
     orderItems: []
   });
 
   // Reference to the map component
-  const mapRef = useRef(null);
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
     // Handle params from URL
     const queryParams = new URLSearchParams(location.search);
     const restaurantId = queryParams.get('restaurantId');
 
-
-    // Fetch cart data from sessionStorage (set in CartPage during checkout)
+    // Fetch cart data from sessionStorage
     const storedCartData = sessionStorage.getItem('cartRestaurantGroups');
 
+    if (!user?.userId) {
+      alert('Please log in to place an order');
+      navigate('/login');
+      return;
+    }
+
     if (storedCartData) {
-      const parsedData = JSON.parse(storedCartData);
+      const parsedData: CartData = JSON.parse(storedCartData);
       setCartData(parsedData);
 
-      // Get all restaurant IDs from cart
-      const allRestaurantIds = Object.keys(parsedData);
+      // Get all restaurant IDs from cart and ensure they are valid
+      const allRestaurantIds = Object.keys(parsedData).filter(id => id && id !== 'null' && id !== 'undefined');
+      if (allRestaurantIds.length === 0) {
+        alert('No valid restaurants found in cart. Redirecting to cart page.');
+        navigate('/cart');
+        return;
+      }
+      
       setRestaurantIds(allRestaurantIds);
 
       // Check if there are multiple restaurants
@@ -95,13 +132,13 @@ const OrderForm = () => {
         setMultipleOrders(true);
       }
 
-      // If a specific restaurant ID is provided in URL, start with that
+      // If a specific restaurant ID is provided in URL, validate and use it
       if (restaurantId && allRestaurantIds.includes(restaurantId)) {
         const index = allRestaurantIds.indexOf(restaurantId);
         setCurrentRestaurantIndex(index);
         loadRestaurantItems(parsedData, restaurantId);
       } else {
-        // Otherwise, start with the first restaurant in the list
+        // Otherwise, start with the first valid restaurant in the list
         loadRestaurantItems(parsedData, allRestaurantIds[0]);
       }
     } else if (isEditMode) {
@@ -113,14 +150,14 @@ const OrderForm = () => {
     }
 
     setupLocation();
-  }, [location.search, isEditMode, navigate, user?.userId]);
+  }, [location.search, isEditMode, navigate, user]);
 
   const fetchOrder = async () => {
     if (isEditMode) {
       try {
         setLoading(true);
-        const data = await orderService.getOrderById(parseInt(orderId));
-        setOrder(data);
+        const data = await orderService.getOrderById(parseInt(orderId!));
+        setOrder(data as FormOrder);
 
         // Set position if latitude and longitude exist
         if (data.latitude && data.longitude) {
@@ -139,32 +176,32 @@ const OrderForm = () => {
     // Get user's current location when component mounts
     if (navigator.geolocation && !isEditMode) {
       navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            setPosition([latitude, longitude]);
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setPosition([latitude, longitude]);
 
-            // Set order's latitude and longitude
-            setOrder(prev => ({
-              ...prev,
-              latitude,
-              longitude
-            }));
+          // Set order's latitude and longitude
+          setOrder(prev => ({
+            ...prev,
+            latitude,
+            longitude
+          }));
 
-            // Reverse geocode to get address
-            reverseGeocode(latitude, longitude);
-          },
-          (error) => {
-            console.error('Error getting location:', error);
-            // Default position (if user denies location access)
-            setPosition([40.7128, -74.0060]);  // New York City coordinates
-          }
+          // Reverse geocode to get address
+          reverseGeocode(latitude, longitude);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          // Default position (if user denies location access)
+          setPosition([40.7128, -74.0060]);  // New York City coordinates
+        }
       );
     }
 
     setMapLoaded(true);
   };
 
-  const loadRestaurantItems = (cartData, restaurantId) => {
+  const loadRestaurantItems = (cartData: CartData, restaurantId: string) => {
     const restaurantData = cartData[restaurantId];
 
     if (!restaurantData) {
@@ -173,32 +210,39 @@ const OrderForm = () => {
     }
 
     // Convert cart items to order items
-    const orderItems = restaurantData.items.map(item => ({
-      menuItemId: item.foodItemId,
+    const orderItems: OrderItem[] = restaurantData.items.map(item => ({
+      menuItemId: Number(item.foodItemId),
       itemName: item.foodName,
-      quantity: item.quantity,
-      unitPrice: item.price,
-      totalPrice: item.price * item.quantity
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.price),
+      totalPrice: Number(item.price) * Number(item.quantity)
     }));
+
+    // Calculate totals with proper number handling
+    const subtotal = Number(restaurantData.totalPrice);
+    const tax = Number((subtotal * 0.1).toFixed(2)); // 10% tax
+    const deliveryFee = Number(order.deliveryFee);
+    const totalAmount = Number((subtotal + tax + deliveryFee).toFixed(2));
 
     // Update order with restaurant specific data, preserving user data
     setOrder(prev => ({
       ...prev,
-      restaurantId: parseInt(restaurantId),
+      restaurantId: Number(restaurantId), // Convert to number immediately
       orderItems: orderItems,
-      subtotal: restaurantData.totalPrice,
-      tax: restaurantData.totalPrice * 0.1, // 10% tax
-      totalAmount: restaurantData.totalPrice + (restaurantData.totalPrice * 0.1) + 5 // subtotal + tax + delivery fee
+      subtotal,
+      tax,
+      deliveryFee,
+      totalAmount
     }));
 
     setLoading(false);
   };
 
-  const reverseGeocode = async (lat, lng) => {
+  const reverseGeocode = async (lat: number, lng: number) => {
     try {
       // Using OpenStreetMap Nominatim API for reverse geocoding
       const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
       );
       const data = await response.json();
 
@@ -213,7 +257,7 @@ const OrderForm = () => {
     }
   };
 
-  const handleLocationSelect = async (lat, lng) => {
+  const handleLocationSelect = async (lat: number, lng: number) => {
     setOrder(prev => ({
       ...prev,
       latitude: lat,
@@ -224,7 +268,7 @@ const OrderForm = () => {
     await reverseGeocode(lat, lng);
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
     // For new orders, keep status as PLACED
@@ -238,12 +282,12 @@ const OrderForm = () => {
     });
   };
 
-  const handleItemChange = (index, field, value) => {
+  const handleItemChange = (index: number, field: keyof OrderItem, value: string | number) => {
     const updatedItems = [...order.orderItems];
 
     if (field === 'quantity' || field === 'unitPrice') {
       // Fix for NaN - use parseFloat and handle empty values
-      const numValue = value === '' ? 0 : parseFloat(value);
+      const numValue = value === '' ? 0 : parseFloat(value as string);
 
       updatedItems[index] = {
         ...updatedItems[index],
@@ -259,7 +303,7 @@ const OrderForm = () => {
     } else {
       updatedItems[index] = {
         ...updatedItems[index],
-        [field]: field === 'menuItemId' ? parseInt(value) || 0 : value
+        [field]: field === 'menuItemId' ? parseInt(value as string) || 0 : value
       };
     }
 
@@ -277,7 +321,7 @@ const OrderForm = () => {
     });
   };
 
-  const handleAddressChange = (e) => {
+  const handleAddressChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setOrder({
       ...order,
       deliveryAddress: e.target.value
@@ -287,40 +331,63 @@ const OrderForm = () => {
   const handleGetCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            setPosition([latitude, longitude]);
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setPosition([latitude, longitude]);
 
-            // Set order's latitude and longitude
-            setOrder(prev => ({
-              ...prev,
-              latitude,
-              longitude
-            }));
+          // Set order's latitude and longitude
+          setOrder(prev => ({
+            ...prev,
+            latitude,
+            longitude
+          }));
 
-            // Reverse geocode to get address
-            reverseGeocode(latitude, longitude);
+          // Reverse geocode to get address
+          reverseGeocode(latitude, longitude);
 
-            // Center map on new position
-            if (mapRef.current) {
-              mapRef.current.flyTo([latitude, longitude], 15);
-            }
-          },
-          (error) => {
-            console.error('Error getting location:', error);
-            alert('Unable to get your current location');
+          // Center map on new position
+          if (mapRef.current) {
+            mapRef.current.flyTo([latitude, longitude], 15);
           }
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          alert('Unable to get your current location');
+        }
       );
     } else {
       alert('Geolocation is not supported by your browser');
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!order.deliveryAddress || !order.contactPhone) {
-      alert('Please provide delivery address and contact phone');
+    // Required field validation with specific messages
+    if (!order.userId) {
+      alert('Please log in to place an order');
+      return;
+    }
+
+    if (!order.restaurantId) {
+      alert('Invalid restaurant selection. Please try again');
+      return;
+    }
+
+    if (!order.deliveryAddress.trim()) {
+      alert('Please select a delivery address or use the map to choose a location');
+      return;
+    }
+
+    if (!order.contactPhone.trim()) {
+      alert('Please provide a contact phone number for delivery updates');
+      return;
+    }
+
+    // Validate phone number format (basic validation)
+    const phoneRegex = /^\+?[\d\s-()]{8,}$/;
+    if (!phoneRegex.test(order.contactPhone)) {
+      alert('Please enter a valid phone number');
       return;
     }
 
@@ -329,338 +396,368 @@ const OrderForm = () => {
       return;
     }
 
-    try {
-      // Create the order
-      const createdOrder = await orderService.createOrder({
-        ...order,
-        status: OrderStatus.PLACED
-      });
+    // Validate coordinates
+    if ((order.latitude === null && order.longitude !== null) || 
+        (order.latitude !== null && order.longitude === null)) {
+      alert('Please select a valid delivery location on the map');
+      return;
+    }
 
-      // For multiple restaurants, handle next restaurant order
+    // Validate prices
+    if (order.subtotal <= 0 || order.totalAmount <= 0) {
+      alert('Order amounts must be greater than zero');
+      return;
+    }
+
+    for (const item of order.orderItems) {
+      if (item.quantity <= 0 || item.unitPrice <= 0 || item.totalPrice <= 0) {
+        alert('All item quantities and prices must be greater than zero');
+        return;
+      }
+    }
+
+    try {
+      // Format data and submit
+      const orderData = {
+        ...order,
+        userId: Number(order.userId),
+        restaurantId: Number(order.restaurantId), // Convert string restaurant ID to number here
+        subtotal: Number(Number(order.subtotal).toFixed(2)),
+        deliveryFee: Number(Number(order.deliveryFee).toFixed(2)),
+        tax: Number(Number(order.tax).toFixed(2)),
+        totalAmount: Number(Number(order.totalAmount).toFixed(2)),
+        latitude: order.latitude !== null ? Number(Number(order.latitude).toFixed(6)) : null,
+        longitude: order.longitude !== null ? Number(Number(order.longitude).toFixed(6)) : null,
+        orderItems: order.orderItems.map(item => ({
+          ...item,
+          menuItemId: Number(item.menuItemId),
+          quantity: Number(item.quantity),
+          unitPrice: Number(Number(item.unitPrice).toFixed(2)),
+          totalPrice: Number(Number(item.totalPrice).toFixed(2))
+        }))
+      };
+
+      const createdOrder = await orderService.createOrder(orderData);
+
+      // Handle multiple restaurant orders
       if (multipleOrders) {
-        // Store the completed order
         setCompletedOrders([...completedOrders, createdOrder]);
 
-        // Move to the next restaurant if there are more
         if (currentRestaurantIndex < restaurantIds.length - 1) {
           const nextIndex = currentRestaurantIndex + 1;
           setCurrentRestaurantIndex(nextIndex);
-          loadRestaurantItems(cartData, restaurantIds[nextIndex]);
-
-          // Show progress alert
-          alert(`Order for ${cartData[restaurantIds[currentRestaurantIndex]].restaurantName} created successfully! Now creating order for ${cartData[restaurantIds[nextIndex]].restaurantName}.`);
+          loadRestaurantItems(cartData!, restaurantIds[nextIndex]);
+          alert(`Order for ${cartData![restaurantIds[currentRestaurantIndex]].restaurantName} created successfully! Now creating order for ${cartData![restaurantIds[nextIndex]].restaurantName}.`);
           return;
         }
       }
 
-      // All orders are complete
       alert('Order(s) created successfully!');
-
       // Clear cart data from session storage
       sessionStorage.removeItem('cartRestaurantGroups');
-
       // Navigate to orders list
       navigate('/orders');
+
     } catch (error) {
       console.error('Error saving order:', error);
-      alert('Failed to save order');
+      alert('Failed to save order. Please check all required fields and try again.');
     }
   };
 
   if (loading) {
     return (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
     );
   }
 
   // Get current restaurant name
   const currentRestaurantName = cartData && restaurantIds.length > 0
-      ? cartData[restaurantIds[currentRestaurantIndex]]?.restaurantName || `Restaurant ${order.restaurantId}`
-      : `Restaurant ${order.restaurantId}`;
+    ? cartData[restaurantIds[currentRestaurantIndex]]?.restaurantName || `Restaurant ${order.restaurantId}`
+    : `Restaurant ${order.restaurantId}`;
 
   return (
-      <div className="bg-gradient-to-r white relative overflow-hidden">
-        <div className="w-full">
-          <SubNav/>
-        </div>
-        <div className="w-full">
-          <NavigationBar/>
-        </div>
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">
-              {isEditMode ? 'Edit Order' : 'Create New Order'}
-              {multipleOrders && ` (${currentRestaurantIndex + 1}/${restaurantIds.length})`}
-            </h1>
+    <div className="bg-gradient-to-r white relative overflow-hidden">
+      <div className="w-full">
+        <SubNav />
+      </div>
+      <div className="w-full">
+        <NavigationBar />
+      </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">
+            {isEditMode ? 'Edit Order' : 'Create New Order'}
+            {multipleOrders && ` (${currentRestaurantIndex + 1}/${restaurantIds.length})`}
+          </h1>
 
-            {multipleOrders && (
-                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p>Creating order {currentRestaurantIndex + 1} of {restaurantIds.length} -
-                    <span className="font-semibold"> {currentRestaurantName}</span>
-                  </p>
+          {multipleOrders && (
+            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p>Creating order {currentRestaurantIndex + 1} of {restaurantIds.length} -
+                <span className="font-semibold"> {currentRestaurantName}</span>
+              </p>
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-gray-200 rounded-lg shadow-md p-6">
+          {/* User Information Section */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4">Customer Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-gray-700 mb-2">User ID</label>
+                <input
+                  type="text"
+                  name="userId"
+                  value={userId}
+                  readOnly
+                  className="w-full p-2 border rounded bg-gray-100"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Contact Phone</label>
+                <input
+                  type="text"
+                  name="contactPhone"
+                  value={order.contactPhone}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter your phone number"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Status</label>
+                <input
+                  type="text"
+                  value={OrderStatus.PLACED}
+                  readOnly
+                  className="w-full p-2 border rounded bg-gray-100"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Restaurant Info */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4">Restaurant Information</h2>
+            <div>
+              <label className="block text-gray-700 mb-2">Restaurant</label>
+              <input
+                type="text"
+                value={currentRestaurantName}
+                readOnly
+                className="w-full p-2 border rounded bg-gray-100"
+              />
+              <input
+                type="hidden"
+                name="restaurantId"
+                value={order.restaurantId || ''}
+              />
+            </div>
+          </div>
+
+          {/* Map and location section */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4">Delivery Location</h2>
+
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="md:w-1/2">
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={handleGetCurrentLocation}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
+                  >
+                    Use My Current Location
+                  </button>
+
+                  {/* Map container */}
+                  <div className="border rounded shadow-md" style={{ height: '400px' }}>
+                    {mapLoaded && (
+                      <MapContainer
+                        center={position || [40.7128, -74.0060]} // Default to NYC if no position
+                        zoom={13}
+                        style={{ height: '100%', width: '100%' }}
+                        ref={mapRef}
+                      >
+                        <TileLayer
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        />
+                        <LocationMarker
+                          position={position}
+                          setPosition={setPosition}
+                          onLocationSelect={handleLocationSelect}
+                        />
+                      </MapContainer>
+                    )}
+                  </div>
+
+                  <div className="mt-2 text-sm text-gray-600">
+                    Click on the map to select delivery location or use your current location
+                  </div>
                 </div>
+              </div>
+
+              <div className="md:w-1/2">
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Delivery Address</label>
+                  <textarea
+                    name="deliveryAddress"
+                    value={order.deliveryAddress}
+                    onChange={handleAddressChange}
+                    required
+                    rows={4}
+                    className="w-full p-2 border rounded"
+                    placeholder="Enter your delivery address"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 mb-2">Latitude</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={order.latitude !== null ? order.latitude.toFixed(6) : ''}
+                      className="w-full p-2 border rounded bg-gray-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 mb-2">Longitude</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={order.longitude !== null ? order.longitude.toFixed(6) : ''}
+                      className="w-full p-2 border rounded bg-gray-100"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+
+            {order.orderItems.length === 0 ? (
+              <div className="text-center py-4 bg-gray-50 rounded">
+                No items loaded. Please return to cart and try again.
+              </div>
+            ) : (
+              <div className="bg-white rounded-md shadow-sm overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {order.orderItems.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{item.itemName}</div>
+                              <div className="text-sm text-gray-500">Item ID: {item.menuItemId}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <div className="flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() => item.quantity > 1 && handleItemChange(index, 'quantity', item.quantity - 1)}
+                              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                              disabled={item.quantity <= 1}
+                            >
+                              <span className="text-gray-600">-</span>
+                            </button>
+                            <span className="mx-3">{item.quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleItemChange(index, 'quantity', item.quantity + 1)}
+                              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                            >
+                              <span className="text-gray-600">+</span>
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                          ${item.unitPrice.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          ${item.totalPrice.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-gray-200 rounded-lg shadow-md p-6">
-            {/* User Information Section */}
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">Customer Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-gray-700 mb-2">User ID</label>
-                  <input
-                      type="text"
-                      name="userId"
-                      value={userId}
-                      readOnly
-                      className="w-full p-2 border rounded bg-gray-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2">Contact Phone</label>
-                  <input
-                      type="text"
-                      name="contactPhone"
-                      value={order.contactPhone}
-                      onChange={handleChange}
-                      required
-                      className="w-full p-2 border rounded"
-                      placeholder="Enter your phone number"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2">Status</label>
-                  <input
-                      type="text"
-                      value={OrderStatus.PLACED}
-                      readOnly
-                      className="w-full p-2 border rounded bg-gray-100"
-                  />
-                </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+            <div className="bg-gray-50 p-4 rounded">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="text-gray-700">Subtotal:</div>
+                <div className="text-right">${order.subtotal.toFixed(2)}</div>
+
+                <div className="text-gray-700">Tax (10%):</div>
+                <div className="text-right">${order.tax.toFixed(2)}</div>
+
+                <div className="text-gray-700">Delivery Fee:</div>
+                <div className="text-right">${order.deliveryFee.toFixed(2)}</div>
+
+                <div className="font-semibold border-t pt-2 mt-2">Total:</div>
+                <div className="text-right font-semibold border-t pt-2 mt-2">${order.totalAmount.toFixed(2)}</div>
               </div>
             </div>
+          </div>
 
-            {/* Restaurant Info */}
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">Restaurant Information</h2>
-              <div>
-                <label className="block text-gray-700 mb-2">Restaurant</label>
-                <input
-                    type="text"
-                    value={currentRestaurantName}
-                    readOnly
-                    className="w-full p-2 border rounded bg-gray-100"
-                />
-                <input
-                    type="hidden"
-                    name="restaurantId"
-                    value={order.restaurantId || ''}
-                />
-              </div>
+          <div className="flex space-x-4">
+            <button
+              type="submit"
+              className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+              disabled={order.orderItems.length === 0}
+            >
+              {multipleOrders && currentRestaurantIndex < restaurantIds.length - 1
+                ? `Place Order & Continue (${currentRestaurantIndex + 1}/${restaurantIds.length})`
+                : 'Place Order'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/cart')}
+              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+            >
+              Back to Cart
+            </button>
+          </div>
+
+          {/* Completed orders status */}
+          {completedOrders.length > 0 && (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+              <h3 className="text-lg font-medium text-green-800 mb-2">Orders Completed</h3>
+              <ul className="list-disc list-inside">
+                {completedOrders.map((completedOrder, index) => (
+                  <li key={index} className="text-green-700">
+                    Order #{completedOrder.orderId || index + 1} for {cartData![completedOrder.restaurantId]?.restaurantName || `Restaurant ${completedOrder.restaurantId}`}
+                  </li>
+                ))}
+              </ul>
             </div>
-
-            {/* Map and location section */}
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">Delivery Location</h2>
-
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="md:w-1/2">
-                  <div className="mb-4">
-                    <button
-                        type="button"
-                        onClick={handleGetCurrentLocation}
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
-                    >
-                      Use My Current Location
-                    </button>
-
-                    {/* Map container */}
-                    <div className="border rounded shadow-md" style={{ height: '400px' }}>
-                      {mapLoaded && (
-                          <MapContainer
-                              center={position || [40.7128, -74.0060]} // Default to NYC if no position
-                              zoom={13}
-                              style={{ height: '100%', width: '100%' }}
-                              ref={mapRef}
-                          >
-                            <TileLayer
-                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            />
-                            <LocationMarker
-                                position={position}
-                                setPosition={setPosition}
-                                onLocationSelect={handleLocationSelect}
-                            />
-                          </MapContainer>
-                      )}
-                    </div>
-
-                    <div className="mt-2 text-sm text-gray-600">
-                      Click on the map to select delivery location or use your current location
-                    </div>
-                  </div>
-                </div>
-
-                <div className="md:w-1/2">
-                  <div className="mb-4">
-                    <label className="block text-gray-700 mb-2">Delivery Address</label>
-                    <textarea
-                        name="deliveryAddress"
-                        value={order.deliveryAddress}
-                        onChange={handleAddressChange}
-                        required
-                        rows={4}
-                        className="w-full p-2 border rounded"
-                        placeholder="Enter your delivery address"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-gray-700 mb-2">Latitude</label>
-                      <input
-                          type="text"
-                          readOnly
-                          value={order.latitude !== null ? order.latitude.toFixed(6) : ''}
-                          className="w-full p-2 border rounded bg-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 mb-2">Longitude</label>
-                      <input
-                          type="text"
-                          readOnly
-                          value={order.longitude !== null ? order.longitude.toFixed(6) : ''}
-                          className="w-full p-2 border rounded bg-gray-100"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">Order Items</h2>
-
-              {order.orderItems.length === 0 ? (
-                  <div className="text-center py-4 bg-gray-50 rounded">
-                    No items loaded. Please return to cart and try again.
-                  </div>
-              ) : (
-                  <div className="bg-white rounded-md shadow-sm overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                      </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                      {order.orderItems.map((item, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">{item.itemName}</div>
-                                  <div className="text-sm text-gray-500">Item ID: {item.menuItemId}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <div className="flex items-center justify-center">
-                                <button
-                                    type="button"
-                                    onClick={() => item.quantity > 1 && handleItemChange(index, 'quantity', item.quantity - 1)}
-                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
-                                    disabled={item.quantity <= 1}
-                                >
-                                  <span className="text-gray-600">-</span>
-                                </button>
-                                <span className="mx-3">{item.quantity}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => handleItemChange(index, 'quantity', item.quantity + 1)}
-                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
-                                >
-                                  <span className="text-gray-600">+</span>
-                                </button>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                              ${item.unitPrice.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              ${item.totalPrice.toFixed(2)}
-                            </td>
-                          </tr>
-                      ))}
-                      </tbody>
-                    </table>
-                  </div>
-              )}
-            </div>
-
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-              <div className="bg-gray-50 p-4 rounded">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-gray-700">Subtotal:</div>
-                  <div className="text-right">${order.subtotal.toFixed(2)}</div>
-
-                  <div className="text-gray-700">Tax (10%):</div>
-                  <div className="text-right">${order.tax.toFixed(2)}</div>
-
-                  <div className="text-gray-700">Delivery Fee:</div>
-                  <div className="text-right">${order.deliveryFee.toFixed(2)}</div>
-
-                  <div className="font-semibold border-t pt-2 mt-2">Total:</div>
-                  <div className="text-right font-semibold border-t pt-2 mt-2">${order.totalAmount.toFixed(2)}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex space-x-4">
-              <button
-                  type="submit"
-                  className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
-                  disabled={order.orderItems.length === 0}
-              >
-                {multipleOrders && currentRestaurantIndex < restaurantIds.length - 1
-                    ? `Place Order & Continue (${currentRestaurantIndex + 1}/${restaurantIds.length})`
-                    : 'Place Order'}
-              </button>
-              <button
-                  type="button"
-                  onClick={() => navigate('/cart')}
-                  className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
-              >
-                Back to Cart
-              </button>
-            </div>
-
-            {/* Completed orders status */}
-            {completedOrders.length > 0 && (
-                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-                  <h3 className="text-lg font-medium text-green-800 mb-2">Orders Completed</h3>
-                  <ul className="list-disc list-inside">
-                    {completedOrders.map((completedOrder, index) => (
-                        <li key={index} className="text-green-700">
-                          Order #{completedOrder.id || index + 1} for {cartData[completedOrder.restaurantId]?.restaurantName || `Restaurant ${completedOrder.restaurantId}`}
-                        </li>
-                    ))}
-                  </ul>
-                </div>
-            )}
-          </form>
-        </div>
-        <Footer />
+          )}
+        </form>
       </div>
+      <Footer />
+    </div>
   );
 };
 
