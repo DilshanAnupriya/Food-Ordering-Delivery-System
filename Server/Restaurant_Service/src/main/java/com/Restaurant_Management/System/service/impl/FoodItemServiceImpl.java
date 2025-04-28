@@ -120,6 +120,7 @@ public class FoodItemServiceImpl implements FoodItemService {
                 .imageUrl(dto.getImageUrl())
                 .description(dto.getDescription())
                 .available(dto.isAvailable())
+                .restaurantName(restaurant.getRestaurantName())
                 .restaurant(restaurant)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -137,7 +138,7 @@ public class FoodItemServiceImpl implements FoodItemService {
                 .description(foodItem.getDescription())
                 .available(foodItem.isAvailable())
                 .restaurantId(foodItem.getRestaurant().getRestaurantId())
-                .restaurantName(foodItem.getRestaurant().getRestaurantName())
+                .restaurantName(foodItem.getRestaurantName())
                 .createdAt(foodItem.getCreatedAt())
                 .build();
     }

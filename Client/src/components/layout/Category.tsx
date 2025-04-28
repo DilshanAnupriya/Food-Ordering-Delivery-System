@@ -1,53 +1,116 @@
-import {motion} from "framer-motion";
-import {textVariant} from "../../util/motion.ts";
-import {useEffect, useState} from "react";
+import { motion } from "framer-motion";
+import { textVariant } from "../../util/motion.ts";
+import { useEffect, useState } from "react";
 import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 
-interface Category {
-    name: string;
-}
 interface ApiResponse {
     code: number;
     message: string;
     data: string[];
 }
-const FoodCard = ({ categoryName }: { categoryName: string }) => {
 
+// Skeleton loader for category cards
+const CategoryCardSkeleton = () => {
+    return (
+        <div className="flex flex-col w-full rounded-2xl overflow-hidden shadow-md bg-white">
+            <div className="h-48 bg-gray-200 animate-pulse"></div>
+            <div className="p-4 bg-gray-100 animate-pulse">
+                <div className="h-6 w-3/4 mx-auto bg-gray-300 rounded"></div>
+                <div className="h-4 w-1/2 mx-auto bg-gray-300 rounded mt-2"></div>
+            </div>
+        </div>
+    );
+};
+
+const FoodCard = ({ categoryName, index }: { categoryName: string; index: number }) => {
+    // Local placeholder images instead of external URLs
     const categoryImages: Record<string, string> = {
-        "Italian": "https://insanelygoodrecipes.com/wp-content/uploads/2020/12/Homemade-Ground-Beef-Lasagna-800x530.png",
-        "fast food": "https://www.hashtagburgersandwaffles.com.au/wp-content/uploads/2024/08/Why-Fast-Foods-Are-So-Successful.jpeg",
-        "Desserts": "https://images.immediate.co.uk/production/volatile/sites/2/2022/08/Vegan-sticky-toffee-pudding-header-0b7834c.jpg?quality=90&resize=556,505",
-        "Vegan": "https://vancouverwithlove.com/wp-content/uploads/2022/06/how-to-go-vegan-10.jpg",
-        "Beverages": "https://www.shutterstock.com/image-photo/soft-drinks-fruit-juice-mixed-600nw-2321374403.jpg",
-        // Default image for any other category
-        "default": "/api/placeholder/350/192"
+        "Italian": "/api/placeholder/350/200",
+        "fast food": "/api/placeholder/350/200",
+        "Desserts": "/api/placeholder/350/200",
+        "Vegan": "/api/placeholder/350/200",
+        "Beverages": "/api/placeholder/350/200",
+        "default": "/api/placeholder/350/200"
     };
 
     const imageUrl = categoryImages[categoryName] || categoryImages.default;
 
+    // Animation variants for each card
+    const cardVariants = {
+        hidden: {
+            opacity: 0,
+            y: 50
+        },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                type: "spring",
+                stiffness: 100,
+                damping: 12,
+                delay: index * 0.1
+            }
+        },
+        hover: {
+            y: -15,
+            boxShadow: "0px 15px 25px rgba(0,0,0,0.1)",
+            transition: { duration: 0.3 }
+        }
+    };
+
+    // Animation for image zoom on hover
+    const imageVariants = {
+        hover: {
+            scale: 1.1,
+            transition: { duration: 0.5 }
+        }
+    };
+
     return (
-        <>
-            <div className="flex flex-col  w-59 mt-6 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all ease-in-out transform hover:-translate-y-2 duration-300 bg-white">
-                <div className="h-48 flex items-center justify-center bg-gray-100">
-                    <img
-                        src={imageUrl}
-                        alt={`${categoryName} category`}
-                        className="h-full w-full object-cover"
-                    />
-                </div>
-                <div className="p-4 bg-amber-50 text-black">
-                    <h2 className="font-semibold text-lg">{categoryName}</h2>
-                    <p className="text-sm text-gray-600">Explore {categoryName.toLowerCase()} dishes</p>
-                </div>
+        <motion.div
+            className="flex flex-col w-full rounded-2xl overflow-hidden shadow-md bg-white"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            whileHover="hover"
+        >
+            <div className="h-48 overflow-hidden">
+                <motion.img
+                    src={imageUrl}
+                    alt={`${categoryName} category`}
+                    className="h-full w-full object-cover"
+                    variants={imageVariants}
+                    whileHover="hover"
+                />
             </div>
-        </>
-    )
-}
+            <div className="p-4 bg-gradient-to-r from-amber-50 to-amber-100 text-black">
+                <h2 className="font-semibold text-lg text-center">{categoryName}</h2>
+                <p className="text-sm text-gray-600 text-center mt-1">
+                    Explore {categoryName.toLowerCase()} dishes
+                </p>
+            </div>
+        </motion.div>
+    );
+};
 
 const Category = () => {
     const [categories, setCategories] = useState<string[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Container animation variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                when: "beforeChildren",
+                staggerChildren: 0.1,
+                delayChildren: 0.3,
+                duration: 0.5
+            }
+        }
+    };
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -69,7 +132,8 @@ const Category = () => {
                 setError(err instanceof Error ? err.message : 'An unknown error occurred');
                 console.error('Failed to fetch categories:', err);
             } finally {
-                setLoading(false);
+                // Add a slight delay to show the skeleton loader
+                setTimeout(() => setLoading(false), 600);
             }
         };
 
@@ -77,41 +141,61 @@ const Category = () => {
     }, []);
 
     return (
-        <>
-            <section className="py-8 ">
-                <motion.div variants={textVariant(0.3)}>
-                    <h2 className="text-black font-black md:text-[25px] sm:text-[50px] xs:text-[40px] text-[30px] mb-6">
+        <section className="py-16 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <motion.div
+                    variants={textVariant(0.3)}
+                    initial="hidden"
+                    animate="visible"
+                    className="mb-10"
+                >
+                    <h2 className="text-3xl font-bold text-gray-900">
                         Popular Categories
                     </h2>
+                    <div className="h-1 w-24 bg-orange-500 mt-2"></div>
+                    <p className="mt-4 text-gray-600">
+                        Explore our most popular food categories
+                    </p>
                 </motion.div>
 
-                {loading && (
-                    <div className="flex justify-center items-center h-40">
-                        <p className="text-gray-600">Loading categories...</p>
-                    </div>
-                )}
-
-                {error && (
-                    <div className="flex justify-center items-center h-40 text-red-500">
-                        <p>Error loading categories: {error}</p>
-                    </div>
-                )}
-
-                {!loading && !error && (
-                    <div className="flex flex-wrap gap-6 justify-center md:justify-start">
-                        {categories.map((category, index) => (
-                            <FoodCard key={index} categoryName={category} />
+                {loading ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        {Array(5).fill(0).map((_, index) => (
+                            <CategoryCardSkeleton key={index} />
                         ))}
                     </div>
+                ) : error ? (
+                    <motion.div
+                        className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                    >
+                        <p className="font-medium">Error loading categories:</p>
+                        <p>{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-2 text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors"
+                        >
+                            Try Again
+                        </button>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                    >
+                        {categories.map((category, index) => (
+                            <FoodCard key={index} categoryName={category} index={index} />
+                        ))}
+                    </motion.div>
                 )}
-            </section>
-
-        </>
-    )
-}
-
+            </div>
+        </section>
+    );
+};
 
 const CategoryWrapper = SectionWrapper(Category);
 
 export default CategoryWrapper;
-

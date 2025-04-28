@@ -19,6 +19,7 @@ import OrderDetail from "./pages/orders/OrderDetail.tsx";
 import OrderTracking from "./pages/orders/OrderTracking.tsx";
 import RestaurantAdminDashboard from "./pages/Restaurant/Admin/RestaurantAdminDashboard.tsx";
 import UpdateRestaurantPage from "./pages/Restaurant/Admin/RestaurantUpdate.tsx";
+import RestuarantAdminFoodItem from "./pages/Restaurant/Admin/RestuarantAdminFoodItem.tsx";
 
 function App() {
     return (
@@ -41,6 +42,7 @@ function App() {
                     <Route path="/cart/:id" element={<CartPage />} />
                     <Route path='/admin-restaurant' element={<RestaurantAdminDashboard/>}/>
                     <Route path='/update/:id' element={<UpdateRestaurantPage/>} />
+                    <Route path='/admin-fooditems' element={<RestuarantAdminFoodItem/>} />
 
 
                     <Route path="/orders" element={<OrderList />} />

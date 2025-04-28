@@ -6,6 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity(name = "cartItems")
 @AllArgsConstructor
@@ -30,6 +32,7 @@ public class CartItems {
 
     @ManyToOne
     @JoinColumn(name = "food_item_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private FoodItem foodItem;
 
     private int quantity;

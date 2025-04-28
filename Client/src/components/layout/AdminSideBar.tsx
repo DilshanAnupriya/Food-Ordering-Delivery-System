@@ -133,7 +133,7 @@ const AdminSidebar: React.FC = () => {
                           </li>
                           <li>
                             <NavLink
-                                to="/food-items"
+                                to="/admin-fooditems"
                                 className={({ isActive }) => navLinkStyle(isActive)}
                             >
                               <Pizza size={18} />

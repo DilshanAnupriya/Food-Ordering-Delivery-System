@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity(name = "food_items")
 @AllArgsConstructor
@@ -29,11 +31,14 @@ public class FoodItem {
     private String description;
     private boolean available;
     private LocalDateTime createdAt;
+    private String restaurantName;
 
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id",nullable = false)
     private Restaurant restaurant;
+
+
 
 
 
