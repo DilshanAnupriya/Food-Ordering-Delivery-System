@@ -1,101 +1,113 @@
-import React, { useState, useEffect } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import { createCheckoutSession } from "../../services/Payment/payment";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../services/auth/authContext';
+import { createCheckoutSession } from '../../services/Payment/payment';
+import NavigationBar from '../../components/layout/Navbar';
+import SubNav from '../../components/layout/SubNav';
+import Footer from '../../components/layout/Footer';
 
-const Checkout = ({ userId, orderId }: { userId: number; orderId: number }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [amount, setAmount] = useState<number>(0);
+const Checkout = () => {
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-  // Load your Stripe public key with error handling
-  const stripePromise = (() => {
-    const key = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-    if (!key) {
-      console.error('Stripe public key is not configured');
-      return null;
+    useEffect(() => {
+        const processCheckout = async () => {
+            if (!user?.userId) {
+                navigate('/login');
+                return;
+            }
+
+            try {
+                setLoading(true);
+                setError(null);
+
+                const orderDetails = JSON.parse(sessionStorage.getItem('orderDetails') || '[]');
+                const latestOrder = orderDetails[orderDetails.length - 1];
+
+                if (!latestOrder) {
+                    throw new Error('No order found');
+                }
+
+                const productRequest = {
+                    amount: Math.round(latestOrder.totalAmount * 100),
+                    quantity: 1,
+                    name: `Order #${latestOrder.orderId}`,
+                    currency: 'USD',
+                    userId: parseInt(user.userId),
+                    orderId: latestOrder.orderId
+                };
+
+                const response = await createCheckoutSession(productRequest);
+
+                if (response.status === 'SUCCESS' && response.sessionUrl) {
+                    window.location.href = response.sessionUrl;
+                } else {
+                    throw new Error('Failed to create checkout session');
+                }
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+                setError(errorMessage);
+                console.error('Checkout error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        processCheckout();
+    }, [user, navigate]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <SubNav />
+                <NavigationBar />
+                <div className="flex justify-center items-center h-[60vh]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+                <Footer />
+            </div>
+        );
     }
-    return loadStripe(key);
-  })();
 
-  // Fetch the amount dynamically (e.g., from an API or context)
-  useEffect(() => {
-    // Simulate fetching the amount from an API
-    const fetchAmount = async () => {
-      try {
-        // Replace with your API call to fetch the amount
-        const response = await fetch(`/api/v1/orders/${orderId}`);
-        const data = await response.json();
-        setAmount(data.totalAmount); // Assuming the API returns `totalAmount`
-      } catch (error) {
-        console.error("Error fetching amount:", error);
-      }
-    };
-
-    fetchAmount();
-  }, [orderId]);
-
-  const handleCheckout = async () => {
-    if (!stripePromise) {
-      setErrorMessage("Payment system is not properly configured. Please contact support.");
-      return;
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <SubNav />
+                <NavigationBar />
+                <div className="max-w-lg mx-auto mt-10 p-6">
+                    <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                        <strong className="font-bold">Error: </strong>
+                        <span className="block sm:inline">{error}</span>
+                    </div>
+                    <button
+                        onClick={() => navigate('/orders')}
+                        className="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    >
+                        Return to Orders
+                    </button>
+                </div>
+                <Footer />
+            </div>
+        );
     }
 
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    const productRequest = {
-      amount: amount * 100, // Convert to cents
-      quantity: 1,
-      name: "Order Payment",
-      currency: "USD",
-      userId,
-      orderId,
-    };
-
-    try {
-      const sessionData = await createCheckoutSession(productRequest);
-      const stripe = await stripePromise;
-      if (stripe) {
-        const { sessionUrl } = sessionData;
-        if (!sessionUrl) {
-          throw new Error("Invalid session URL received");
-        }
-        window.location.href = sessionUrl; // Redirect to Stripe
-      }
-    } catch (error) {
-      console.error("Checkout error:", error);
-      setErrorMessage("There was an error processing your payment. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center text-green-600">Checkout</h1>
-        <div className="mb-8 flex flex-col items-center">
-          <p className="text-gray-700 text-lg font-medium">
-            You're about to pay <span className="font-bold">${amount.toFixed(2)}</span>
-          </p>
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <SubNav />
+            <NavigationBar />
+            <div className="max-w-lg mx-auto mt-10 p-6">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold mb-4">Processing Your Payment</h1>
+                    <p className="text-gray-600">
+                        Please wait while we redirect you to our secure payment gateway...
+                    </p>
+                </div>
+            </div>
+            <Footer />
         </div>
-        <button
-          onClick={handleCheckout}
-          disabled={isLoading}
-          className={`w-full py-3 rounded-lg font-semibold text-white transition-colors duration-200 ${
-            isLoading ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
-          }`}
-        >
-          {isLoading ? "Processing..." : "Checkout with Stripe"}
-        </button>
-        {errorMessage && (
-          <p className="mt-6 text-center text-red-500 bg-red-100 rounded-lg py-2 px-4">
-            {errorMessage}
-          </p>
-        )}
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Checkout;

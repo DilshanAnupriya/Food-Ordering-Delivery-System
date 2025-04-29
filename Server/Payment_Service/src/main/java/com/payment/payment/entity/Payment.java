@@ -3,6 +3,7 @@ package com.payment.payment.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,15 +19,20 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long user_id;
-    private Long order_id;
+    private String userId;
+    private Long orderId;
+    private BigDecimal totalAmount;
+    private String paymentStatus;
+    private LocalDateTime paymentDate;
 
-    private Double amount;
-    private String currency;
-
-    private String stripe_payment_id;
-    private String payment_status;
-    private String payment_method;
-
-    private LocalDateTime paid_at;
+    // Constructor for successful payments
+    public static Payment createSuccessfulPayment(String userId, Long orderId, BigDecimal totalAmount) {
+        return Payment.builder()
+                .userId(userId)
+                .orderId(orderId)
+                .totalAmount(totalAmount)
+                .paymentStatus("SUCCESS")
+                .paymentDate(LocalDateTime.now())
+                .build();
+    }
 }

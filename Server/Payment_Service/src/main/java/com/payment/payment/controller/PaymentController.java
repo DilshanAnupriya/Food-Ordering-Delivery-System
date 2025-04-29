@@ -40,4 +40,5 @@ public class PaymentController {
     public void delete(@PathVariable Long id) {
         service.deletePayment(id);
     }
+
 }

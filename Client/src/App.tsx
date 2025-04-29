@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ContactUs from './pages/ContactUs/ContactUs';
 import Home from './pages/Home';
-import Checkout from './pages/Payment/Checkout';
+
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import { AuthProvider } from './services/auth/authContext';
@@ -17,6 +17,7 @@ import OrderList from "./pages/orders/OrderList.tsx";
 import OrderForm from "./pages/orders/OrderForm.tsx";
 import OrderDetail from "./pages/orders/OrderDetail.tsx";
 import OrderTracking from "./pages/orders/OrderTracking.tsx";
+import Checkout from './pages/Payment/Checkout.tsx';
 import RestaurantAdminDashboard from "./pages/Restaurant/Admin/RestaurantAdminDashboard.tsx";
 import UpdateRestaurantPage from "./pages/Restaurant/Admin/RestaurantUpdate.tsx";
 import RestuarantAdminFoodItem from "./pages/Restaurant/Admin/RestuarantAdminFoodItem.tsx";
@@ -28,7 +29,7 @@ function App() {
                 <Routes>
                     <Route path="/contact" element={<ContactUs />} />
                     <Route path="/" element={<Home />} />
-                    <Route path="/checkout" element={<Checkout userId={0} orderId={0} />} />
+                
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/restaurants" element={<Restaurants />} />
@@ -44,13 +45,13 @@ function App() {
                     <Route path='/update/:id' element={<UpdateRestaurantPage/>} />
                     <Route path='/admin-fooditems' element={<RestuarantAdminFoodItem/>} />
 
-
+                    <Route path='/checkout' element={<Checkout />} />
                     <Route path="/orders" element={<OrderList />} />
                     <Route path="/orders/new" element={<OrderForm />} />
                     <Route path="/orders/:orderId" element={<OrderDetail />} />
                     <Route path="/orders/:orderId/edit" element={<OrderForm />} />
                     <Route path="/track" element={<OrderTracking />} />
-
+                    
                 </Routes>
             </Router>
         </AuthProvider>
