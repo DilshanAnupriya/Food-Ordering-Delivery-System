@@ -1,6 +1,7 @@
 package com.example.pos1.pos1.api;
 
 
+import com.example.pos1.pos1.dto.request.RequestAdminDto;
 import com.example.pos1.pos1.dto.request.RequestUserDto;
 import com.example.pos1.pos1.service.ApplicationUserService;
 import com.example.pos1.pos1.util.StandardResponseDto;
@@ -33,7 +34,7 @@ public class UserController {
     @PostMapping("/admin/create")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     public ResponseEntity<StandardResponseDto> createAdmin(
-            @RequestBody RequestUserDto dto
+            @RequestBody RequestAdminDto dto
     ) throws IOException {
         // Call a new method that specifically creates admins
         applicationUserService.createAdmin(dto);

@@ -34,9 +34,15 @@ public class  RestaurantServiceImpl implements RestaurantService {
     private final RestaurantRepo restaurantRepo;
     private final SearchHistoryRepo searchHistoryRepo;
 
-    ;
 
-
+    @Override
+    public RestaurantResponseDto getRestaurantByOwnerUsername(String username) {
+        Restaurant restaurant = restaurantRepo.getRestaurantByOwnerUsername(username);
+        if (restaurant == null) {
+            throw new EntryNotFoundException("No restaurant found for owner with username: " + username);
+        }
+        return toRestaurantResponseDto(restaurant);
+    }
 
     @Override
     public void restaurantSave(RestaurantRequestDto dto) {
@@ -69,10 +75,21 @@ public class  RestaurantServiceImpl implements RestaurantService {
         restaurant.setAvailability(dto.isAvailability());
         restaurant.setOrderAvailability(dto.isOrderAvailability());
         restaurant.setRating(dto.getRating());
+        restaurant.setOwner_username(dto.getOwner_username() != null ? dto.getOwner_username() : restaurant.getOwner_username());
 
         restaurantRepo.save(restaurant);
 
 
+    }
+
+
+    @Override
+    public String getRestaurantIdByRestaurantName(String restaurantName) {
+        String restaurantId = restaurantRepo.findRestaurantIdByRestaurantName(restaurantName);
+        if (restaurantId == null || restaurantId.isEmpty()) {
+            throw new EntryNotFoundException("Restaurant with name '" + restaurantName + "' not found");
+        }
+        return restaurantId;
     }
 
     @Override
@@ -176,6 +193,7 @@ public class  RestaurantServiceImpl implements RestaurantService {
                 .updatedAt(LocalDateTime.now())
                 .createdAt(LocalDateTime.now())
                 .rating(dto.getRating())
+                .owner_username(dto.getOwner_username() != null ? dto.getOwner_username() : dto.getRestaurantName())
                 .build();
     }
 
@@ -200,6 +218,7 @@ public class  RestaurantServiceImpl implements RestaurantService {
                 .updatedAt(LocalDateTime.now())
                 .createdAt(restaurant.getCreatedAt())
                 .rating(restaurant.getRating())
+                .owner_username(restaurant.getOwner_username())
                 .build();
     }
 }
