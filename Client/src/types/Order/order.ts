@@ -8,7 +8,7 @@ export enum OrderStatus {
 }
 export interface OrderItem {
   id?: number;
-  menuItemId: number;
+  menuItemId: string;
   itemName: string;
   quantity: number;
   unitPrice: number;
@@ -17,8 +17,8 @@ export interface OrderItem {
 
 export interface Order {
   orderId?: number;
-  userId: number;
-  restaurantId: number;
+  userId: string;
+  restaurantId: string;
   status: OrderStatus;
   orderDate?: string;
   lastUpdated?: string;

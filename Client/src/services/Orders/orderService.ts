@@ -60,8 +60,8 @@ export const orderService = {
       // Format all numeric values with 2 decimal places and ensure proper typing
       const orderData = {
         ...order,
-        userId: Number(order.userId),
-        restaurantId: Number(order.restaurantId),
+        userId: String(order.userId),
+        restaurantId: String(order.restaurantId),
         subtotal: Number(Number(order.subtotal).toFixed(2)),
         deliveryFee: Number(Number(order.deliveryFee).toFixed(2)),
         tax: Number(Number(order.tax).toFixed(2)),
@@ -70,7 +70,7 @@ export const orderService = {
         longitude: order.longitude !== null ? Number(Number(order.longitude).toFixed(6)) : null,
         orderItems: order.orderItems.map(item => ({
           ...item,
-          menuItemId: Number(item.menuItemId),
+          menuItemId: String(item.menuItemId),
           quantity: Number(item.quantity),
           unitPrice: Number(Number(item.unitPrice).toFixed(2)),
           totalPrice: Number(Number(item.totalPrice).toFixed(2))
