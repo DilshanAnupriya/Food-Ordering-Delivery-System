@@ -293,7 +293,7 @@ const UpdateRestaurantPage: React.FC = () => {
                     >
                         <div className="bg-white shadow-lg sm:rounded-lg overflow-hidden rounded-2xl w-full mt-3 2xl:w-[1600px] 2xl:ml-[-50px] 2xl:mt-[-150px] h-[700px]">
                             {/* Header with progress bar */}
-                            <div className="bg-gradient-to-r from-blue-600 to-blue-400 text-white px-6 py-4">
+                            <div className="bg-gradient-to-r from-orange-600 to-orange-400 text-white px-6 py-4">
                                 <h2 className="text-2xl font-bold">Update Restaurant</h2>
                                 <p className="mt-1 text-indigo-100">
                                     Update the details for {formData.restaurantName}
@@ -321,7 +321,7 @@ const UpdateRestaurantPage: React.FC = () => {
                                             onClick={() => setActiveTab(index)}
                                             className={`${
                                                 activeTab === index
-                                                    ? 'border-blue-400 text-blue-500'
+                                                    ? 'border-orange-400 text-orange-500'
                                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                             } whitespace-nowrap flex items-center px-4 py-2 border-b-2 font-medium text-sm mx-2 transition-all duration-200`}
                                         >
@@ -474,7 +474,7 @@ const UpdateRestaurantPage: React.FC = () => {
                                             <motion.button
                                                 type="button"
                                                 onClick={() => setActiveTab(1)}
-                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
@@ -581,7 +581,7 @@ const UpdateRestaurantPage: React.FC = () => {
                                             </div>
                                             <div className="sm:col-span-3">
                                                 <label htmlFor="ownerRestaurant" className="block text-sm font-medium text-gray-700">
-                                                    Email<span className="text-red-500">*</span>
+                                                    Restaurant Owner<span className="text-red-500">*</span>
                                                 </label>
                                                 <div className="mt-1">
                                                     <input
@@ -592,7 +592,7 @@ const UpdateRestaurantPage: React.FC = () => {
                                                         value={formData.owner_username}
                                                         onChange={handleInputChange}
                                                         className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
-                                                        placeholder="restaurant@example.com"
+                                                        placeholder="Owner name"
                                                     />
                                                 </div>
                                             </div>
@@ -663,7 +663,7 @@ const UpdateRestaurantPage: React.FC = () => {
                                             <motion.button
                                                 type="button"
                                                 onClick={() => setActiveTab(2)}
-                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
@@ -767,7 +767,7 @@ const UpdateRestaurantPage: React.FC = () => {
                                             <motion.button
                                                 type="button"
                                                 onClick={() => setActiveTab(3)}
-                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
@@ -890,8 +890,8 @@ const UpdateRestaurantPage: React.FC = () => {
                                             <motion.button
                                                 type="submit"
                                                 className={`inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-                                                    isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
-                                                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200`}
+                                                    isLoading ? 'bg-orange-400' : 'bg-orange-500 hover:bg-orange-700'
+                                                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200`}
                                                 disabled={isLoading}
                                                 whileHover={{ scale: isLoading ? 1 : 1.05 }}
                                                 whileTap={{ scale: isLoading ? 1 : 0.95 }}
