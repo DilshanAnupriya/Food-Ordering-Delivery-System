@@ -2,8 +2,7 @@ package com.payment.payment.service;
 
 import com.payment.payment.dto.ProductRequest; // Ensure the ProductRequest class exists under this package level
 import com.payment.payment.dto.StripeResponse;
-import com.payment.payment.entity.Payment;
-import com.payment.payment.repository.PaymentRepository;
+import com.payment.payment.service.PaymentService;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
@@ -13,14 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Service
 @Slf4j
 public class StripeService {
 
     @Autowired
-    private PaymentRepository paymentRepository;
+    private PaymentService paymentService;
 
     @Value("${stripe.secretKey}")
     private String secretKey;
@@ -29,68 +28,54 @@ public class StripeService {
         Stripe.apiKey = secretKey;
 
         try {
-            // 1. Create product data
-            SessionCreateParams.LineItem.PriceData.ProductData productData =
-                    SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                            .setName(productRequest.getName())
-                            .build();
-
-            // 2. Create price data
-            SessionCreateParams.LineItem.PriceData priceData =
-                    SessionCreateParams.LineItem.PriceData.builder()
-                            .setCurrency(productRequest.getCurrency() != null ? productRequest.getCurrency() : "USD")
-                            .setUnitAmount(productRequest.getAmount()) // cents
-                            .setProductData(productData)
-                            .build();
-
-            // 3. Create line item
-            SessionCreateParams.LineItem lineItem =
-                    SessionCreateParams.LineItem.builder()
-                            .setQuantity(productRequest.getQuantity())
-                            .setPriceData(priceData)
-                            .build();
-
-            // 4. Build checkout session params
-            SessionCreateParams params =
-                    SessionCreateParams.builder()
-                            .setMode(SessionCreateParams.Mode.PAYMENT)
-                            .setSuccessUrl("http://localhost:8080/success")
-                            .setCancelUrl("http://localhost:8080/cancel")
-                            .addLineItem(lineItem)
-                            .build();
-
-            // 5. Create the Stripe session
-            Session session = Session.create(params);
-
-            // 6. Save payment record to database
-            Payment payment = Payment.builder()
-                    .user_id(productRequest.getUserId())
-                    .order_id(productRequest.getOrderId())
-                    .amount(productRequest.getAmount() / 100.0) // convert to dollars
-                    .currency(productRequest.getCurrency())
-                    .stripe_payment_id(session.getId())
-                    .payment_status("PENDING")
-                    .payment_method("Stripe")
-                    .paid_at(null) // To be updated on success
+            // Create price data
+            SessionCreateParams.LineItem.PriceData priceData = SessionCreateParams.LineItem.PriceData.builder()
+                    .setCurrency(productRequest.getCurrency() != null ? productRequest.getCurrency() : "USD")
+                    .setUnitAmount(productRequest.getAmount())
+                    .setProductData(
+                            SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                    .setName(productRequest.getName())
+                                    .build()
+                    )
                     .build();
 
-            paymentRepository.save(payment);
+            // Create line item
+            SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
+                    .setQuantity(1L)
+                    .setPriceData(priceData)
+                    .build();
 
-            log.info("Stripe session created successfully. Session ID: {}", session.getId());
+            // Create session
+            SessionCreateParams params = SessionCreateParams.builder()
+                    .setMode(SessionCreateParams.Mode.PAYMENT)
+                    .setSuccessUrl("http://localhost:5173/orders")
+                    .setCancelUrl("http://localhost:5173/orders")
+                    .addLineItem(lineItem)
+                    .build();
+
+            Session session = Session.create(params);
+
+            // Save successful payment to database
+            paymentService.saveSuccessfulPayment(
+                String.valueOf(productRequest.getUserId()),
+                productRequest.getOrderId(),
+                BigDecimal.valueOf(productRequest.getAmount() / 100.0)
+            );
+
+            log.info("Payment saved successfully for order: {}", productRequest.getOrderId());
 
             return StripeResponse.builder()
                     .status("SUCCESS")
-                    .message("Stripe session created")
+                    .message("Payment processed successfully")
                     .sessionId(session.getId())
                     .sessionUrl(session.getUrl())
                     .build();
 
         } catch (StripeException e) {
-            log.error("Stripe session creation failed", e);
-
+            log.error("Stripe payment failed", e);
             return StripeResponse.builder()
                     .status("FAILED")
-                    .message("Stripe session creation failed: " + e.getMessage())
+                    .message("Payment failed: " + e.getMessage())
                     .build();
         }
     }

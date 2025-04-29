@@ -421,7 +421,7 @@ const OrderForm = () => {
       const orderData = {
         ...order,
         userId: String(order.userId),
-        restaurantId: String(order.restaurantId), // Convert string restaurant ID to number here
+        restaurantId: String(order.restaurantId),
         subtotal: Number(Number(order.subtotal).toFixed(2)),
         deliveryFee: Number(Number(order.deliveryFee).toFixed(2)),
         tax: Number(Number(order.tax).toFixed(2)),
@@ -438,6 +438,18 @@ const OrderForm = () => {
       };
 
       const createdOrder = await orderService.createOrder(orderData);
+
+      // Store order details in session storage
+      const orderDetails = {
+        orderId: createdOrder.orderId,
+        userId: createdOrder.userId,
+        totalAmount: createdOrder.totalAmount
+      };
+
+      // Get existing orders array or initialize new one
+      const existingOrders = JSON.parse(sessionStorage.getItem('orderDetails') || '[]');
+      existingOrders.push(orderDetails);
+      sessionStorage.setItem('orderDetails', JSON.stringify(existingOrders));
 
       // Handle multiple restaurant orders
       if (multipleOrders) {
