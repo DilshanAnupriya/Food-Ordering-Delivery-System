@@ -21,6 +21,7 @@ import Checkout from './pages/Payment/Checkout.tsx';
 import RestaurantAdminDashboard from "./pages/Restaurant/Admin/RestaurantAdminDashboard.tsx";
 import UpdateRestaurantPage from "./pages/Restaurant/Admin/RestaurantUpdate.tsx";
 import RestuarantAdminFoodItem from "./pages/Restaurant/Admin/RestuarantAdminFoodItem.tsx";
+import PaymentDetails from './pages/Payment/PaymentDetails';
 
 function App() {
     return (
@@ -51,6 +52,7 @@ function App() {
                     <Route path="/orders/:orderId" element={<OrderDetail />} />
                     <Route path="/orders/:orderId/edit" element={<OrderForm />} />
                     <Route path="/track" element={<OrderTracking />} />
+                    <Route path="/payments" element={<PaymentDetails />} />
                     
                 </Routes>
             </Router>
