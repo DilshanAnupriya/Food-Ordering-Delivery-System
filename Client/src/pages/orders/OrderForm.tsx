@@ -24,7 +24,7 @@ interface LocationMarkerProps {
 }
 
 interface CartItem {
-  foodItemId: number;
+  foodItemId: string;
   foodName: string;
   quantity: number;
   price: number;
@@ -81,9 +81,9 @@ const OrderForm = () => {
   const userId = user?.userId;
 
   const [order, setOrder] = useState<FormOrder>({
-    userId: user?.userId || 0,
+    userId: user?.userId || '',
     userName: user?.name || '',
-    restaurantId: 0,
+    restaurantId: '',
     status: OrderStatus.PLACED,
     deliveryAddress: '',
     longitude: null,
@@ -211,7 +211,7 @@ const OrderForm = () => {
 
     // Convert cart items to order items
     const orderItems: OrderItem[] = restaurantData.items.map(item => ({
-      menuItemId: Number(item.foodItemId),
+      menuItemId: String(item.foodItemId),
       itemName: item.foodName,
       quantity: Number(item.quantity),
       unitPrice: Number(item.price),
@@ -227,7 +227,7 @@ const OrderForm = () => {
     // Update order with restaurant specific data, preserving user data
     setOrder(prev => ({
       ...prev,
-      restaurantId: Number(restaurantId), // Convert to number immediately
+      restaurantId: (restaurantId),
       orderItems: orderItems,
       subtotal,
       tax,
@@ -420,8 +420,8 @@ const OrderForm = () => {
       // Format data and submit
       const orderData = {
         ...order,
-        userId: Number(order.userId),
-        restaurantId: Number(order.restaurantId), // Convert string restaurant ID to number here
+        userId: String(order.userId),
+        restaurantId: String(order.restaurantId), // Convert string restaurant ID to number here
         subtotal: Number(Number(order.subtotal).toFixed(2)),
         deliveryFee: Number(Number(order.deliveryFee).toFixed(2)),
         tax: Number(Number(order.tax).toFixed(2)),
@@ -430,7 +430,7 @@ const OrderForm = () => {
         longitude: order.longitude !== null ? Number(Number(order.longitude).toFixed(6)) : null,
         orderItems: order.orderItems.map(item => ({
           ...item,
-          menuItemId: Number(item.menuItemId),
+          menuItemId: String(item.menuItemId),
           quantity: Number(item.quantity),
           unitPrice: Number(Number(item.unitPrice).toFixed(2)),
           totalPrice: Number(Number(item.totalPrice).toFixed(2))
@@ -456,7 +456,7 @@ const OrderForm = () => {
       // Clear cart data from session storage
       sessionStorage.removeItem('cartRestaurantGroups');
       // Navigate to orders list
-      navigate('/orders');
+      navigate('/checkout');
 
     } catch (error) {
       console.error('Error saving order:', error);

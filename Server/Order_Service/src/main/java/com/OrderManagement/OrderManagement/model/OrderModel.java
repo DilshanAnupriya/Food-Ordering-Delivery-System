@@ -24,10 +24,10 @@ public class OrderModel {
     private Long orderId;
 
     @NotNull(message = "User ID cannot be null")
-    private Long userId;
+    private String userId;
 
     @NotNull(message = "Restaurant ID cannot be null")
-    private Long restaurantId;
+    private String restaurantId;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;

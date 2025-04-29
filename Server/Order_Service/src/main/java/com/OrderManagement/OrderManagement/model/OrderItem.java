@@ -23,7 +23,7 @@ public class OrderItem {
     private Long id;
 
     @NotNull(message = "Menu item ID cannot be null")
-    private Long menuItemId;
+    private String menuItemId;
 
     @NotBlank(message = "Item name cannot be blank")
     private String itemName;

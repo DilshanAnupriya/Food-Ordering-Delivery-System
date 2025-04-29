@@ -33,7 +33,7 @@ public class OrderService {
         return orderRepository.findAll(pageable);
     }
 
-    public List<OrderModel> getOrdersByUserId(Long userId) {
+    public List<OrderModel> getOrdersByUserId(String userId) {
         if (userId == null) {
             throw new OrderException("User ID cannot be null", HttpStatus.BAD_REQUEST);
         }
