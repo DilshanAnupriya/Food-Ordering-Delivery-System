@@ -63,6 +63,20 @@ public class RestaurantController {
         );
     }
 
+
+    @GetMapping("/by-name/{name}")
+    public ResponseEntity<StandardResponseDto> getRestaurantIdByName(@PathVariable("name") String restaurantName) {
+        String restaurantId = restaurantService.getRestaurantIdByRestaurantName(restaurantName);
+        return new ResponseEntity<>(
+                StandardResponseDto.builder()
+                        .code(200)
+                        .message("Restaurant ID fetched successfully!")
+                        .data(restaurantId)
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<StandardResponseDto> UpdateRestaurant(
             @PathVariable("id") String restaurantId,
@@ -76,6 +90,17 @@ public class RestaurantController {
                         .data(null)
                         .build(),
                 HttpStatus.CREATED
+        );
+    }
+    @GetMapping("/by-owner/{username}")
+    public ResponseEntity<StandardResponseDto> getRestaurantByOwnerUsername(@PathVariable("username") String username) {
+        return new ResponseEntity<>(
+                StandardResponseDto.builder()
+                        .code(200)
+                        .message("Restaurant fetched successfully by owner username!")
+                        .data(restaurantService.getRestaurantByOwnerUsername(username))
+                        .build(),
+                HttpStatus.OK
         );
     }
 

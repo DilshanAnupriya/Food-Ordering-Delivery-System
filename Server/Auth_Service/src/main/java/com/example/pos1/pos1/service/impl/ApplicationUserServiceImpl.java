@@ -1,5 +1,6 @@
 package com.example.pos1.pos1.service.impl;
 
+import com.example.pos1.pos1.dto.request.RequestAdminDto;
 import com.example.pos1.pos1.dto.request.RequestUserDto;
 import com.example.pos1.pos1.dto.response.UserResponseDto;
 import com.example.pos1.pos1.entity.ApplicationUser;
@@ -85,7 +86,7 @@ public class ApplicationUserServiceImpl implements ApplicationUserService {
         }
 
     @Override
-    public void createAdmin(RequestUserDto dto) throws IOException {
+    public void createAdmin(RequestAdminDto dto) throws IOException {
         UserRole adminRole = roleRepo.findByRoleName("ADMIN")
                 .orElseThrow(() -> new RuntimeException("Admin role not found"));
 
@@ -97,6 +98,8 @@ public class ApplicationUserServiceImpl implements ApplicationUserService {
         ApplicationUser admin = ApplicationUser.builder()
                 .userId(UUID.randomUUID().toString())
                 .username(dto.getUsername())
+                .fullName(dto.getFullName())
+                .restaurantId(dto.getRestaurantId())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .roles(adminRoles)  // Pass the Set of roles
                 .isAccountNonExpired(true)

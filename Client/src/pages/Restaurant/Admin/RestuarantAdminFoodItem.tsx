@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import  { useState, useEffect, useRef } from 'react';
 import { Search, Edit, Trash2, Plus, Filter, ChevronDown, ChevronRight, X, Image, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminSidebar from '../../../components/layout/AdminSideBar';
 import AdminNavbar from '../../../components/admin/AdminNavbar';
-import { fetchFoodItemsByCategory, fetchFoodCategories, FoodItem } from '../../../services/Restaurants/Fooditems';
+import {  fetchFoodCategories, } from '../../../services/Restaurants/Fooditems';
 
 const AdminFoodItemDashboard = () => {
     const [searchText, setSearchText] = useState('');
@@ -71,6 +71,7 @@ const AdminFoodItemDashboard = () => {
                     // Group by restaurant
                     const groupedByRestaurant = {};
                     items.forEach(item => {
+
                         if (!groupedByRestaurant[item.restaurantId]) {
                             groupedByRestaurant[item.restaurantId] = [];
                         }
