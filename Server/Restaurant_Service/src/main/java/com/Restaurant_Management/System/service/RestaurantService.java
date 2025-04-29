@@ -21,4 +21,6 @@ public interface RestaurantService {
     public void setRestaurantAvailability(String id, RestaurantAvailabilityDto dto);
     public  void setOrderAvailability(String id, RestaurantOrderAvailabilityDto dto);
     public TrendingRestaurantResponseListDto trendingRestaurant();
+    public String getRestaurantIdByRestaurantName(String restaurantName);
+    public RestaurantResponseDto getRestaurantByOwnerUsername(String username);
 }

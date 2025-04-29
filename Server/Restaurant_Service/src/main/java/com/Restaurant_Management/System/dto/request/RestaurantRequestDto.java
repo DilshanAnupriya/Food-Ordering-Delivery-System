@@ -28,6 +28,7 @@ public class RestaurantRequestDto {
     private String description;
     private String imageUrl;
     private String coverImageUrl;
+    private String owner_username;
     private boolean active;
 
 }

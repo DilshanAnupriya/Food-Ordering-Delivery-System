@@ -26,6 +26,7 @@ interface RestaurantRequestDto {
     description: string;
     imageUrl: string;
     coverImageUrl: string;
+    owner_username:string
     active: boolean;
 }
 
@@ -57,6 +58,7 @@ const UpdateRestaurantPage: React.FC = () => {
         description: '',
         imageUrl: '',
         coverImageUrl: '',
+        owner_username:'',
         active: true
     });
 
@@ -91,6 +93,7 @@ const UpdateRestaurantPage: React.FC = () => {
                             description: restaurantData.description || '',
                             imageUrl: restaurantData.imageUrl || '',
                             coverImageUrl: restaurantData.coverImageUrl || '',
+                            owner_username: restaurantData.owner_username || '',
                             active: restaurantData.active !== undefined ? restaurantData.active : true
                         });
 
@@ -573,6 +576,23 @@ const UpdateRestaurantPage: React.FC = () => {
                                                         value={formData.closingTime}
                                                         onChange={handleInputChange}
                                                         className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="sm:col-span-3">
+                                                <label htmlFor="ownerRestaurant" className="block text-sm font-medium text-gray-700">
+                                                    Email<span className="text-red-500">*</span>
+                                                </label>
+                                                <div className="mt-1">
+                                                    <input
+                                                        type="text"
+                                                        name="ownerRestaurant"
+                                                        id="ownerRestaurant"
+                                                        required
+                                                        value={formData.owner_username}
+                                                        onChange={handleInputChange}
+                                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                        placeholder="restaurant@example.com"
                                                     />
                                                 </div>
                                             </div>
