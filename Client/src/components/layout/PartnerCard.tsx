@@ -163,13 +163,13 @@ const PartnerCardSection = () => {
                     animate="visible"
                 >
                     <JobCard
-                        img="/api/placeholder/600/400"
+                        img="https://www.heraldtribune.com/gcdn/authoring/2019/06/26/NSHT/ghows-LK-8c18d1ea-2228-1fe7-e053-0100007f4e92-7ed4c5c4.jpeg?width=1200&disable=upscale&format=pjpg&auto=webp"
                         subheadTxt="Signup as a business"
                         headTxt="Partner with us"
                         index={0}
                     />
                     <JobCard
-                        img="/api/placeholder/600/400"
+                        img="https://wearesolomon.com/wp-content/uploads/2019/03/If-your-food-delivery-man-handed-you-the-real-menu-of-their-everyday-lives-the-story-of-Mohammed-1-1.jpg"
                         subheadTxt="Signup as a rider"
                         headTxt="Ride with us"
                         index={1}

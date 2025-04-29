@@ -23,7 +23,7 @@ const ManiNavbar = () => {
           <div className="hidden md:flex items-center space-x-8">
             <Link 
               to="/" 
-              className="text-gray-700 bg-[#FC8A06] px-6 py-1 rounded-2xl hover:text-white transition-colors text-[14px]"
+              className="text-gray-700  px-6 py-1 rounded-2xl hover:text-[#FC8A06] transition-colors text-[14px]"
             >
               Home
             </Link>

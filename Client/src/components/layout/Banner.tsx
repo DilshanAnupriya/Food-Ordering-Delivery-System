@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import SectionWrapper from "../../hoc/SectionWrapper.tsx";
+import image3 from "../../../public/assets/image3.png"
 
 const Banner = () => {
   const [address, setAddress] = useState('');
@@ -97,13 +98,13 @@ const Banner = () => {
             {/* Right Content - Order Cards with Responsive Positioning */}
             <div className="relative h-64 md:h-80 w-full">
               <motion.div
-                  className="absolute top-0 right-0 md:right-0 w-full md:w-4/5 h-full"
+                  className="absolute top-0 right-0  md:right-0 w-full md:w-4/5 h-full  mr-12 "
                   variants={imageVariants}
               >
                 <img
-                    src="/api/placeholder/400/320"
+                    src={image3}
                     alt="Food display"
-                    className="object-cover rounded-lg shadow-lg"
+                    className="object-cover rounded-lg shadow-lg "
                 />
               </motion.div>
 

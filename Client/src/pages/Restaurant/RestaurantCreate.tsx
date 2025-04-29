@@ -224,7 +224,7 @@ const CreateRestaurantPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                <div className="bg-white shadow-lg sm:rounded-lg overflow-hidden rounded-2xl w-full mt-3 2xl:w-[1600px] 2xl:ml-[-50px] 2xl:mt-[-150px]  h-[700px]">
+                <div className="bg-white shadow-lg sm:rounded-lg overflow-hidden rounded-2xl w-full mt-3 2xl:w-[1600px] 2xl:ml-[-50px] 2xl:mt-[-150px]  h-[740px]">
                     {/* Header with progress bar */}
                     <div className="bg-gradient-to-r from-orange-600 to-orange-400 text-white px-6 py-4 ">
                         <h2 className="text-2xl font-bold">Create New Restaurant</h2>
@@ -513,14 +513,14 @@ const CreateRestaurantPage: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="sm:col-span-3">
-                                        <label htmlFor="ownerRestaurant" className="block text-sm font-medium text-gray-700">
+                                        <label htmlFor="owner_username" className="block text-sm font-medium text-gray-700">
                                             Restaurant Owner<span className="text-red-500">*</span>
                                         </label>
                                         <div className="mt-1">
                                             <input
                                                 type="text"
-                                                name="ownerRestaurant"
-                                                id="ownerRestaurant"
+                                                name="owner_username"
+                                                id="owner_username"
                                                 required
                                                 value={formData.owner_username}
                                                 onChange={handleInputChange}

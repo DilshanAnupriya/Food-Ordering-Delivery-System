@@ -25,11 +25,11 @@ const CategoryCardSkeleton = () => {
 const FoodCard = ({ categoryName, index }: { categoryName: string; index: number }) => {
     // Local placeholder images instead of external URLs
     const categoryImages: Record<string, string> = {
-        "Italian": "/api/placeholder/350/200",
-        "fast food": "/api/placeholder/350/200",
-        "Desserts": "/api/placeholder/350/200",
-        "Vegan": "/api/placeholder/350/200",
-        "Beverages": "/api/placeholder/350/200",
+        "Italian": "https://florafoods.com/wp-content/uploads/2020/09/AdobeStock_224044706-1-scaled-1.jpeg",
+        "fast food": "https://media.post.rvohealth.io/wp-content/uploads/2021/07/Starbucks_Food_Spinach_Feta_Wrap-732x549-thumbnail-732x549.jpg",
+        "Desserts": "https://stordfkenticomedia.blob.core.windows.net/df-us/rms/media/recipesmedia/recipes/retail/x17/2003/feb/17244-caramel-topped-ice-cream-dessert-600x600.jpg?ext=.jpg",
+        "Vegan": "https://images.immediate.co.uk/production/volatile/sites/30/2023/06/GettyImages-1416818056-6ecd1e0.jpg?quality=90&resize=556,505",
+        "Beverages": "https://static.vecteezy.com/system/resources/thumbnails/026/500/574/small_2x/summer-refreshing-beverages-photo.jpg",
         "default": "/api/placeholder/350/200"
     };
 
@@ -142,6 +142,7 @@ const Category = () => {
 
     return (
         <section className="py-16 bg-white">
+            <h1 className="text-[30px] font-bold text-black">Categories </h1>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div
                     variants={textVariant(0.3)}
@@ -181,7 +182,7 @@ const Category = () => {
                     </motion.div>
                 ) : (
                     <motion.div
-                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ml-[-24px] gap-6"
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"

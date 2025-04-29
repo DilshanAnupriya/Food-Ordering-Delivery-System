@@ -327,11 +327,11 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
                                             <div>
                                                 {item.discount > 0 ? (
                                                     <div className="flex items-center">
-                                                        <span className="text-xl font-bold text-gray-900">Rs.{calculateFinalPrice(item.price, item.discount)}</span>
+                                                        <span className="text-xl font-bold text-gray-900">${calculateFinalPrice(item.price, item.discount)}</span>
                                                         <span className="ml-2 text-sm text-gray-500 line-through">Rs.{item.price.toFixed(2)}</span>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-xl font-bold text-gray-900">Rs.{item.price.toFixed(2)}</span>
+                                                    <span className="text-xl font-bold text-gray-900">${item.price.toFixed(2)}</span>
                                                 )}
                                             </div>
 
