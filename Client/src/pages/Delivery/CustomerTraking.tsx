@@ -55,7 +55,7 @@ interface CustomerTrackingPageProps {
   orderId?: string;
 }
 
-const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = 'ORD531' }) => {
+const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '16' }) => {
   const [customerLocation, setCustomerLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<DeliveryTracking | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -216,7 +216,7 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
                           </svg>
                         </div>
                         <span className="font-medium text-gray-700 mr-2">Driver:</span>
-                        <span className="text-gray-900">{delivery.driverName}</span>
+                        <span className="text-gray-900"> Jehan Kulathunga</span>
                       </div>
                      
                       <div className="flex items-center">
@@ -303,7 +303,7 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
                           position={[delivery.driverLatitude, delivery.driverLongitude]}
                           icon={driverIcon}
                         >
-                          <Popup>Driver: {delivery.driverName}</Popup>
+                          <Popup>Driver:  Jehan Kulathunga</Popup>
                         </Marker>
                       )}
 

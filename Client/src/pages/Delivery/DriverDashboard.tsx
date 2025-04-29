@@ -22,7 +22,7 @@ const DriverDashboard: React.FC = () => {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const navigate = useNavigate();
 
-  const driverId = 'driver132'; 
+  const driverId = 'driver133'; 
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -73,8 +73,9 @@ const DriverDashboard: React.FC = () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleNavigate = (path: string) => {
-    navigate(path);
+  // Navigate to driver delivery page
+  const navigateToDeliveryPage = () => {
+    navigate('/driver-delivery');
   };
 
   // First letter of the driver name for the profile icon
@@ -106,7 +107,7 @@ const DriverDashboard: React.FC = () => {
           </div>
           <div className="ml-4 flex flex-col  b items-start space-y-1">
             <h1 className="text-2xl font-bold text-white">
-              John Doe
+              Jehan Kulathunga
             </h1>
             <p className="text-sm text-white">
               Driver ID: <strong>{driverId}</strong>
@@ -115,16 +116,9 @@ const DriverDashboard: React.FC = () => {
         </div>
 
         <div className="flex space-x-4 bg">
-          
-          <button
-            className="bg-orange-500 text-white border border-yellow-500 px-4 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition-colors"
-            onClick={() => handleNavigate('/driver/profile')}
-          >
-            Profile
-          </button>
           <button
             className="bg-orange-500 text-white px-4 py-2 rounded-md mr-4 hover:bg-yellow-400 hover:text-black transition-colors"
-            onClick={() => handleNavigate('/pages/Delivery/DeliveryHomePage')}
+            onClick={navigateToDeliveryPage}
           >
             Deliveries
           </button>
