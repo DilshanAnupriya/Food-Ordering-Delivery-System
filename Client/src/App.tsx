@@ -22,8 +22,16 @@ import OrderConfirmation from './pages/orders/OrderConfirmation';
 import RestaurantAdminDashboard from "./pages/Restaurant/Admin/RestaurantAdminDashboard.tsx";
 import UpdateRestaurantPage from "./pages/Restaurant/Admin/RestaurantUpdate.tsx";
 import RestuarantAdminFoodItem from "./pages/Restaurant/Admin/RestuarantAdminFoodItem.tsx";
+
 import AdminContactView from './pages/ContactUs/AdminContactView';
+
+
+
 import PaymentDetails from './pages/Payment/PaymentDetails';
+
+import RestaurantOwnerDashboard from "./pages/Restaurant/Admin/RestaurantOwnerDashboard.tsx";
+import ManageFoodItems from "./pages/Restaurant/Admin/ManageFoodItems.tsx";
+
 
 function App() {
     return (
@@ -48,7 +56,12 @@ function App() {
                     <Route path='/admin-restaurant' element={<RestaurantAdminDashboard/>}/>
                     <Route path='/update/:id' element={<UpdateRestaurantPage/>} />
                     <Route path='/admin-fooditems' element={<RestuarantAdminFoodItem/>} />
+
                     <Route path='/admin-contacts' element={<AdminContactView />} />
+
+                    <Route path='/owner-restaurant' element={<RestaurantOwnerDashboard/>} />
+                    <Route path='/:id/fooditems' element={<ManageFoodItems/>} />
+
 
                     <Route path='/checkout' element={<Checkout />} />
                     <Route path='/order-confirmation' element={<OrderConfirmation />} />

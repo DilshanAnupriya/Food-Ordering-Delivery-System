@@ -1,6 +1,7 @@
 package com.example.pos1.pos1.jwt;
 
 import com.example.pos1.pos1.dto.request.ApplicationUserLoginDto;
+import com.example.pos1.pos1.entity.ApplicationUser;
 import com.example.pos1.pos1.repo.ApplicationUserRepo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
@@ -8,7 +9,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,6 +21,7 @@ import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.Optional;
 
 public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final ApplicationUserRepo userRepository;
@@ -57,11 +58,12 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
         }
     }
 
-    private String extractUserIdFromPrincipal(Object principal) {
+    private ApplicationUser getUserFromPrincipal(Object principal) {
         if (principal instanceof UserDetails) {
             String username = ((UserDetails) principal).getUsername();
-            // Fetch user from repository and get ID
-            return userRepository.findByUsername(username).get().getUserId();
+            // Fetch user from repository
+            Optional<ApplicationUser> userOptional = userRepository.findByUsername(username);
+            return userOptional.orElse(null);
         }
         return null;
     }
@@ -74,12 +76,22 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
         // Get user principal
         Object principal = authResult.getPrincipal();
 
-        // Extract userId from principal
-        String userId = null;
-        if (principal instanceof UserDetails) {
-            // If you're using a custom UserDetails implementation that contains userId
-            // For example, if you have a CustomUserDetails class with getUserId method
-            userId = extractUserIdFromPrincipal(principal);
+        // Get user from database
+        ApplicationUser user = getUserFromPrincipal(principal);
+
+        // Extract userId and restaurantId from the user entity
+        String userId = user != null ? user.getUserId() : null;
+        String restaurantId = user != null ? user.getRestaurantId() : null;
+
+        // Debug logging
+        System.out.println("Debug - userId: " + userId);
+        System.out.println("Debug - restaurantId: " + restaurantId);
+
+        // Check if user is null
+        if (user == null) {
+            System.out.println("Warning: User object is null");
+        } else {
+            System.out.println("User found with username: " + user.getUsername());
         }
 
         String token = Jwts.builder()
@@ -87,6 +99,7 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
                 .claim("authorities", authResult.getAuthorities())
                 // Add userId as a claim
                 .claim("userId", userId)
+                .claim("restaurantId", restaurantId) // Correctly add restaurantId claim
                 .setIssuedAt(new Date())
                 .setExpiration(
                         java.sql.Date.valueOf(LocalDate.now()
@@ -97,14 +110,10 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
 
         response.addHeader(HttpHeaders.AUTHORIZATION, jwtConfig.getTokenPrefix() + token);
 
-        // Optionally, you can also add the userId to the response body
+        // Include both userId and restaurantId in the response body
         response.setContentType("application/json");
-        response.getWriter().write("{\"token\":\"" + token + "\", \"userId\":\"" + userId + "\"}");
+        response.getWriter().write("{\"token\":\"" + token + "\", \"userId\":\"" + userId + "\", \"restaurantId\":\"" + restaurantId + "\"}");
     }
-
-
-
-
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {

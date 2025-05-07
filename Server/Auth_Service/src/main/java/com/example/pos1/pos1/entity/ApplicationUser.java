@@ -39,6 +39,8 @@ public class ApplicationUser {
     @Column(name = "is_enabled",columnDefinition = "TINYINT")
     private boolean isEnabled;
 
+    private String restaurantId;
+
     @ManyToMany
     @JoinTable(name="user_user_role",
             joinColumns = @JoinColumn(name="user_id"),

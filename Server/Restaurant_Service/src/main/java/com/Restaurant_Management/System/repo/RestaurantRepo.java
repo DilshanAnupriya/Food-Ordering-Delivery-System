@@ -19,4 +19,11 @@ public interface RestaurantRepo extends JpaRepository<Restaurant,String> {
     @Query(nativeQuery = true, value = "SELECT image_url FROM restaurant WHERE restaurant_name = ?1 LIMIT 1")
     String findRestaurantImageUrlByRestaurantName(String restaurantName);
 
+    @Query(nativeQuery = true, value = "SELECT restaurant_id FROM restaurant WHERE restaurant_name = ?1 LIMIT 1")
+    String findRestaurantIdByRestaurantName(String restaurantName);
+
+    @Query(nativeQuery = true, value = "SELECT * FROM restaurant WHERE owner_username = ?1 LIMIT 1")
+    Restaurant getRestaurantByOwnerUsername(String username);
+
+
 }

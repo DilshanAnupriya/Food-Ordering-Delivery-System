@@ -76,6 +76,8 @@ public class Restaurant {
 
     private String coverImageUrl;
 
+    private String owner_username;
+
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "restaurant",cascade = CascadeType.ALL, fetch = FetchType.LAZY,orphanRemoval = true)

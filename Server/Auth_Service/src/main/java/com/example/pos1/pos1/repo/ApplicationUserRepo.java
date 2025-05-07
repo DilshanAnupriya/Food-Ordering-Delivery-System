@@ -19,4 +19,6 @@ public interface ApplicationUserRepo extends JpaRepository<ApplicationUser, Stri
     @Query(value = "SELECT COUNT(*) FROM application_user WHERE username LIKE %?1% OR full_name LIKE %?1%", nativeQuery = true)
     public long countUsers(String username);
 
+
+
 }
