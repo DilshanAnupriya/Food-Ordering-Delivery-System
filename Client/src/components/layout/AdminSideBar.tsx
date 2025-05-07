@@ -10,7 +10,9 @@ import {
   ChevronRight,
   ChevronLeft,
   Store,
-  Pizza
+  Pizza,
+  MessageSquare,
+  LayoutDashboard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -89,6 +91,17 @@ const AdminSidebar: React.FC = () => {
         {/* Main Navigation */}
         <nav className="flex-1 px-3 py-4 overflow-y-auto">
           <ul className="space-y-2">
+            {/* Dashboard Link */}
+            <li>
+              <NavLink
+                  to="/admin-dashboard"
+                  className={({ isActive }) => navLinkStyle(isActive)}
+              >
+                <LayoutDashboard size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Dashboard</span>}
+              </NavLink>
+            </li>
+
             {/* Restaurant with submenu */}
             <li>
               <div
@@ -163,6 +176,15 @@ const AdminSidebar: React.FC = () => {
               >
                 <UtensilsCrossed size={20} className="flex-shrink-0" />
                 {!collapsed && <span className="ml-3">Orders</span>}
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                  to="/admin-contacts"
+                  className={({ isActive }) => navLinkStyle(isActive)}
+              >
+                <MessageSquare size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Contact Messages</span>}
               </NavLink>
             </li>
             <li>

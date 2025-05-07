@@ -42,10 +42,11 @@ const Checkout = () => {
                 const response = await createCheckoutSession(productRequest);
 
                 if (response.status === 'SUCCESS' && response.sessionUrl) {
-                    // After successful payment, navigate to track page
+                    // Redirect to Stripe checkout
                     window.location.href = response.sessionUrl;
+                    // After successful payment, navigate to order confirmation
                     setTimeout(() => {
-                        navigate('/track');
+                        navigate('/order-confirmation');
                     }, 1000);
                 } else {
                     throw new Error('Failed to create checkout session');
