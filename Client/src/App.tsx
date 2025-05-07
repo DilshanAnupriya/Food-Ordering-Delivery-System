@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ContactUs from './pages/ContactUs/ContactUs';
 import Home from './pages/Home';
 
@@ -18,11 +18,20 @@ import OrderForm from "./pages/orders/OrderForm.tsx";
 import OrderDetail from "./pages/orders/OrderDetail.tsx";
 import OrderTracking from "./pages/orders/OrderTracking.tsx";
 import Checkout from './pages/Payment/Checkout.tsx';
+import OrderConfirmation from './pages/orders/OrderConfirmation';
 import RestaurantAdminDashboard from "./pages/Restaurant/Admin/RestaurantAdminDashboard.tsx";
 import UpdateRestaurantPage from "./pages/Restaurant/Admin/RestaurantUpdate.tsx";
 import RestuarantAdminFoodItem from "./pages/Restaurant/Admin/RestuarantAdminFoodItem.tsx";
+
+import AdminContactView from './pages/ContactUs/AdminContactView';
+
+
+
+import PaymentDetails from './pages/Payment/PaymentDetails';
+
 import RestaurantOwnerDashboard from "./pages/Restaurant/Admin/RestaurantOwnerDashboard.tsx";
 import ManageFoodItems from "./pages/Restaurant/Admin/ManageFoodItems.tsx";
+
 
 function App() {
     return (
@@ -41,20 +50,27 @@ function App() {
                     <Route path="/driver-delivery" element={<DriverDeliveryPageWrapper />} />
                     <Route path="/driver-dashboard" element={<DriverDashboard />} />
                     <Route path="/customer-tracking" element={<CustomerTrackingPage />} />
-                    <Route path="/AdminDashboard" element={<AdminDashboard />} />
+                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                    <Route path="/AdminDashboard" element={<Navigate to="/admin-dashboard" replace />} />
                     <Route path="/cart/:id" element={<CartPage />} />
                     <Route path='/admin-restaurant' element={<RestaurantAdminDashboard/>}/>
                     <Route path='/update/:id' element={<UpdateRestaurantPage/>} />
                     <Route path='/admin-fooditems' element={<RestuarantAdminFoodItem/>} />
+
+                    <Route path='/admin-contacts' element={<AdminContactView />} />
+
                     <Route path='/owner-restaurant' element={<RestaurantOwnerDashboard/>} />
                     <Route path='/:id/fooditems' element={<ManageFoodItems/>} />
 
+
                     <Route path='/checkout' element={<Checkout />} />
+                    <Route path='/order-confirmation' element={<OrderConfirmation />} />
                     <Route path="/orders" element={<OrderList />} />
                     <Route path="/orders/new" element={<OrderForm />} />
                     <Route path="/orders/:orderId" element={<OrderDetail />} />
                     <Route path="/orders/:orderId/edit" element={<OrderForm />} />
                     <Route path="/track" element={<OrderTracking />} />
+                    <Route path="/payments" element={<PaymentDetails />} />
                     
                 </Routes>
             </Router>

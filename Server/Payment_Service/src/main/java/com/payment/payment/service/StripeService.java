@@ -48,7 +48,7 @@ public class StripeService {
             // Create session
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl("http://localhost:5173/orders")
+                    .setSuccessUrl("http://localhost:5173/order-confirmation")
                     .setCancelUrl("http://localhost:5173/orders")
                     .addLineItem(lineItem)
                     .build();

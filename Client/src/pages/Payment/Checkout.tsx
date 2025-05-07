@@ -42,7 +42,12 @@ const Checkout = () => {
                 const response = await createCheckoutSession(productRequest);
 
                 if (response.status === 'SUCCESS' && response.sessionUrl) {
+                    // Redirect to Stripe checkout
                     window.location.href = response.sessionUrl;
+                    // After successful payment, navigate to order confirmation
+                    setTimeout(() => {
+                        navigate('/order-confirmation');
+                    }, 1000);
                 } else {
                     throw new Error('Failed to create checkout session');
                 }
@@ -82,7 +87,7 @@ const Checkout = () => {
                         <span className="block sm:inline">{error}</span>
                     </div>
                     <button
-                        onClick={() => navigate('/orders')}
+                        onClick={() => navigate('/track')}
                         className="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                     >
                         Return to Orders
