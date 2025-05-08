@@ -130,10 +130,10 @@ const OrderTracking: React.FC = () => {
         <NavigationBar/>
       </div>
       
-      <div className="flex-grow container mx-auto px-4 sm:px-10 py-12">
+      <div className="flex-grow container mx-auto px-4 sm:px-10 py-12 bg-gray-800">
         {/* Increased width here: max-w-4xl */}
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-orange-100 mb-16">
-          <div className="bg-gradient-to-r from-orange-500 to-orange-400 py-10 px-8">
+          <div className="bg-gradient-to-r from-orange-500 to-orange-500 py-10 px-8">
             <h1 className="text-3xl font-extrabold text-white text-center tracking-tight">Track Your Order</h1>
             <p className="text-orange-50 text-center mt-2 opacity-90">Enter your order ID to check its current status</p>
           </div>
@@ -216,7 +216,7 @@ const OrderTracking: React.FC = () => {
                     <svg className="h-6 w-6 text-orange-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    Order #{orderId} Status
+                    Order {orderId} Status
                   </h2>
                   <button
                     onClick={() => setShowDetailedView(!showDetailedView)}
@@ -310,12 +310,12 @@ const OrderTracking: React.FC = () => {
                   
                   <button
                     className="text-orange-600 hover:text-orange-800 font-medium flex items-center bg-orange-50 px-4 py-2 rounded-lg transition-colors hover:bg-orange-100 shadow-sm border border-orange-100"
-                    onClick={() => window.print()}
+                    onClick={() => window.open('about:blank', '_blank')}
                   >
                     <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                     </svg>
-                    Print Details
+                    Track Your Order
                   </button>
                 </div>
               </div>
