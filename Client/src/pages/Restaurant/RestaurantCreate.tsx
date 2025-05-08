@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import {useNavigate} from 'react-router-dom'
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import AdminNavbar from "../../components/admin/AdminNavbar.tsx";
 import AdminSideBar from "../../components/layout/AdminSideBar.tsx";
+
 
 
 // Types
@@ -35,7 +37,7 @@ interface StandardResponseDto {
 }
 
 const CreateRestaurantPage: React.FC = () => {
-
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [formData, setFormData] = useState<RestaurantRequestDto>({
         restaurantName: '',
@@ -156,7 +158,7 @@ const CreateRestaurantPage: React.FC = () => {
                 toast.success('Restaurant created successfully!');
                 resetForm();
                 // Navigate to admin restaurant page after successful creation
-                // router.push('/admin-restaurant');
+                navigate('/admin-restaurant');
             }
         } catch (error) {
             console.error('Error creating restaurant:', error);

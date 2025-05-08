@@ -139,7 +139,7 @@ const PartnerCardSection = () => {
     };
 
     return (
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-gray-100 rounded-3xl shadow-2xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div
                     className="mb-12 text-center"
@@ -147,7 +147,7 @@ const PartnerCardSection = () => {
                     initial="hidden"
                     animate="visible"
                 >
-                    <h2 className="text-3xl font-bold text-gray-900">
+                    <h2 className="text-5xl font-bold font-sans text-gray-900">
                         Join Our Community
                     </h2>
                     <div className="h-1 w-24 bg-orange-500 mx-auto mt-2"></div>

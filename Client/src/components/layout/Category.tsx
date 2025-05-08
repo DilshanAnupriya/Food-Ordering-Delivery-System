@@ -142,7 +142,7 @@ const Category = () => {
 
     return (
         <section className="py-16 bg-white">
-            <h1 className="text-[30px] font-bold text-black">Categories </h1>
+            <h1 className="text-[28px]  ml-2 font-bold text-black">Categories 🍽️ </h1>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div
                     variants={textVariant(0.3)}
@@ -182,7 +182,7 @@ const Category = () => {
                     </motion.div>
                 ) : (
                     <motion.div
-                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ml-[-24px] gap-6"
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ml-[-24px] mt-[-90px] gap-4"
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"

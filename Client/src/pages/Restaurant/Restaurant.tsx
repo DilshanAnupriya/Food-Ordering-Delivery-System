@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchRestaurantData } from '../../services/Restaurants/LoadAllRestaurants';
 import { fetchFoodItemsByCategory } from '../../services/Restaurants/Fooditems';
@@ -27,7 +27,6 @@ interface FoodItem {
     createdAt: string;
 }
 
-// Updated Restaurant interface to match API response
 interface Restaurant {
     restaurantId: string;
     restaurantName: string;
@@ -47,7 +46,6 @@ interface Restaurant {
     coverImageUrl: string;
     updatedAt: string;
     createdAt: string;
-    // Using optional categories field
     categories?: string[];
 }
 
@@ -61,18 +59,19 @@ const Restaurant = () => {
     const [loadingFoodItems, setLoadingFoodItems] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [searchText, setSearchText] = useState<string>('');
-    // Default categories to use if none come from API
-    const defaultCategories = ['Italian', 'fast food', 'Desserts', 'Vegan','Beverages'];
-
-// Pagination state
+    const defaultCategories = ['Italian', 'fast food', 'Desserts', 'Vegan', 'Beverages'];
     const [page, setPage] = useState<number>(0);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [size, setSize] = useState<number>(6); // Number of items per page
+    // @ts-ignore
+    const [size, setSize] = useState<number>(6);
 
-    const handlePageChange = (newPage: number) => {
-        setPage(newPage);
-    };
+    // Use a ref to track which categories have been loaded
+    const loadedCategories = useRef<Set<string>>(new Set());
 
+    // Data loading state from previous page
+    const isInitialLoad = useRef<boolean>(true);
+
+    // Load restaurant data and categories only once
     useEffect(() => {
         const loadRestaurantData = async () => {
             if (!id) return;
@@ -107,34 +106,37 @@ const Restaurant = () => {
                 console.error(err);
             } finally {
                 setLoading(false);
+                isInitialLoad.current = false;
             }
         };
 
         loadRestaurantData();
     }, [id]);
 
+    // Reset page when category or search changes
     useEffect(() => {
-        // Reset page when category or search changes
         setPage(0);
     }, [selectedCategory, searchText]);
 
-
+    // Load food items for a category if not already loaded or if search/pagination changes
     useEffect(() => {
-        // Fetch food items when a category is selected
         const loadFoodItems = async () => {
             if (!id || !selectedCategory) return;
 
+            // Skip if this category is already loaded and there's no search or pagination
+            const categoryKey = `${selectedCategory}-${searchText}-${page}`;
+            if (
+                loadedCategories.current.has(categoryKey) &&
+                !searchText &&
+                page === 0 &&
+                !isInitialLoad.current
+            ) {
+                return;
+            }
+
             try {
                 setLoadingFoodItems(true);
-                console.log(`Loading food items for ${selectedCategory}`);
-
-                // Initialize the category with an empty array before fetching
-                setFoodItemsByCategory(prev => ({
-                    ...prev,
-                    [selectedCategory]: []
-                }));
-
-
+                console.log(`Loading food items for ${selectedCategory}, search: ${searchText}, page: ${page}`);
 
                 const response = await fetchFoodItemsByCategory(
                     id,
@@ -143,12 +145,11 @@ const Restaurant = () => {
                     page,
                     size
                 );
-                console.log('Food items API response:', response);
 
-                // Correctly access the data within the StandardResponse
+                // Add this category to loaded categories
+                loadedCategories.current.add(categoryKey);
+
                 if (response.data) {
-                    console.log('Food items data:', response.data);
-
                     setFoodItemsByCategory(prev => ({
                         ...prev,
                         [selectedCategory]: response.data.dataList || []
@@ -158,12 +159,9 @@ const Restaurant = () => {
                         ...prev,
                         [selectedCategory]: response.data.dataCount || 0
                     }));
-
-                    console.log('Updated food items state:', response.data.dataList);
                 }
             } catch (err) {
                 console.error('Failed to load food items:', err);
-                // Initialize with empty array on error
                 setFoodItemsByCategory(prev => ({
                     ...prev,
                     [selectedCategory]: []
@@ -180,19 +178,24 @@ const Restaurant = () => {
         loadFoodItems();
     }, [id, selectedCategory, searchText, page, size]);
 
-    const handleCategoryChange = (category: string) => {
+    // Memoize handlers to prevent unnecessary re-renders
+    const handleCategoryChange = useCallback((category: string) => {
         console.log('Changing category to:', category);
         setSelectedCategory(category);
-    };
+    }, []);
 
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);
-    };
+    }, []);
+
+    const handlePageChange = useCallback((newPage: number) => {
+        setPage(newPage);
+    }, []);
 
     // Calculate final price after discount
-    const calculateFinalPrice = (price: number, discount: number) => {
+    const calculateFinalPrice = useCallback((price: number, discount: number) => {
         return (price - (price * discount / 100)).toFixed(2);
-    };
+    }, []);
 
     if (loading) {
         return (
@@ -212,41 +215,41 @@ const Restaurant = () => {
         );
     }
 
+    // Calculate total items safely for pagination
+    const totalItems = selectedCategory ? (foodItemsTotalCount[selectedCategory] || 0) : 0;
+
     return (
         <div>
             <SubNav/>
             <Navbar/>
 
-                <RestaurantHeaderWrapper restaurant={restaurant} />
+            <RestaurantHeaderWrapper restaurant={restaurant} />
 
-                {/* Using the new CategorySearch component */}
-                <CategoriesSearch
-                    categories={restaurant.categories || []}
-                    selectedCategory={selectedCategory}
-                    onCategoryChange={handleCategoryChange}
-                    searchText={searchText}
-                />
+            <CategoriesSearch
+                categories={restaurant.categories || []}
+                selectedCategory={selectedCategory}
+                onCategoryChange={handleCategoryChange}
+                searchText={searchText}
+                onSearchChange={handleSearchChange}
+            />
+<div className="w-[1280px] bg-white shadow-2xl p-10 ml-20  mt-[-60px] rounded-b-3xl 2xl:ml-80 mb-30">
+            <FoodItemsListWrapper
+                selectedCategory={selectedCategory}
+                foodItemsByCategory={foodItemsByCategory}
+                foodItemsTotalCount={foodItemsTotalCount}
+                loadingFoodItems={loadingFoodItems}
+                calculateFinalPrice={calculateFinalPrice}
+                searchText={searchText}
+                onSearchChange={handleSearchChange}
+            />
 
-
-
-                {/* Using the new FoodItemsList component */}
-                <FoodItemsListWrapper
-                    selectedCategory={selectedCategory}
-                    foodItemsByCategory={foodItemsByCategory}
-                    foodItemsTotalCount={foodItemsTotalCount}
-                    loadingFoodItems={loadingFoodItems}
-                    calculateFinalPrice={calculateFinalPrice}
-                    searchText={searchText}
-                    onSearchChange={handleSearchChange}
-
-                />
-
-                    <WrapperPagination
-                        page={page}
-                        size={size}
-                        totalItems={foodItemsTotalCount[selectedCategory]}
-                        onPageChange={handlePageChange}
-                    />
+            <WrapperPagination
+                page={page}
+                size={size}
+                totalItems={totalItems}
+                onPageChange={handlePageChange}
+            />
+</div>
             <Footer/>
         </div>
     );
