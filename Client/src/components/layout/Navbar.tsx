@@ -53,7 +53,7 @@ const ManiNavbar = () => {
             </Link>
             {isAuthenticated && (
               <Link
-                to="/order-tracker"
+                to="/track"
                 className="text-gray-700 hover:text-orange-500 transition-colors text-[14px]"
               >
                 Order Tracker
