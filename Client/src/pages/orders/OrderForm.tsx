@@ -104,6 +104,7 @@ const OrderForm = () => {
     const queryParams = new URLSearchParams(location.search);
     const restaurantId = queryParams.get('restaurantId');
 
+
     // Fetch cart data from sessionStorage
     const storedCartData = sessionStorage.getItem('cartRestaurantGroups');
 
@@ -442,6 +443,7 @@ const OrderForm = () => {
       // Store order details in session storage
       const orderDetails = {
         orderId: createdOrder.orderId,
+        restaurantId:createdOrder.restaurantId,
         userId: createdOrder.userId,
         totalAmount: createdOrder.totalAmount
       };
