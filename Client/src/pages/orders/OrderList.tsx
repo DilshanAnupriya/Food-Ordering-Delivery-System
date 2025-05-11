@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { orderService } from '../../services/Orders/orderService';
 import { PaginatedOrdersResponse } from '../../types/Order/order';
 import { Link } from 'react-router-dom';
-import NavigationBar from '../../components/layout/Navbar';
-import Footer from '../../components/layout/Footer';
-import SubNav from '../../components/layout/SubNav';
+import AdminSidebar from "../../components/layout/AdminSideBar";
+import AdminNavbar from "../../components/admin/AdminNavbar";
 
 const OrderList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -299,42 +298,38 @@ const OrderList: React.FC = () => {
   };
 
   return (
-      <div className="bg-gray-50 min-h-screen">
-        <div className="w-full">
-          <SubNav/>
-        </div>
-        <div className="w-full shadow-md">
-          <NavigationBar/>
-        </div>
-
-        <div className="container mx-auto py-8 bg-gray-700">
-          <div className="flex justify-between items-center mb-8 max-w-7xl mx-auto px-4">
-            <h1 className="text-2xl font-bold text-white">
-              <span className="border-b-4 border-orange-500 pb-1">Order Management</span>
-            </h1>
-            <div className="flex">
-              <form onSubmit={handleSearch} className="flex">
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={handleSearchInputChange}
-                    placeholder="Search orders..."
-                    className="border border-gray-300 rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-64 shadow-sm text-white"
-                />
-                <button
-                    type="submit"
-                    className="bg-orange-500 text-white px-6 py-2 rounded-r-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors duration-300 font-medium shadow-sm"
-                >
-                  Search
-                </button>
-              </form>
+      <div className="bg-gray-50 min-h-screen flex">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col">
+          <AdminNavbar />
+          
+          <div className="container mx-auto py-8 bg-gray-700 mt-16">
+            <div className="flex justify-between items-center mb-8 max-w-7xl mx-auto px-4">
+              <h1 className="text-2xl font-bold text-white">
+                <span className="border-b-4 border-orange-500 pb-1">Order Management</span>
+              </h1>
+              <div className="flex">
+                <form onSubmit={handleSearch} className="flex">
+                  <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={handleSearchInputChange}
+                      placeholder="Search orders..."
+                      className="border border-gray-300 rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-64 shadow-sm text-white"
+                  />
+                  <button
+                      type="submit"
+                      className="bg-orange-500 text-white px-6 py-2 rounded-r-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors duration-300 font-medium shadow-sm"
+                  >
+                    Search
+                  </button>
+                </form>
+              </div>
             </div>
+
+            {renderContent()}
           </div>
-
-          {renderContent()}
         </div>
-
-        <Footer />
       </div>
   );
 };
