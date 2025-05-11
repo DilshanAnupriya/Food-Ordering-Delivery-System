@@ -6,7 +6,6 @@ import Footer from "../../components/layout/Footer";
 import NavigationBar from "../../components/layout/Navbar";
 import SubNav from "../../components/layout/SubNav";
 
-
 export interface Location {
   latitude: number;
   longitude: number;
@@ -51,16 +50,40 @@ const createCustomIcon = (color: string) => {
 const driverIcon = createCustomIcon('blue');
 const customerIcon = createCustomIcon('green');
 
-interface CustomerTrackingPageProps {
-  orderId?: string;
-}
-
-const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '18' }) => {
+const CustomerTrackingPage: React.FC = () => {
+  const [orderId, setOrderId] = useState<string | null>(null);
   const [customerLocation, setCustomerLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<DeliveryTracking | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+
+  // Get orderId from session storage
+  useEffect(() => {
+    try {
+      // Parse the orders data from session storage
+      const sessionData = sessionStorage.getItem('orders');
+      if (sessionData) {
+        const ordersData = JSON.parse(sessionData);
+        
+        // Check if it's an array and has at least one order
+        if (Array.isArray(ordersData) && ordersData.length > 0) {
+          // Get the first order's ID (or you could use another logic to determine which order to track)
+          setOrderId(ordersData[0].orderId.toString());
+        } else if (ordersData.orderId) {
+          // If it's a single order object
+          setOrderId(ordersData.orderId.toString());
+        } else {
+          throw new Error('No valid order data found');
+        }
+      } else {
+        throw new Error('No order data in session storage');
+      }
+    } catch (err) {
+      console.error('Error retrieving order data from session storage:', err);
+      setError('Unable to retrieve order information. Please go back and try again.');
+    }
+  }, []);
 
   // Get customer location on mount
   useEffect(() => {
@@ -80,6 +103,9 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
 
   // Fetch delivery tracking info and update periodically
   useEffect(() => {
+    // Only proceed if we have an orderId
+    if (!orderId) return;
+    
     const fetchDeliveryInfo = () => {
       setLoading(true);
       // Replace with your actual API endpoint
@@ -115,8 +141,6 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
     return () => clearInterval(intervalId);
   }, [orderId, customerLocation]);
 
- 
-
   const isValidCoords = (lat: number, lng: number): boolean =>
     Boolean(
       typeof lat === 'number' &&
@@ -147,6 +171,18 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
             </svg>
             Retry
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state while retrieving order ID
+  if (!orderId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-500"></div>
+          <p className="mt-4 text-gray-500">Loading order information...</p>
         </div>
       </div>
     );
@@ -318,7 +354,6 @@ const CustomerTrackingPage: React.FC<CustomerTrackingPageProps> = ({ orderId = '
                           color="#3B82F6"
                           weight={4}
                           opacity={0.7}
-                          
                         />
                       )}
                     </MapContainer>
