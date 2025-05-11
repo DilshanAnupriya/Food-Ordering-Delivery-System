@@ -157,7 +157,7 @@ const OrderForm = () => {
     if (isEditMode) {
       try {
         setLoading(true);
-        const data = await orderService.getOrderById(parseInt(orderId!));
+        const data = await orderService.getOrderById(orderId!);
         setOrder(data as FormOrder);
 
         // Set position if latitude and longitude exist
@@ -269,7 +269,7 @@ const OrderForm = () => {
     await reverseGeocode(lat, lng);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
     // For new orders, keep status as PLACED
@@ -438,40 +438,47 @@ const OrderForm = () => {
         }))
       };
 
-      const createdOrder = await orderService.createOrder(orderData);
+      if (isEditMode && orderId) {
+        // Update existing order
+        await orderService.updateOrder(parseInt(orderId), orderData);
+        alert('Order updated successfully!');
+        navigate('/orders');
+      } else {
+        // Create new order
+        const createdOrder = await orderService.createOrder(orderData);
 
-      // Store order details in session storage
-      const orderDetails = {
-        orderId: createdOrder.orderId,
-        restaurantId:createdOrder.restaurantId,
-        userId: createdOrder.userId,
-        totalAmount: createdOrder.totalAmount
-      };
+        // Store order details in session storage
+        const orderDetails = {
+          orderId: createdOrder.orderId,
+          restaurantId: createdOrder.restaurantId,
+          userId: createdOrder.userId,
+          totalAmount: createdOrder.totalAmount
+        };
 
-      // Get existing orders array or initialize new one
-      const existingOrders = JSON.parse(sessionStorage.getItem('orderDetails') || '[]');
-      existingOrders.push(orderDetails);
-      sessionStorage.setItem('orderDetails', JSON.stringify(existingOrders));
+        // Get existing orders array or initialize new one
+        const existingOrders = JSON.parse(sessionStorage.getItem('orderDetails') || '[]');
+        existingOrders.push(orderDetails);
+        sessionStorage.setItem('orderDetails', JSON.stringify(existingOrders));
 
-      // Handle multiple restaurant orders
-      if (multipleOrders) {
-        setCompletedOrders([...completedOrders, createdOrder]);
+        // Handle multiple restaurant orders
+        if (multipleOrders) {
+          setCompletedOrders([...completedOrders, createdOrder]);
 
-        if (currentRestaurantIndex < restaurantIds.length - 1) {
-          const nextIndex = currentRestaurantIndex + 1;
-          setCurrentRestaurantIndex(nextIndex);
-          loadRestaurantItems(cartData!, restaurantIds[nextIndex]);
-          alert(`Order for ${cartData![restaurantIds[currentRestaurantIndex]].restaurantName} created successfully! Now creating order for ${cartData![restaurantIds[nextIndex]].restaurantName}.`);
-          return;
+          if (currentRestaurantIndex < restaurantIds.length - 1) {
+            const nextIndex = currentRestaurantIndex + 1;
+            setCurrentRestaurantIndex(nextIndex);
+            loadRestaurantItems(cartData!, restaurantIds[nextIndex]);
+            alert(`Order for ${cartData![restaurantIds[currentRestaurantIndex]].restaurantName} created successfully! Now creating order for ${cartData![restaurantIds[nextIndex]].restaurantName}.`);
+            return;
+          }
         }
+
+        alert('Order(s) created successfully!');
+        // Clear cart data from session storage
+        sessionStorage.removeItem('cartRestaurantGroups');
+        // Navigate to orders list
+        navigate('/checkout');
       }
-
-      alert('Order(s) created successfully!');
-      // Clear cart data from session storage
-      sessionStorage.removeItem('cartRestaurantGroups');
-      // Navigate to orders list
-      navigate('/checkout');
-
     } catch (error) {
       console.error('Error saving order:', error);
       alert('Failed to save order. Please check all required fields and try again.');
@@ -544,12 +551,27 @@ const OrderForm = () => {
               </div>
               <div>
                 <label className="block text-gray-700 mb-2">Status</label>
-                <input
-                  type="text"
-                  value={OrderStatus.PLACED}
-                  readOnly
-                  className="w-full p-2 border border-gray-300 rounded bg-gray-50"
-                />
+                {isEditMode ? (
+                  <select
+                    name="status"
+                    value={order.status}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-300 rounded focus:border-orange-500 focus:ring focus:ring-orange-200"
+                  >
+                    {Object.values(OrderStatus).map((status) => (
+                      <option key={status} value={status}>
+                        {status.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={OrderStatus.PLACED}
+                    readOnly
+                    className="w-full p-2 border border-gray-300 rounded bg-gray-50"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -742,35 +764,41 @@ const OrderForm = () => {
               className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 transition-colors"
               disabled={order.orderItems.length === 0}
             >
-              {multipleOrders && currentRestaurantIndex < restaurantIds.length - 1
+              {isEditMode ? 'Update Order' : 
+                multipleOrders && currentRestaurantIndex < restaurantIds.length - 1
                 ? `Place Order & Continue (${currentRestaurantIndex + 1}/${restaurantIds.length})`
                 : 'Place Order'}
             </button>
             <button
               type="button"
-              onClick={() => navigate('/cart')}
+              onClick={() => navigate(isEditMode ? '/orders' : '/cart')}
               className="bg-gray-200 text-gray-700 px-6 py-2 rounded hover:bg-gray-300 transition-colors"
             >
-              Back to Cart
+              {isEditMode ? 'Cancel' : 'Back to Cart'}
             </button>
           </div>
-
-          {/* Completed orders status */}
-          {completedOrders.length > 0 && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-              <h3 className="text-lg font-medium text-green-800 mb-2">Orders Completed</h3>
-              <ul className="list-disc list-inside">
-                {completedOrders.map((completedOrder, index) => (
-                  <li key={index} className="text-green-700">
-                    Order #{completedOrder.orderId || index + 1} for {cartData![completedOrder.restaurantId]?.restaurantName || `Restaurant ${completedOrder.restaurantId}`}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </form>
+
+        {/* Information about completed orders */}
+        {completedOrders.length > 0 && (
+          <div className="mt-8 bg-green-50 p-4 rounded-lg border border-green-200">
+            <h2 className="text-lg font-semibold text-green-700 mb-2">Orders Completed</h2>
+            <div className="space-y-2">
+              {completedOrders.map((completedOrder, index) => (
+                <div key={index} className="p-3 bg-white rounded shadow-sm">
+                  <p className="text-gray-700">
+                    <span className="font-medium">Order #{completedOrder.id}:</span> {cartData?.[completedOrder.restaurantId]?.restaurantName || 'Restaurant'} - 
+                    <span className="text-green-600 font-medium"> ${completedOrder.totalAmount.toFixed(2)}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-      <Footer />
+      <div className="mt-12">
+        <Footer />
+      </div>
     </div>
   );
 };
