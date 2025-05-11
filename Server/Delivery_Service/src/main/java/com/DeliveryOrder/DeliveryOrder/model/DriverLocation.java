@@ -1,6 +1,5 @@
 package com.DeliveryOrder.DeliveryOrder.model;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +15,9 @@ public class DriverLocation {
     private String driverId;
 
     @Column(nullable = false)
+    private String driverName;
+
+    @Column(nullable = false)
     private double latitude;
 
     @Column(nullable = false)
@@ -23,4 +25,26 @@ public class DriverLocation {
 
     @Column(nullable = false)
     private boolean isAvailable;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DriverStatus status = DriverStatus.PENDING;
+
+    public DriverLocation(String driverId, double latitude, double longitude, boolean isAvailable) {
+        this.driverId = driverId;
+        this.driverName = "Driver " + driverId.substring(0, Math.min(4, driverId.length()));
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.isAvailable = isAvailable;
+        this.status = DriverStatus.PENDING;
+    }
+
+    public DriverLocation(String driverId, String driverName, double latitude, double longitude, boolean isAvailable) {
+        this.driverId = driverId;
+        this.driverName = driverName;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.isAvailable = isAvailable;
+        this.status = DriverStatus.PENDING;
+    }
 }

@@ -22,9 +22,17 @@ public class DeliveryService {
     @Transactional
     public void updateLocation(LocationDTO location) {
         DriverLocation driverLoc = driverLocationRepo.findById(location.getDriverId())
-                .orElse(new DriverLocation(location.getDriverId(), location.getLatitude(), location.getLongitude(), true));
+                .orElse(new DriverLocation(location.getDriverId(), location.getDriverName(),
+                        location.getLatitude(), location.getLongitude(), true));
+
         driverLoc.setLatitude(location.getLatitude());
         driverLoc.setLongitude(location.getLongitude());
+
+        // Update driver name if provided
+        if (location.getDriverName() != null && !location.getDriverName().isEmpty()) {
+            driverLoc.setDriverName(location.getDriverName());
+        }
+
         driverLocationRepo.save(driverLoc);
 
         deliveryRepo.findByDriverId(location.getDriverId()).ifPresent(delivery -> {
@@ -36,10 +44,11 @@ public class DeliveryService {
 
     @Transactional
     public void createDelivery(String orderId, double shopLat, double shopLon, double customerLat, double customerLon) {
-        List<DriverLocation> availableDrivers = driverLocationRepo.findByIsAvailableTrue();
+        // Only consider approved drivers who are available
+        List<DriverLocation> availableDrivers = driverLocationRepo.findByIsAvailableTrueAndStatus(DriverStatus.APPROVED);
 
         if (availableDrivers.isEmpty()) {
-            throw new RuntimeException("No available drivers!");
+            throw new RuntimeException("No available approved drivers!");
         }
 
         DriverLocation nearest = null;
@@ -114,16 +123,16 @@ public class DeliveryService {
         Delivery delivery = deliveryRepo.findOne(orderId)
                 .orElseThrow(() -> new RuntimeException("No active delivery found for this order ID"));
 
-        // Map your Delivery entity to a DeliveryTracking DTO that matches the frontend needs
         return mapToDeliveryTracking(delivery);
     }
 
-    // Helper method to map the entity to the frontend DTO
     private DeliveryTrackingDTO mapToDeliveryTracking(Delivery delivery) {
-        // You might also need to fetch driver name from a user service if available
-        String driverName = "Driver " + delivery.getDriverId().substring(0, 4); // Placeholder
+        // Get the actual driver name from the repository
+        String driverName = driverLocationRepo.findById(delivery.getDriverId())
+                .map(DriverLocation::getDriverName)
+                .orElse("Driver " + delivery.getDriverId().substring(0, Math.min(4, delivery.getDriverId().length())));
 
-        // Calculate estimated arrival time (you could add logic for this)
+        // Calculate estimated arrival time
         LocalDateTime estimatedArrival = LocalDateTime.now().plusMinutes(15); // Placeholder
 
         return new DeliveryTrackingDTO(
@@ -137,6 +146,7 @@ public class DeliveryService {
                 delivery.getDestinationLongitude()
         );
     }
+
     @Transactional
     public void deleteCompletedDeliveryByOrderId(String orderId) {
         if (!completedDeliveryRepo.existsByOrderId(orderId)) {
@@ -144,4 +154,32 @@ public class DeliveryService {
         }
         completedDeliveryRepo.deleteByOrderId(orderId);
     }
+
+    // Get all driver locations
+    public List<DriverLocation> getAllDriverLocations() {
+        return driverLocationRepo.findAll();
+    }
+
+    // Get driver locations by status
+    public List<DriverLocation> getDriverLocationsByStatus(DriverStatus status) {
+        return driverLocationRepo.findByStatus(status);
+    }
+
+    // Update driver status
+    @Transactional
+    public void updateDriverStatus(String driverId, DriverStatus status) {
+        DriverLocation driver = driverLocationRepo.findById(driverId)
+                .orElseThrow(() -> new RuntimeException("Driver with ID " + driverId + " not found"));
+        driver.setStatus(status);
+        driverLocationRepo.save(driver);
+    }
+    //delete driver records
+    @Transactional
+    public void deleteDriverById(String driverId) {
+        if (!driverLocationRepo.existsById(driverId)) {
+            throw new RuntimeException("Driver with ID " + driverId + " not found");
+        }
+        driverLocationRepo.deleteById(driverId);
+    }
+
 }
