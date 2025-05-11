@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import {SectionWrapper} from "../../hoc";
 
 interface Restaurant {
     restaurantId: string;
@@ -27,7 +28,7 @@ interface Props {
     restaurant: Restaurant;
 }
 
-const RestaurantHeader: React.FC<Props> = ({ restaurant }) => {
+const WrapperRestaurantHeader: React.FC<Props> = ({ restaurant }) => {
     const isOpen = () => {
         // Simple mock function to check if restaurant is open
         // In a real app, you would compare current time with opening/closing times
@@ -128,4 +129,5 @@ const RestaurantHeader: React.FC<Props> = ({ restaurant }) => {
     );
 };
 
+const RestaurantHeader = SectionWrapper(WrapperRestaurantHeader)
 export default RestaurantHeader;

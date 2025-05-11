@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import {useNavigate} from 'react-router-dom'
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import AdminNavbar from "../../components/admin/AdminNavbar.tsx";
 import AdminSideBar from "../../components/layout/AdminSideBar.tsx";
+
 
 
 // Types
@@ -35,7 +37,7 @@ interface StandardResponseDto {
 }
 
 const CreateRestaurantPage: React.FC = () => {
-
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [formData, setFormData] = useState<RestaurantRequestDto>({
         restaurantName: '',
@@ -156,7 +158,7 @@ const CreateRestaurantPage: React.FC = () => {
                 toast.success('Restaurant created successfully!');
                 resetForm();
                 // Navigate to admin restaurant page after successful creation
-                // router.push('/admin-restaurant');
+                navigate('/admin-restaurant');
             }
         } catch (error) {
             console.error('Error creating restaurant:', error);
@@ -224,7 +226,7 @@ const CreateRestaurantPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                <div className="bg-white shadow-lg sm:rounded-lg overflow-hidden rounded-2xl w-full mt-3 2xl:w-[1600px] 2xl:ml-[-50px] 2xl:mt-[-150px]  h-[700px]">
+                <div className="bg-white shadow-lg sm:rounded-lg overflow-hidden rounded-2xl w-full mt-3 2xl:w-[1600px] 2xl:ml-[-50px] 2xl:mt-[-150px]  h-[740px]">
                     {/* Header with progress bar */}
                     <div className="bg-gradient-to-r from-orange-600 to-orange-400 text-white px-6 py-4 ">
                         <h2 className="text-2xl font-bold">Create New Restaurant</h2>
@@ -513,14 +515,14 @@ const CreateRestaurantPage: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="sm:col-span-3">
-                                        <label htmlFor="ownerRestaurant" className="block text-sm font-medium text-gray-700">
+                                        <label htmlFor="owner_username" className="block text-sm font-medium text-gray-700">
                                             Restaurant Owner<span className="text-red-500">*</span>
                                         </label>
                                         <div className="mt-1">
                                             <input
                                                 type="text"
-                                                name="ownerRestaurant"
-                                                id="ownerRestaurant"
+                                                name="owner_username"
+                                                id="owner_username"
                                                 required
                                                 value={formData.owner_username}
                                                 onChange={handleInputChange}

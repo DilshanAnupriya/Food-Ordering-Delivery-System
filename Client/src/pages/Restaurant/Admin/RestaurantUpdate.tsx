@@ -168,7 +168,11 @@ const UpdateRestaurantPage: React.FC = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        if (name === "ownerRestaurant") {
+            setFormData({ ...formData, owner_username: value });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -580,14 +584,14 @@ const UpdateRestaurantPage: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="sm:col-span-3">
-                                                <label htmlFor="ownerRestaurant" className="block text-sm font-medium text-gray-700">
+                                                <label htmlFor="owner_username" className="block text-sm font-medium text-gray-700">
                                                     Restaurant Owner<span className="text-red-500">*</span>
                                                 </label>
                                                 <div className="mt-1">
                                                     <input
                                                         type="text"
-                                                        name="ownerRestaurant"
-                                                        id="ownerRestaurant"
+                                                        name="owner_username"
+                                                        id="owner_username"
                                                         required
                                                         value={formData.owner_username}
                                                         onChange={handleInputChange}

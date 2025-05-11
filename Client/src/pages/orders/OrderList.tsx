@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { orderService } from '../../services/Orders/orderService'; 
-import { PaginatedOrdersResponse } from '../../types/Order/order'; 
+import { orderService } from '../../services/Orders/orderService';
+import { PaginatedOrdersResponse } from '../../types/Order/order';
 import { Link } from 'react-router-dom';
-import AdminNavbar from '../../components/admin/AdminNavbar';
-import AdminSidebar from '../../components/layout/AdminSideBar';
-import { Package, Search, RefreshCcw, PlusCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import NavigationBar from '../../components/layout/Navbar';
+import Footer from '../../components/layout/Footer';
+import SubNav from '../../components/layout/SubNav';
 
 const OrderList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -17,9 +16,6 @@ const OrderList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const fetchOrders = async () => {
     try {
@@ -48,7 +44,8 @@ const OrderList: React.FC = () => {
       setSearchError(null);
       const data = await orderService.searchOrders(searchTerm, page, size, sortBy, direction);
       setOrderData(data);
-      
+
+      // Check if no results found
       if (data.orders.length === 0) {
         setSearchError(`No results found for "${searchTerm}"`);
       }
@@ -84,7 +81,7 @@ const OrderList: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setPage(0);
+    setPage(0); // Reset to first page when searching
     searchOrders();
   };
 
@@ -105,123 +102,122 @@ const OrderList: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (loading) {
-      return (
-        <div className="flex justify-center items-center h-64">
+    if (loading) return (
+        <div className="flex justify-center items-center h-40">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
         </div>
-      );
-    }
-    
+    );
+
     if (searchError) {
       return (
-        <div className="bg-red-50 p-4 rounded-lg flex items-start gap-3">
-          <span className="text-red-500">!</span>
-          <div>
-            <h3 className="font-medium text-red-800">{searchError}</h3>
-            <button 
-              onClick={clearSearch}
-              className="mt-2 text-red-600 hover:text-red-800 underline"
+          <div className="text-center mt-10 p-6 bg-white rounded-lg shadow-md">
+            <p className="text-red-500 font-medium">{searchError}</p>
+            <button
+                onClick={clearSearch}
+                className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-md hover:bg-orange-600 transition-colors duration-300 font-medium focus:outline-none focus:ring-2 focus:ring-orange-300"
             >
               Clear Search
             </button>
           </div>
-        </div>
       );
     }
-    
+
     if (!orderData || orderData.orders.length === 0) {
       return (
-        <div className="text-center bg-white p-8 rounded-lg shadow-sm border border-gray-200">
-          <Package className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No Orders</h3>
-          <p className="mt-1 text-sm text-gray-500">No orders found in the system.</p>
-        </div>
+          <div className="text-center mt-10 p-6 bg-white rounded-lg shadow-md">
+            <p className="text-gray-600 font-medium">No orders found.</p>
+          </div>
       );
     }
 
     return (
-      <>
-        {isSearching && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-              <span className="text-blue-700 flex items-center gap-2">
-                <Search size={16} />
-                Results for: <strong>"{searchTerm}"</strong>
+        <>
+          {/* Search indicator */}
+          {isSearching && (
+              <div className="max-w-7xl mx-auto px-4 mb-6">
+                <div className="flex items-center justify-between bg-blue-50 p-3 rounded-md shadow-sm border border-blue-100">
+              <span className="text-blue-800 font-medium">
+                Showing results for: <strong className="font-semibold">"{searchTerm}"</strong>
               </span>
-              <button 
-                onClick={clearSearch}
-                className="text-blue-700 hover:text-blue-900 flex items-center gap-1"
-              >
-                <RefreshCcw size={16} />
-                Clear
-              </button>
-            </div>
-          </div>
-        )}
-      
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-gray-800">Orders</h2>
-              <Link
-                to="/orders/new"
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Order
-              </Link>
-            </div>
-          </div>
+                  <button
+                      onClick={clearSearch}
+                      className="text-blue-700 hover:text-blue-900 font-medium transition-colors duration-200"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              </div>
+          )}
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          {/* Table */}
+          <div className="overflow-x-auto max-w-7xl mx-auto w-full px-4">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
                 <tr>
-                  <th 
-                    className="py-2 px-4 border-b cursor-pointer" 
-                    onClick={() => handleSort('orderId')}
+                  <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                      onClick={() => handleSort('orderId')}
                   >
-                    Order ID {sortBy === 'orderId' && (direction === 'asc' ? '↑' : '↓')}
+                    <div className="flex items-center">
+                      Order ID
+                      {sortBy === 'orderId' && (
+                          <span className="ml-1">{direction === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
                   </th>
-                  <th 
-                    className="py-2 px-4 border-b cursor-pointer" 
-                    onClick={() => handleSort('orderDate')}
+                  <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                      onClick={() => handleSort('orderDate')}
                   >
-                    Date {sortBy === 'orderDate' && (direction === 'asc' ? '↑' : '↓')}
+                    <div className="flex items-center">
+                      Date
+                      {sortBy === 'orderDate' && (
+                          <span className="ml-1">{direction === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
                   </th>
-                  <th className="py-2 px-4 border-b">Customer</th>
-                  <th 
-                    className="py-2 px-4 border-b cursor-pointer" 
-                    onClick={() => handleSort('status')}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                      onClick={() => handleSort('status')}
                   >
-                    Status {sortBy === 'status' && (direction === 'asc' ? '↑' : '↓')}
+                    <div className="flex items-center">
+                      Status
+                      {sortBy === 'status' && (
+                          <span className="ml-1">{direction === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
                   </th>
-                  <th 
-                    className="py-2 px-4 border-b cursor-pointer" 
-                    onClick={() => handleSort('totalAmount')}
+                  <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                      onClick={() => handleSort('totalAmount')}
                   >
-                    Total {sortBy === 'totalAmount' && (direction === 'asc' ? '↑' : '↓')}
+                    <div className="flex items-center">
+                      Total
+                      {sortBy === 'totalAmount' && (
+                          <span className="ml-1">{direction === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
                   </th>
-                  <th className="py-2 px-4 border-b">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
                 {orderData.orders.map((order) => (
-                  <motion.tr 
-                    key={order.orderId}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="hover:bg-gray-50"
-                  >
-                    <td className="py-2 px-4 border-b">{order.orderId}</td>
-                    <td className="py-2 px-4 border-b">
-                      {new Date(order.orderDate!).toLocaleDateString()}
-                    </td>
-                    <td className="py-2 px-4 border-b">User #{order.userId}</td>
-                    <td className="py-2 px-4 border-b">
-                      <span 
-                        className={`px-2 py-1 rounded text-xs font-semibold
+                    <tr key={order.orderId} className="hover:bg-gray-50 transition-colors duration-150">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(order.orderDate!).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">User #{order.userId}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
                           ${order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' : ''}
                           ${order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' : ''}
                           ${order.status === 'PLACED' ? 'bg-blue-100 text-blue-800' : ''}
@@ -232,118 +228,114 @@ const OrderList: React.FC = () => {
                       >
                         {order.status}
                       </span>
-                    </td>
-                    <td className="py-2 px-4 border-b">${order.totalAmount.toFixed(2)}</td>
-                    <td className="py-2 px-4 border-b">
-                      <Link 
-                        to={`/orders/${order.orderId}`} 
-                        className="text-blue-500 hover:underline mr-2"
-                      >
-                        View
-                      </Link>
-                      <Link 
-                        to={`/orders/${order.orderId}/edit`} 
-                        className="text-green-500 hover:underline mr-2"
-                      >
-                        Edit
-                      </Link>
-                      <button 
-                        onClick={async () => {
-                          if (window.confirm('Are you sure you want to delete this order?')) {
-                            await orderService.deleteOrder(order.orderId!);
-                            fetchOrders();
-                          }
-                        }} 
-                        className="text-red-500 hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </motion.tr>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.totalAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-3">
+                          <Link
+                              to={`/orders/${order.orderId}`}
+                              className="text-blue-600 hover:text-blue-900 transition-colors duration-200"
+                          >
+                            View
+                          </Link>
+                          <Link
+                              to={`/orders/${order.orderId}/edit`}
+                              className="text-green-600 hover:text-green-900 transition-colors duration-200"
+                          >
+                            Edit
+                          </Link>
+                          <button
+                              onClick={async () => {
+                                if (window.confirm('Are you sure you want to delete this order?')) {
+                                  await orderService.deleteOrder(order.orderId!);
+                                  fetchOrders();
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
                 ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center justify-between bg-white px-4 py-3 border border-gray-200 rounded-lg mt-4">
-          <div className="flex-1 flex justify-between items-center">
-            <div className="text-sm text-gray-700">
-              Showing page <span className="font-medium">{orderData.currentPage + 1}</span> of{' '}
-              <span className="font-medium">{orderData.totalPages}</span>
+          {/* Pagination */}
+          <div className="flex justify-between items-center mt-6 mb-8 max-w-7xl mx-auto px-4">
+            <div className="text-gray-200 font-medium">
+              Showing page {orderData.currentPage + 1} of {orderData.totalPages}
             </div>
             <div className="flex space-x-2">
-              <button 
-                onClick={() => handlePageChange(page - 1)} 
-                disabled={page === 0}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md
-                  ${page === 0 
-                    ? 'bg-gray-100 text-gray-400 cursor-default' 
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'}`}
+              <button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 0}
+                  className={`px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors duration-200 ${
+                      page === 0
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
               >
                 Previous
               </button>
-              <button 
-                onClick={() => handlePageChange(page + 1)} 
-                disabled={page >= orderData.totalPages - 1}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md
-                  ${page >= orderData.totalPages - 1 
-                    ? 'bg-gray-100 text-gray-400 cursor-default' 
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'}`}
+              <button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= orderData.totalPages - 1}
+                  className={`px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors duration-200 ${
+                      page >= orderData.totalPages - 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
               >
                 Next
               </button>
             </div>
           </div>
-        </div>
-      </>
+        </>
     );
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className={`fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
-        <AdminSidebar />
-      </div>
+      <div className="bg-gray-50 min-h-screen">
+        <div className="w-full">
+          <SubNav/>
+        </div>
+        <div className="w-full shadow-md">
+          <NavigationBar/>
+        </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminNavbar onToggleSidebar={toggleSidebar} />
-
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h1 className="text-2xl font-semibold text-gray-900">Order Management</h1>
-                <form onSubmit={handleSearch} className="flex-1 sm:flex-initial">
-                  <div className="flex max-w-md">
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={handleSearchInputChange}
-                        placeholder="Search orders..."
-                        className="block w-full rounded-l-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm pl-4 pr-10 py-2"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                    <button 
-                      type="submit"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                    >
-                      Search
-                    </button>
-                  </div>
-                </form>
-              </div>
+        <div className="container mx-auto py-8 bg-gray-700">
+          <div className="flex justify-between items-center mb-8 max-w-7xl mx-auto px-4">
+            <h1 className="text-2xl font-bold text-white">
+              <span className="border-b-4 border-orange-500 pb-1">Order Management</span>
+            </h1>
+            <div className="flex">
+              <form onSubmit={handleSearch} className="flex">
+                <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={handleSearchInputChange}
+                    placeholder="Search orders..."
+                    className="border border-gray-300 rounded-l-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent w-64 shadow-sm text-white"
+                />
+                <button
+                    type="submit"
+                    className="bg-orange-500 text-white px-6 py-2 rounded-r-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors duration-300 font-medium shadow-sm"
+                >
+                  Search
+                </button>
+              </form>
             </div>
-
-            {renderContent()}
           </div>
-        </main>
+
+          {renderContent()}
+        </div>
+
+        <Footer />
       </div>
-    </div>
   );
 };
 

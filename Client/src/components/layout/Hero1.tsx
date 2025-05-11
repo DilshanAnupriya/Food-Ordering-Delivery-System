@@ -68,7 +68,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: TrendingRestaurant }) => {
 
     return (
         <motion.div
-            className="flex flex-col w-full rounded-2xl overflow-hidden shadow-md bg-white"
+            className="flex flex-col w-full   rounded-2xl overflow-hidden shadow-md bg-white"
             variants={cardVariants}
             initial="hidden"
             animate="visible"
@@ -162,8 +162,8 @@ const TrendingRestaurants = () => {
     }, []);
 
     return (
-        <section className="py-12 bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-12  bg-gray-100 shadow-2xl rounded-3xl">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6  lg:px-8">
                 <motion.div
                     variants={titleVariants}
                     initial="hidden"

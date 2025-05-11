@@ -219,6 +219,8 @@ public class  RestaurantServiceImpl implements RestaurantService {
                 .createdAt(restaurant.getCreatedAt())
                 .rating(restaurant.getRating())
                 .owner_username(restaurant.getOwner_username())
+                .latitude(restaurant.getLatitude())
+                .longitude(restaurant.getLongitude())
                 .build();
     }
 }
