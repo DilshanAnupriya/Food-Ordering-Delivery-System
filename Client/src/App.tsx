@@ -31,6 +31,7 @@ import PaymentDetails from './pages/Payment/PaymentDetails';
 
 import RestaurantOwnerDashboard from "./pages/Restaurant/Admin/RestaurantOwnerDashboard.tsx";
 import ManageFoodItems from "./pages/Restaurant/Admin/ManageFoodItems.tsx";
+import AdminDriverDashboard from "./pages/Delivery/AdminDriverDashboard.tsx";
 
 
 function App() {
@@ -65,6 +66,7 @@ function App() {
                     <Route path="/orders/:orderId/edit" element={<OrderForm />} />
                     <Route path="/track" element={<OrderTracking />} />
                     <Route path="/payments" element={<PaymentDetails />} />
+                    <Route path="/driveradmin-dashboard" element={<AdminDriverDashboard />} />
                     
                 </Routes>
             </Router>
