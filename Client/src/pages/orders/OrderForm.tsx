@@ -448,7 +448,7 @@ const OrderForm = () => {
         const createdOrder = await orderService.createOrder(orderData);
 
         // Store order details in session storage
-        const orderDetails = {
+        const orderDetail = {
           orderId: createdOrder.orderId,
           restaurantId: createdOrder.restaurantId,
           userId: createdOrder.userId,
@@ -456,9 +456,9 @@ const OrderForm = () => {
         };
 
         // Get existing orders array or initialize new one
-        const existingOrders = JSON.parse(sessionStorage.getItem('orderDetails') || '[]');
-        existingOrders.push(orderDetails);
-        sessionStorage.setItem('orderDetails', JSON.stringify(existingOrders));
+        const existingOrders = JSON.parse(sessionStorage.getItem('orderDetail') || '[]');
+        existingOrders.push(orderDetail);
+        sessionStorage.setItem('orderDetail', JSON.stringify(existingOrders));
 
         // Handle multiple restaurant orders
         if (multipleOrders) {

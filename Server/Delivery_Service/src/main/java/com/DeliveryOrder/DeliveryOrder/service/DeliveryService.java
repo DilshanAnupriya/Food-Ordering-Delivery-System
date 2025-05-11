@@ -111,7 +111,7 @@ public class DeliveryService {
     }
 
     public DeliveryTrackingDTO getDeliveryByOrderId(String orderId) {
-        Delivery delivery = deliveryRepo.findByOrderId(orderId)
+        Delivery delivery = deliveryRepo.findOne(orderId)
                 .orElseThrow(() -> new RuntimeException("No active delivery found for this order ID"));
 
         // Map your Delivery entity to a DeliveryTracking DTO that matches the frontend needs
