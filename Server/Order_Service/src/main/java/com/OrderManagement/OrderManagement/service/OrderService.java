@@ -296,7 +296,7 @@ public class OrderService {
                 .orElseThrow(() -> new OrderException("Order not found with ID: " + orderId, HttpStatus.NOT_FOUND));
 
         StringBuilder statusInfo = new StringBuilder();
-        statusInfo.append("Order #").append(orderId).append("\n");
+        statusInfo.append("Order ").append(orderId).append("\n");
         statusInfo.append("Status: ").append(order.getStatus()).append("\n");
         statusInfo.append("Last Updated: ").append(order.getLastUpdated()).append("\n");
 

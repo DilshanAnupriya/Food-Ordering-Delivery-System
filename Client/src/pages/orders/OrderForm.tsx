@@ -506,7 +506,7 @@ const OrderForm = () => {
       <div className="w-full">
         <NavigationBar />
       </div>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 bg-gradient-to-r from-black via-black/80 to-black/60">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-orange-500">
             {isEditMode ? 'Edit Order' : 'Create New Order'}
@@ -787,7 +787,7 @@ const OrderForm = () => {
               {completedOrders.map((completedOrder, index) => (
                 <div key={index} className="p-3 bg-white rounded shadow-sm">
                   <p className="text-gray-700">
-                    <span className="font-medium">Order #{completedOrder.id}:</span> {cartData?.[completedOrder.restaurantId]?.restaurantName || 'Restaurant'} - 
+                    <span className="font-medium">Order {completedOrder.id}:</span> {cartData?.[completedOrder.restaurantId]?.restaurantName || 'Restaurant'} - 
                     <span className="text-green-600 font-medium"> ${completedOrder.totalAmount.toFixed(2)}</span>
                   </p>
                 </div>

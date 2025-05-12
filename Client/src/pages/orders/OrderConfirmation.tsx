@@ -196,7 +196,7 @@ const OrderConfirmation = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-r from-black via-black/80 to-black/60">
             <div className="max-w-2xl mx-auto mt-10 p-6">
                 <div className="bg-white rounded-lg shadow-md p-8 text-center">
                     <div className="mb-6">
@@ -218,7 +218,7 @@ const OrderConfirmation = () => {
                             <h2 className="text-xl font-semibold mb-3">Order Details</h2>
                             {orderDetails.map((order, index) => (
                                 <div key={index} className={index > 0 ? "mt-4 pt-4 border-t border-gray-200" : ""}>
-                                    <p className="text-gray-700">Order ID: #{order.orderId}</p>
+                                    <p className="text-gray-700">Order ID: {order.orderId}</p>
                                     <p className="text-gray-700">Restaurant ID: {order.restaurantId}</p>
                                     <p className="text-gray-700">Total: ${order.totalAmount.toFixed(2)}</p>
                                     <div className="mt-2">
