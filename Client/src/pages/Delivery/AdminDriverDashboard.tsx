@@ -109,9 +109,9 @@ export default function DriversDashboard() {
   };
 
   const filteredDrivers = drivers.filter(driver =>
-    driver.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.driverId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  (driver.driverName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+  (driver.driverId?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+   );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -266,7 +266,7 @@ export default function DriversDashboard() {
                                 <div className="flex items-center">
                                   <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                                     <span className="text-blue-600 font-medium">
-                                      {driver.driverName.charAt(0).toUpperCase()}
+                                      {driver.driverName?.charAt(0)?.toUpperCase() || ''}
                                     </span>
                                   </div>
                                   <div className="ml-4">
