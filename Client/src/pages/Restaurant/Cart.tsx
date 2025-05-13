@@ -29,6 +29,7 @@ const CartPage = () => {
 
             if (!userId) {
                 console.error('User ID not found in token:', user);
+                // @ts-ignore
                 setError('User ID not found. Please log in again.');
                 setLoading(false);
                 return;

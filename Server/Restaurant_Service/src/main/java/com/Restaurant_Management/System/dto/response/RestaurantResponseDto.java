@@ -31,6 +31,8 @@ public class RestaurantResponseDto {
     private String imageUrl;
     private String coverImageUrl;
     private String owner_username;
+    private Double latitude;
+    private Double longitude;
     private LocalDateTime updatedAt;
     private LocalDateTime createdAt;
 }

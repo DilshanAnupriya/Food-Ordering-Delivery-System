@@ -44,9 +44,9 @@ export const orderService = {
   },
 
   // Get order by ID
-  getOrderById: async (orderId: number) => {
+  getOrderById: async (orderId: string) => {
     try {
-      const response = await api.get<Order>(`/orders/${orderId}`);
+      const response = await api.get<Order>(`${API_BASE_URL}orders/${orderId}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching order ${orderId}:`, error);

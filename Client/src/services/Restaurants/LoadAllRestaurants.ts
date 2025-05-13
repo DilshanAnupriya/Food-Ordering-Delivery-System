@@ -18,6 +18,8 @@ export interface Restaurant {
     description: string;
     active: boolean;
     imageUrl: string;
+    latitude:number;
+    longitude:number;
     coverImageUrl: string;
     updatedAt: string;
     createdAt: string;

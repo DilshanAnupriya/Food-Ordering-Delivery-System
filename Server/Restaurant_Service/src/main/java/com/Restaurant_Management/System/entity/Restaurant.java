@@ -66,6 +66,8 @@ public class Restaurant {
     @JsonFormat(pattern = "HH:mm")
     private LocalTime closingTime;
 
+
+    @Column( nullable = false,length = 1000)
     private String description;
 
     @Column( nullable = false)

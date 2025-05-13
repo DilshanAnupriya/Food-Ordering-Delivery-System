@@ -104,6 +104,7 @@ const OrderForm = () => {
     const queryParams = new URLSearchParams(location.search);
     const restaurantId = queryParams.get('restaurantId');
 
+
     // Fetch cart data from sessionStorage
     const storedCartData = sessionStorage.getItem('cartRestaurantGroups');
 
@@ -193,7 +194,7 @@ const OrderForm = () => {
         (error) => {
           console.error('Error getting location:', error);
           // Default position (if user denies location access)
-          setPosition([40.7128, -74.0060]);  // New York City coordinates
+          setPosition([6.9271, 79.8612]);  
         }
       );
     }
@@ -442,6 +443,7 @@ const OrderForm = () => {
       // Store order details in session storage
       const orderDetails = {
         orderId: createdOrder.orderId,
+        restaurantId:createdOrder.restaurantId,
         userId: createdOrder.userId,
         totalAmount: createdOrder.totalAmount
       };
@@ -479,7 +481,7 @@ const OrderForm = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
@@ -490,7 +492,7 @@ const OrderForm = () => {
     : `Restaurant ${order.restaurantId}`;
 
   return (
-    <div className="bg-gradient-to-r white relative overflow-hidden">
+    <div className="bg-white relative overflow-hidden">
       <div className="w-full">
         <SubNav />
       </div>
@@ -499,24 +501,24 @@ const OrderForm = () => {
       </div>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold text-orange-500">
             {isEditMode ? 'Edit Order' : 'Create New Order'}
             {multipleOrders && ` (${currentRestaurantIndex + 1}/${restaurantIds.length})`}
           </h1>
 
           {multipleOrders && (
-            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p>Creating order {currentRestaurantIndex + 1} of {restaurantIds.length} -
+            <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded-md">
+              <p className="text-orange-700">Creating order {currentRestaurantIndex + 1} of {restaurantIds.length} -
                 <span className="font-semibold"> {currentRestaurantName}</span>
               </p>
             </div>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-gray-200 rounded-lg shadow-md p-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 border border-orange-100">
           {/* User Information Section */}
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Customer Information</h2>
+            <h2 className="text-xl font-semibold mb-4 text-orange-500">Customer Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-gray-700 mb-2">User ID</label>
@@ -525,7 +527,7 @@ const OrderForm = () => {
                   name="userId"
                   value={userId}
                   readOnly
-                  className="w-full p-2 border rounded bg-gray-100"
+                  className="w-full p-2 border border-gray-300 rounded bg-gray-50"
                 />
               </div>
               <div>
@@ -536,7 +538,7 @@ const OrderForm = () => {
                   value={order.contactPhone}
                   onChange={handleChange}
                   required
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border border-gray-300 rounded focus:border-orange-500 focus:ring focus:ring-orange-200"
                   placeholder="Enter your phone number"
                 />
               </div>
@@ -546,7 +548,7 @@ const OrderForm = () => {
                   type="text"
                   value={OrderStatus.PLACED}
                   readOnly
-                  className="w-full p-2 border rounded bg-gray-100"
+                  className="w-full p-2 border border-gray-300 rounded bg-gray-50"
                 />
               </div>
             </div>
@@ -554,14 +556,14 @@ const OrderForm = () => {
 
           {/* Restaurant Info */}
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Restaurant Information</h2>
+            <h2 className="text-xl font-semibold mb-4 text-orange-500">Restaurant Information</h2>
             <div>
               <label className="block text-gray-700 mb-2">Restaurant</label>
               <input
                 type="text"
                 value={currentRestaurantName}
                 readOnly
-                className="w-full p-2 border rounded bg-gray-100"
+                className="w-full p-2 border border-gray-300 rounded bg-gray-50"
               />
               <input
                 type="hidden"
@@ -573,7 +575,7 @@ const OrderForm = () => {
 
           {/* Map and location section */}
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Delivery Location</h2>
+            <h2 className="text-xl font-semibold mb-4 text-orange-500">Delivery Location</h2>
 
             <div className="flex flex-col md:flex-row gap-6">
               <div className="md:w-1/2">
@@ -581,16 +583,16 @@ const OrderForm = () => {
                   <button
                     type="button"
                     onClick={handleGetCurrentLocation}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4"
+                    className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition-colors mb-4"
                   >
                     Use My Current Location
                   </button>
 
                   {/* Map container */}
-                  <div className="border rounded shadow-md" style={{ height: '400px' }}>
+                  <div className="border border-orange-200 rounded shadow-md" style={{ height: '400px' }}>
                     {mapLoaded && (
                       <MapContainer
-                        center={position || [40.7128, -74.0060]} // Default to NYC if no position
+                        center={position || [6.9271, 79.8612]} // Default to Colombo if no position
                         zoom={13}
                         style={{ height: '100%', width: '100%' }}
                         ref={mapRef}
@@ -623,7 +625,7 @@ const OrderForm = () => {
                     onChange={handleAddressChange}
                     required
                     rows={4}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border border-gray-300 rounded focus:border-orange-500 focus:ring focus:ring-orange-200"
                     placeholder="Enter your delivery address"
                   />
                 </div>
@@ -635,7 +637,7 @@ const OrderForm = () => {
                       type="text"
                       readOnly
                       value={order.latitude !== null ? order.latitude.toFixed(6) : ''}
-                      className="w-full p-2 border rounded bg-gray-100"
+                      className="w-full p-2 border border-gray-300 rounded bg-gray-50"
                     />
                   </div>
                   <div>
@@ -644,7 +646,7 @@ const OrderForm = () => {
                       type="text"
                       readOnly
                       value={order.longitude !== null ? order.longitude.toFixed(6) : ''}
-                      className="w-full p-2 border rounded bg-gray-100"
+                      className="w-full p-2 border border-gray-300 rounded bg-gray-50"
                     />
                   </div>
                 </div>
@@ -653,26 +655,26 @@ const OrderForm = () => {
           </div>
 
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+            <h2 className="text-xl font-semibold mb-4 text-orange-500">Order Items</h2>
 
             {order.orderItems.length === 0 ? (
-              <div className="text-center py-4 bg-gray-50 rounded">
-                No items loaded. Please return to cart and try again.
+              <div className="text-center py-4 bg-orange-50 rounded border border-orange-200">
+                <p className="text-orange-700">No items loaded. Please return to cart and try again.</p>
               </div>
             ) : (
-              <div className="bg-white rounded-md shadow-sm overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="bg-white rounded-md shadow-sm overflow-hidden border border-orange-100">
+                <table className="min-w-full divide-y divide-orange-200">
+                  <thead className="bg-orange-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-orange-700 uppercase tracking-wider">Item</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-orange-700 uppercase tracking-wider">Quantity</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-orange-700 uppercase tracking-wider">Unit Price</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-orange-700 uppercase tracking-wider">Total</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-orange-100">
                     {order.orderItems.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
+                      <tr key={index} className="hover:bg-orange-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div>
@@ -686,25 +688,25 @@ const OrderForm = () => {
                             <button
                               type="button"
                               onClick={() => item.quantity > 1 && handleItemChange(index, 'quantity', item.quantity - 1)}
-                              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                              className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
                               disabled={item.quantity <= 1}
                             >
-                              <span className="text-gray-600">-</span>
+                              <span className="text-orange-600">-</span>
                             </button>
                             <span className="mx-3">{item.quantity}</span>
                             <button
                               type="button"
                               onClick={() => handleItemChange(index, 'quantity', item.quantity + 1)}
-                              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                              className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center hover:bg-orange-200 transition-colors"
                             >
-                              <span className="text-gray-600">+</span>
+                              <span className="text-orange-600">+</span>
                             </button>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                           ${item.unitPrice.toFixed(2)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-orange-500">
                           ${item.totalPrice.toFixed(2)}
                         </td>
                       </tr>
@@ -716,20 +718,20 @@ const OrderForm = () => {
           </div>
 
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            <div className="bg-gray-50 p-4 rounded">
+            <h2 className="text-xl font-semibold mb-4 text-orange-500">Order Summary</h2>
+            <div className="bg-orange-50 p-4 rounded border border-orange-100">
               <div className="grid grid-cols-2 gap-2">
                 <div className="text-gray-700">Subtotal:</div>
-                <div className="text-right">${order.subtotal.toFixed(2)}</div>
+                <div className="text-right text-gray-800">${order.subtotal.toFixed(2)}</div>
 
                 <div className="text-gray-700">Tax (10%):</div>
-                <div className="text-right">${order.tax.toFixed(2)}</div>
+                <div className="text-right text-gray-800">${order.tax.toFixed(2)}</div>
 
                 <div className="text-gray-700">Delivery Fee:</div>
-                <div className="text-right">${order.deliveryFee.toFixed(2)}</div>
+                <div className="text-right text-gray-800">${order.deliveryFee.toFixed(2)}</div>
 
-                <div className="font-semibold border-t pt-2 mt-2">Total:</div>
-                <div className="text-right font-semibold border-t pt-2 mt-2">${order.totalAmount.toFixed(2)}</div>
+                <div className="font-semibold border-t border-orange-200 pt-2 mt-2 text-orange-600">Total:</div>
+                <div className="text-right font-semibold border-t border-orange-200 pt-2 mt-2 text-orange-600">${order.totalAmount.toFixed(2)}</div>
               </div>
             </div>
           </div>
@@ -737,7 +739,7 @@ const OrderForm = () => {
           <div className="flex space-x-4">
             <button
               type="submit"
-              className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+              className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 transition-colors"
               disabled={order.orderItems.length === 0}
             >
               {multipleOrders && currentRestaurantIndex < restaurantIds.length - 1
@@ -747,7 +749,7 @@ const OrderForm = () => {
             <button
               type="button"
               onClick={() => navigate('/cart')}
-              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+              className="bg-gray-200 text-gray-700 px-6 py-2 rounded hover:bg-gray-300 transition-colors"
             >
               Back to Cart
             </button>

@@ -88,17 +88,17 @@ const StatsDisplayBar: React.FC = () => {
     return (
         <div
             ref={statsRef}
-            className="w-full bg-orange-500 py-8 md:py-12 px-4 md:px-6 rounded-2xl transition-opacity duration-1000 ease-in mb-10"
+            className="w-full bg-orange-500 py-8 md:py-12 px-4 md:px-6 rounded-2xl mt-30 transition-opacity duration-1000 ease-in mb-30"
             style={{ opacity: isVisible ? 1 : 0 }}
         >
             <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-4">
                     {isVisible && (
                         <>
-                            <StatCounter value={546} label="Registered Riders" />
-                            <StatCounter value={789900} label="Orders Delivered" />
-                            <StatCounter value={690} label="Restaurants Partnered" />
-                            <StatCounter value={17457} label="Food items" />
+                            <StatCounter value={10} label="Registered Riders" />
+                            <StatCounter value={20} label="Orders Delivered" />
+                            <StatCounter value={5} label="Restaurants Partnered" />
+                            <StatCounter value={50} label="Food items" />
                         </>
                     )}
                 </div>

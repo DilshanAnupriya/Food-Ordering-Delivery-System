@@ -21,8 +21,8 @@ function Home() {
             <Hero1 />
             <Poster/>
             <PartnerCard/>
-            <FAQContent/>
             <StatsDisplay/>
+            <FAQContent/>
             <Footer/>
 
         </>

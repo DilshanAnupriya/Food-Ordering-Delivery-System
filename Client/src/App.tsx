@@ -40,13 +40,11 @@ function App() {
                 <Routes>
                     <Route path="/contact" element={<ContactUs />} />
                     <Route path="/" element={<Home />} />
-                
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/restaurants" element={<Restaurants />} />
                     <Route path="/restaurant/:id" element={<Restaurant />} />
                     <Route path="/restaurant/create" element={<RestaurantCreate />} />
-
                     <Route path="/driver-delivery" element={<DriverDeliveryPageWrapper />} />
                     <Route path="/driver-dashboard" element={<DriverDashboard />} />
                     <Route path="/customer-tracking" element={<CustomerTrackingPage />} />
@@ -56,13 +54,9 @@ function App() {
                     <Route path='/admin-restaurant' element={<RestaurantAdminDashboard/>}/>
                     <Route path='/update/:id' element={<UpdateRestaurantPage/>} />
                     <Route path='/admin-fooditems' element={<RestuarantAdminFoodItem/>} />
-
                     <Route path='/admin-contacts' element={<AdminContactView />} />
-
                     <Route path='/owner-restaurant' element={<RestaurantOwnerDashboard/>} />
                     <Route path='/:id/fooditems' element={<ManageFoodItems/>} />
-
-
                     <Route path='/checkout' element={<Checkout />} />
                     <Route path='/order-confirmation' element={<OrderConfirmation />} />
                     <Route path="/orders" element={<OrderList />} />

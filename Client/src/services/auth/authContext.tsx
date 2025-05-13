@@ -46,6 +46,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId'); // 👈
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("restaurantId");
+    sessionStorage.removeItem("orderDetails");
+    sessionStorage.removeItem("isAuthenticated");
     setIsAuthenticated(false);
     setUser(null);
   };
