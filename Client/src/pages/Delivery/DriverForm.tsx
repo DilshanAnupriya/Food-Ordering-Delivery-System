@@ -1,9 +1,14 @@
+// Your imports and Leaflet setup remain the same
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
+import Footer from "../../components/layout/Footer";
+import NavigationBar from "../../components/layout/Navbar";
+import SubNav from "../../components/layout/SubNav";
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -120,9 +125,8 @@ const DriverForm = () => {
       };
 
       await axios.post('http://localhost:8082/api/v1/delivery/update-location', locationData);
-
       setSuccess('Driver location updated successfully!');
-      setTimeout(() => navigate('/drivers'), 2000);
+      navigate('/'); // Redirect to home page immediately after success[3][4][5][6]
     } catch (err) {
       console.error('Error saving driver location:', err);
       setError('Failed to update driver location. Please try again.');
@@ -202,121 +206,175 @@ const DriverForm = () => {
   }, [isEditMode]);
 
   return (
-    <div className="bg-white relative overflow-hidden">
-      <div className="container mx-auto px-4 py-8 bg-gradient-to-r from-black via-black/80 to-black/60">
-        <h1 className="text-2xl font-bold text-orange-500 mb-6">
-          {isEditMode ? 'Edit Driver Details' : 'Add New Driver'}
-        </h1>
-
-        {error && <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">{error}</div>}
-        {success && <div className="bg-green-100 text-green-700 p-4 mb-4 rounded">{success}</div>}
-
-        <form onSubmit={handleSubmit} className="bg-white rounded shadow-md p-6 border">
-          <h2 className="text-xl font-semibold mb-4 text-orange-500">Driver Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block mb-2">Driver ID *</label>
-              <input
-                type="text"
-                name="driverId"
-                value={driver.driverId}
-                onChange={handleChange}
-                className="w-full p-2 border rounded"
-                placeholder="Enter driver ID"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-2">Driver Name *</label>
-              <input
-                type="text"
-                name="driverName"
-                value={driver.driverName}
-                onChange={handleChange}
-                className="w-full p-2 border rounded"
-                placeholder="Enter driver name"
-                required
-              />
-            </div>
-          </div>
-
-          <h2 className="text-xl font-semibold mt-8 mb-4 text-orange-500">Driver Location *</h2>
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="md:w-1/2">
-              <button
-                type="button"
-                onClick={handleGetCurrentLocation}
-                className="mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
-              >
-                Use My Current Location
-              </button>
-              <div className="border rounded shadow-md" style={{ height: '400px' }}>
-                {mapLoaded && (
-                  <MapContainer
-                    center={position || [6.9271, 79.8612]}
-                    zoom={13}
-                    style={{ height: '100%', width: '100%' }}
-                    ref={mapRef}
-                  >
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                    />
-                    <LocationMarker
-                      position={position}
-                      setPosition={setPosition}
-                      onLocationSelect={handleLocationSelect}
-                    />
-                  </MapContainer>
-                )}
-              </div>
-              <p className="mt-2 text-sm text-gray-600">Click on the map to set driver location</p>
-            </div>
-
-            <div className="md:w-1/2">
-              <label className="block mb-2">Current Address</label>
-              <textarea
-                name="currentAddress"
-                value={driver.currentAddress}
-                onChange={handleChange}
-                rows={4}
-                className="w-full p-2 border rounded"
-                placeholder="Address will appear here after selecting location"
-              />
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block mb-2">Latitude *</label>
-                  <input
-                    type="text"
-                    value={driver.latitude || ''}
-                    readOnly
-                    className="w-full p-2 border rounded bg-gray-100"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2">Longitude *</label>
-                  <input
-                    type="text"
-                    value={driver.longitude || ''}
-                    readOnly
-                    className="w-full p-2 border rounded bg-gray-100"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <button
-              type="submit"
-              className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              disabled={loading}
-            >
-              {loading ? 'Saving...' : isEditMode ? 'Update Driver' : 'Save Driver'}
-            </button>
-          </div>
-        </form>
+    <div className="flex flex-col min-h-screen">
+      {/* Fixed header section */}
+      <div className="fixed w-full z-50">
+        <div className="w-full">
+          <SubNav />
+        </div>
+        <div className="w-full">
+          <NavigationBar />
+        </div>
       </div>
+      <div className="bg-white min-h-screen py-2">
+        <div className="flex-grow container mx-auto px-4 pt-32 pb-14 bg-gradient-to-r from-black via-black/80 to-black/60">
+          {error && <div className="bg-red-100 text-orange-400 p-4 mb-4 rounded">{error}</div>}
+          {success && <div className="bg-green-100 text-orange-400 p-4 mb-4 rounded">{success}</div>}
+
+          <form
+            onSubmit={handleSubmit}
+            className="relative rounded-2xl shadow-2xl p-8 max-w-5xl mx-auto border border-blue-200 bg-white bg-opacity-80"
+            style={{
+            backgroundImage: "url('https://img.freepik.com/free-vector/white-orange-watercolor-background_23-2148902771.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: "#ffe5b4",
+
+            }}
+          >
+            {/* Profile Avatar */}
+            <div className="flex justify-center -mt-16 mb-6">
+              <div className="w-24 h-24 bg-gradient-to-br from-gray-400 to-orange-400 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2V19.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-400 text-center mb-8 flex items-center justify-center gap-2">
+              <svg className="w-7 h-7 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M3 13h2l.4 2M7 13h10l1.6-8H6.4L7 13zm5 0v6m-4 0h8"/>
+              </svg>
+              {isEditMode ? 'Edit Driver Details' : 'Add New Driver'}
+            </h2>
+
+            {/* Section: Driver Info */}
+            <div className="mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block mb-2 font-semibold text-black">Driver ID *</label>
+                  <input
+                    type="text"
+                    name="driverId"
+                    value={driver.driverId}
+                    onChange={handleChange}
+                    className="w-full p-3 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                    placeholder="Enter driver ID"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 font-semibold text-black">Driver Name *</label>
+                  <input
+                    type="text"
+                    name="driverName"
+                    value={driver.driverName}
+                    onChange={handleChange}
+                    className="w-full p-3 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                    placeholder="Enter driver name"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center my-6"></div>
+
+            {/* Section: Driver Location */}
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="md:w-1/2">
+                <button
+                  type="button"
+                  onClick={handleGetCurrentLocation}
+                  className="mb-4 px-5 py-2 bg-gradient-to-r from-black to-orange-400 text-white font-semibold rounded-lg shadow hover:scale-105 transition"
+                >
+                  <span className="inline-flex items-center gap-1">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.07-7.07l-1.41 1.41M6.34 17.66l-1.41 1.41m12.02 0l-1.41-1.41M6.34 6.34L4.93 4.93"/>
+                    </svg>
+                    Use My Location
+                  </span>
+                </button>
+                <div
+                  className="relative border border-blue-200 rounded-xl shadow-md overflow-hidden leaflet-map-fix"
+                  style={{ height: '300px', zIndex: 0, position: 'relative' }}
+                >
+                  {mapLoaded && (
+                    <MapContainer
+                      center={position || [6.9271, 79.8612]}
+                      zoom={13}
+                      className="w-full h-full"
+                      ref={mapRef}
+                      style={{ zIndex: 0, height: '100%', width: '100%', position: 'relative' }}
+                    >
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+                      />
+                      <LocationMarker
+                        position={position}
+                        setPosition={setPosition}
+                        onLocationSelect={handleLocationSelect}
+                      />
+                    </MapContainer>
+                  )}
+                </div>
+                <p className="mt-2 text-sm text-black">Click on the map to set driver location</p>
+              </div>
+              <div className="md:w-1/2">
+                <label className="block mb-2 font-semibold text-black">Current Address</label>
+                <textarea
+                  name="currentAddress"
+                  value={driver.currentAddress}
+                  onChange={handleChange}
+                  rows={4}
+                  className="w-full p-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  placeholder="Address will appear here after selecting location"
+                />
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div>
+                    <label className="block mb-2 font-semibold text-black">Latitude *</label>
+                    <input
+                      type="text"
+                      value={driver.latitude || ''}
+                      readOnly
+                      className="w-full p-3 border rounded-lg bg-gray-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-semibold text-black">Longitude *</label>
+                    <input
+                      type="text"
+                      value={driver.longitude || ''}
+                      readOnly
+                      className="w-full p-3 border rounded-lg bg-gray-100"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="mt-10 text-center">
+              <button
+                type="submit"
+                className="px-8 py-3 bg-gradient-to-r from-orange-400 to-black text-white font-bold rounded-full shadow-lg hover:scale-105 hover:shadow-xl transition inline-flex items-center gap-2"
+                disabled={loading}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7"/>
+                </svg>
+                {loading ? 'Saving...' : isEditMode ? 'Update Driver' : 'Save Driver'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <Footer />
     </div>
   );
 };
