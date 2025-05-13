@@ -49,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("restaurantId");
     sessionStorage.removeItem("orderDetails");
+    sessionStorage.removeItem("orderDetail");
     sessionStorage.removeItem("isAuthenticated");
     setIsAuthenticated(false);
     setUser(null);

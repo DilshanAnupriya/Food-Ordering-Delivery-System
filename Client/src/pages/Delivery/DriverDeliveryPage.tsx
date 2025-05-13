@@ -66,7 +66,7 @@ interface DriverDeliveryPageProps {
   driverId?: string;
 }
 
-const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver134' }) => {
+const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver133' }) => {
   const [location, setLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -159,7 +159,6 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
 
   if (error) {
     return (
-      
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
           <div className="flex justify-center mb-6">
@@ -186,38 +185,37 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
   }
 
   return (
-    
-    
-   
-    <div className="bg-gradient-to-r from-white to-white w-full relative overflow-hidden">
-       <div className="w-full">
-          <SubNav />
-       </div>
-       <div className="w-full">
-          <NavigationBar />
-       </div>
+    <div className="bg-gradient-to-r from-black via-black/80 to-black/60">
+      <div className="w-full">
+        <SubNav />
+      </div>
+      <div className="w-full">
+        <NavigationBar />
+      </div>
   
-    
-       <nav className="max-w-7xl bg-black mx-auto px-4 py-1">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center"></div>
-            <div className="hidden md:block">
-              <div className="flex items-center space-x-4">
-                <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full flex items-center text-sm">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                  Active Driver
+      {/* Added margin-top to create space between NavigationBar and the next section */}
+      <div className="mt-16">
+        <nav className="max-w-7xl bg-black mx-auto px-4 py-1">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center"></div>
+              <div className="hidden md:block">
+                <div className="flex items-center space-x-4">
+                  <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full flex items-center text-sm">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    Active Driver
+                  </div>
+                  <span className="text-gray-600">|</span>
+                  <div className="text-white">Driver ID: <span className="font-medium">{driverId}</span></div>
                 </div>
-                <span className="text-gray-600">|</span>
-                <div className="text-white">Driver ID: <span className="font-medium">{driverId}</span></div>
               </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-3">
         <div className="bg-orange-50 rounded-xl shadow-md overflow-hidden">
           {/* Header with gradient background */}
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
@@ -324,7 +322,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                 </div>
               </div>
 
-              {/* Map container */}
+              {/* Map container - UPDATED TO PREVENT OVERLAP */}
               {isValidCoords(location) ? (
                 <div className="rounded-xl overflow-hidden shadow-md border border-gray-100 mb-6">
                   <div className="bg-gray-50 border-b px-4 py-3 flex justify-between items-center">
@@ -350,55 +348,57 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                       </div>
                     </div>
                   </div>
-                  <div className="h-96 w-full">
-                    <MapContainer
-                      center={[location?.latitude || 0, location?.longitude || 0]}
-                      zoom={14}
-                      scrollWheelZoom={true}
-                      className="h-full w-full"
-                    >
-                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      
-                      {/* Shop Marker */}
-                      <Marker 
-                        position={[delivery.shopLatitude, delivery.shopLongitude]} 
-                        icon={shopIcon}
+                  <div className="h-96 w-full relative">
+                    <div className="absolute inset-0">
+                      <MapContainer
+                        center={[location?.latitude || 0, location?.longitude || 0]}
+                        zoom={14}
+                        scrollWheelZoom={true}
+                        style={{ height: '100%', width: '100%', zIndex: 0 }}
                       >
-                        <Popup>Resturaent Location</Popup>
-                      </Marker>
-                      
-                      {/* Customer Marker */}
-                      <Marker 
-                        position={[delivery.destinationLatitude, delivery.destinationLongitude]} 
-                        icon={customerIcon}
-                      >
-                        <Popup>Customer Location</Popup>
-                      </Marker>
-                      
-                      {/* Driver Marker */}
-                      {location && (
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                        
+                        {/* Shop Marker */}
                         <Marker 
-                          position={[location.latitude, location.longitude]} 
-                          icon={driverIcon}
+                          position={[delivery.shopLatitude, delivery.shopLongitude]} 
+                          icon={shopIcon}
                         >
-                          <Popup>Your Location</Popup>
+                          <Popup>Resturaent Location</Popup>
                         </Marker>
-                      )}
-                      
-                      {/* Polyline connecting the points */}
-                      {location && (
-                        <Polyline
-                          positions={[
-                            [delivery.shopLatitude, delivery.shopLongitude],
-                            [location.latitude, location.longitude],
-                            [delivery.destinationLatitude, delivery.destinationLongitude]
-                          ]}
-                          color="blue"
-                          weight={3}
-                          opacity={0.7}
-                        />
-                      )}
-                    </MapContainer>
+                        
+                        {/* Customer Marker */}
+                        <Marker 
+                          position={[delivery.destinationLatitude, delivery.destinationLongitude]} 
+                          icon={customerIcon}
+                        >
+                          <Popup>Customer Location</Popup>
+                        </Marker>
+                        
+                        {/* Driver Marker */}
+                        {location && (
+                          <Marker 
+                            position={[location.latitude, location.longitude]} 
+                            icon={driverIcon}
+                          >
+                            <Popup>Your Location</Popup>
+                          </Marker>
+                        )}
+                        
+                        {/* Polyline connecting the points */}
+                        {location && (
+                          <Polyline
+                            positions={[
+                              [delivery.shopLatitude, delivery.shopLongitude],
+                              [location.latitude, location.longitude],
+                              [delivery.destinationLatitude, delivery.destinationLongitude]
+                            ]}
+                            color="blue"
+                            weight={3}
+                            opacity={0.7}
+                          />
+                        )}
+                      </MapContainer>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -451,11 +451,9 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
             </div>
           )}
         </div>
-       
       </main>
       <Footer />
     </div>
-    
   );
 };
 

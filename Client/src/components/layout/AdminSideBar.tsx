@@ -189,7 +189,7 @@ const AdminSidebar: React.FC = () => {
             </li>
             <li>
               <NavLink
-                  to="/delivery"
+                  to="/driveradmin-dashboard"
                   className={({ isActive }) =>
                       navLinkStyle(isActive || location.pathname.startsWith('/driver'))
                   }

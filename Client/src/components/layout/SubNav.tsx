@@ -1,4 +1,3 @@
-import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 import Star from '../../../public/assets/Star Icon.png'
 import Location from '../../../public/assets/Location.png'
 import Cart from '../../../public/assets/Full Shopping Basket.png'
@@ -51,6 +50,6 @@ const SubNavBar = () => {
 };
 
 
-const SubNav = SectionWrapper(SubNavBar);
+// const SubNav = SectionWrapper(SubNavBar);
 
-export default SubNav;
+export default SubNavBar;
