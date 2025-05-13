@@ -1,5 +1,3 @@
-// Your imports and Leaflet setup remain the same
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
@@ -126,7 +124,7 @@ const DriverForm = () => {
 
       await axios.post('http://localhost:8082/api/v1/delivery/update-location', locationData);
       setSuccess('Driver location updated successfully!');
-      navigate('/'); // Redirect to home page immediately after success[3][4][5][6]
+      navigate('/'); // Redirect to home page immediately after success
     } catch (err) {
       console.error('Error saving driver location:', err);
       setError('Failed to update driver location. Please try again.');
@@ -225,12 +223,11 @@ const DriverForm = () => {
             onSubmit={handleSubmit}
             className="relative rounded-2xl shadow-2xl p-8 max-w-5xl mx-auto border border-blue-200 bg-white bg-opacity-80"
             style={{
-            backgroundImage: "url('https://img.freepik.com/free-vector/white-orange-watercolor-background_23-2148902771.jpg')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundColor: "#ffe5b4",
-
+              background: 'linear-gradient(135deg, #FFF3E0 0%, #FFCC80 50%, #FFA726 100%)',
+              boxShadow: '0 10px 25px rgba(255, 152, 0, 0.3)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
             }}
           >
             {/* Profile Avatar */}
@@ -254,7 +251,7 @@ const DriverForm = () => {
             <div className="mb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block mb-2 font-semibold text-black">Driver ID *</label>
+                  <label className="block mb-2 font-semibold text-black">Driver ID </label>
                   <input
                     type="text"
                     name="driverId"
@@ -266,7 +263,7 @@ const DriverForm = () => {
                   />
                 </div>
                 <div>
-                  <label className="block mb-2 font-semibold text-black">Driver Name *</label>
+                  <label className="block mb-2 font-semibold text-black">Driver Name </label>
                   <input
                     type="text"
                     name="driverName"
@@ -332,26 +329,26 @@ const DriverForm = () => {
                   value={driver.currentAddress}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full p-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  className="w-full p-3 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                   placeholder="Address will appear here after selecting location"
                 />
                 <div className="grid grid-cols-2 gap-3 mt-4">
                   <div>
-                    <label className="block mb-2 font-semibold text-black">Latitude *</label>
+                    <label className="block mb-2 font-semibold text-black">Latitude </label>
                     <input
                       type="text"
                       value={driver.latitude || ''}
                       readOnly
-                      className="w-full p-3 border rounded-lg bg-gray-100"
+                      className="w-full p-3 border rounded-lg"
                     />
                   </div>
                   <div>
-                    <label className="block mb-2 font-semibold text-black">Longitude *</label>
+                    <label className="block mb-2 font-semibold text-black">Longitude </label>
                     <input
                       type="text"
                       value={driver.longitude || ''}
                       readOnly
-                      className="w-full p-3 border rounded-lg bg-gray-100"
+                      className="w-full p-3 border rounded-lg"
                     />
                   </div>
                 </div>
