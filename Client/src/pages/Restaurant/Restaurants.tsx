@@ -9,7 +9,6 @@ import Footer from "../../components/layout/Footer.tsx";
 const Restaurants = () => {
     return (
         <>
-            <SubNav/>
             <Navbar/>
             <Banner/>
             <RestaurantsContainer />

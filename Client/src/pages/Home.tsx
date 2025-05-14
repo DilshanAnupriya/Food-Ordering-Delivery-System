@@ -14,14 +14,16 @@ function Home() {
         <>
             <NavigationBar />
             <Banner />
-            <Discount/>
-            <Category />
-            <Hero1 />
-            <Poster/>
-            <PartnerCard/>
-            <StatsDisplay/>
-            <FAQContent/>
-            <Footer/>
+            <div>
+                <Discount/>
+                <Category />
+                <Hero1 />
+                <Poster/>
+                <PartnerCard/>
+                <StatsDisplay/>
+                <FAQContent/>
+                <Footer/>
+            </div>
 
         </>
     );
