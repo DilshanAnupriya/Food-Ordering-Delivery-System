@@ -1,16 +1,20 @@
 package com.example.pos1.pos1.dto.response;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import lombok.*;
-import org.checkerframework.checker.units.qual.A;
+import java.util.Set;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class UserResponseDto {
+    private String userId;
     private String username;
     private String fullName;
-    private String contact;
+    private boolean enabled;
+    private Set<String> roles;
 }

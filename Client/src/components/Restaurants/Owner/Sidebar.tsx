@@ -13,18 +13,19 @@ import {
     Menu
 } from 'lucide-react';
 import Restaurant from "../../../pages/Restaurant/Restaurant.tsx";
-
+import { useAuth } from '../../../services/auth/authContext.tsx'; // Import path may need adjustment
 
 interface SidebarProps {
     isMobile?: boolean;
     restaurant?: Restaurant;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isMobile = false,restaurant }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isMobile = false, restaurant }) => {
     // Changed initial state to false (collapsed) regardless of device type
     const [isExpanded, setIsExpanded] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const { logout } = useAuth(); // Get logout function from authentication context
 
     const toggleSidebar = () => {
         setIsExpanded(!isExpanded);
@@ -45,6 +46,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobile = false,restaurant }) => {
 
     const isActive = (path: string) => {
         return location.pathname === path;
+    };
+
+    // Handle logout with redirect to login page
+    const handleLogout = () => {
+        logout(() => {
+            navigate('/login'); // Redirect to login page after logout
+        });
     };
 
     return (
@@ -69,7 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobile = false,restaurant }) => {
 
             {/* Sidebar */}
             <motion.div
-                className={`fixed  top-0 left-0 z-20 h-screen bg-white shadow-md flex flex-col ${
+                className={`fixed top-0 left-0 z-20 h-screen bg-white shadow-md flex flex-col ${
                     isMobile ? (isExpanded ? 'translate-x-0' : '-translate-x-full') : ''
                 } transition-transform duration-300 ease-in-out`}
                 animate={isExpanded ? 'expanded' : 'collapsed'}
@@ -125,10 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobile = false,restaurant }) => {
                         className="flex items-center w-full p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                            // Handle logout logic here
-                            alert('Logout clicked');
-                        }}
+                        onClick={handleLogout}
                     >
                         <div className={`${!isExpanded ? 'mx-auto' : ''}`}>
                             <LogOut size={20} />

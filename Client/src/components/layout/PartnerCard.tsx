@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import SectionWrapper from "../../hoc/SectionWrapper.tsx";
+import {Link} from "react-router-dom";
 
 interface PartnerCardProps {
     img: string;
@@ -9,9 +10,10 @@ interface PartnerCardProps {
     subheadTxt: string;
     description: string;
     index: number;
+    link: string;
 }
 
-const PartnerCard = ({ img, headTxt, subheadTxt, description, index }: PartnerCardProps) => {
+const PartnerCard = ({ img, headTxt, subheadTxt, description, index,link }: PartnerCardProps) => {
     const controls = useAnimation();
     const [ref, inView] = useInView({
         threshold: 0.25,
@@ -64,6 +66,8 @@ const PartnerCard = ({ img, headTxt, subheadTxt, description, index }: PartnerCa
         }
     };
 
+
+
     return (
         <motion.div
             ref={ref}
@@ -101,18 +105,21 @@ const PartnerCard = ({ img, headTxt, subheadTxt, description, index }: PartnerCa
                     <motion.p variants={itemVariants} className="text-gray-600 mb-6">
                         {description}
                     </motion.p>
-
+                    <Link to={link}>
                     <motion.button
                         variants={itemVariants}
                         className="w-full bg-orange-500 text-white font-medium py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors duration-300 flex items-center justify-center gap-2"
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.98 }}
+
                     >
+
                         Get Started
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                     </motion.button>
+                    </Link>
                 </motion.div>
             </div>
         </motion.div>
@@ -188,6 +195,7 @@ const PartnerSection = () => {
                         headTxt="Become a Restaurant Partner"
                         description="Join thousands of restaurants that deliver with our platform. Increase your sales, reach new customers, and grow your business with our advanced ordering technology."
                         index={0}
+                        link="/restaurant/create"
                     />
 
                     <PartnerCard
@@ -196,6 +204,7 @@ const PartnerSection = () => {
                         headTxt="Deliver With Us"
                         description="Enjoy flexible hours, competitive earnings, and weekly payments. Be your own boss and earn money by delivering food from local restaurants to hungry customers."
                         index={1}
+                        link="/driver"
                     />
                 </div>
 

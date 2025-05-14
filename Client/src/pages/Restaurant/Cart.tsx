@@ -295,7 +295,6 @@ const CartPage = () => {
     if (loading) {
         return (
             <>
-                <SubNav />
                 <Navbar />
                 <div className="min-h-screen bg-gradient-to-r from-blue-900 to-indigo-800 flex justify-center items-center">
                     <motion.div
@@ -324,9 +323,10 @@ const CartPage = () => {
     if (!cart || cart.cartItems?.length === 0 || error) {
         return (
             <>
-                <SubNav />
-                <Navbar />
+
+
                 <div className="min-h-screen bg-gradient-to-r from-blue-900 to-indigo-800 py-20">
+                    <Navbar />
                     <ToastContainer position="top-right" autoClose={3000} />
                     <motion.div
                         initial={{ y: 20, opacity: 0 }}
@@ -365,9 +365,10 @@ const CartPage = () => {
     // @ts-ignore
     return (
         <>
-            <SubNav/>
-            <Navbar/>
+
+
             <div className="min-h-screen bg-gradient-to-r from-blue-900 to-indigo-800 py-16">
+                <Navbar/>
                 <ToastContainer position="top-right" autoClose={3000} />
 
                 <div className="container mx-auto px-4">

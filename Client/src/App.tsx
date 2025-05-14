@@ -10,8 +10,8 @@ import Restaurant from './pages/Restaurant/Restaurant';
 import RestaurantCreate from './pages/Restaurant/RestaurantCreate';
 import DriverDashboard from './pages/Delivery/DriverDashboard';
 import DriverDeliveryPageWrapper from './pages/Delivery/DriverDeliveryPageWrapper';
-import CustomerTrackingPage from './pages/Delivery/CustomerTraking';  
-import AdminDashboard from './pages/AdminDashboard.tsx'; 
+import CustomerTrackingPage from './pages/Delivery/CustomerTraking';
+import AdminDashboard from './pages/AdminDashboard.tsx';
 import CartPage from "./pages/Restaurant/Cart.tsx";
 import OrderList from "./pages/orders/OrderList.tsx";
 import OrderForm from "./pages/orders/OrderForm.tsx";
@@ -32,32 +32,60 @@ import PaymentDetails from './pages/Payment/PaymentDetails';
 import RestaurantOwnerDashboard from "./pages/Restaurant/Admin/RestaurantOwnerDashboard.tsx";
 import ManageFoodItems from "./pages/Restaurant/Admin/ManageFoodItems.tsx";
 import AdminDriverDashboard from "./pages/Delivery/AdminDriverDashboard.tsx";
+import ProtectedRoute from "./services/auth/ProtectedRoute.tsx";
+import AdminRoute from "./services/auth/AdminRoute.tsx";
+import RoleRouter from "./services/auth/RoleRouter.tsx";
+import {Suspense} from "react";
+import AdminUser from './pages/Restaurant/Admin/AdminUser.tsx';
 
 
 function App() {
     return (
         <AuthProvider>
+            <Suspense fallback={
+                <div className="flex items-center justify-center h-screen bg-orange-50">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-orange-500 mx-auto"></div>
+                        <p className="mt-4 text-gray-700 text-xl">Loading...</p>
+                    </div>
+                </div>
+            }>
             <Router>
                 <Routes>
-                    <Route path="/contact" element={<ContactUs />} />
+                    <Route path="/route" element={<RoleRouter />} />
+
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
-                    <Route path="/restaurants" element={<Restaurants />} />
-                    <Route path="/restaurant/:id" element={<Restaurant />} />
-                    <Route path="/restaurant/create" element={<RestaurantCreate />} />
+
+                    <Route element={<ProtectedRoute />}>
+                        <Route path="/contact" element={<ContactUs />} />
+                        <Route path="/restaurants" element={<Restaurants />} />
+                        <Route path="/restaurant/:id" element={<Restaurant />} />
+                        <Route path="/restaurant/create" element={<RestaurantCreate />} />
+                        <Route path="/cart/:id" element={<CartPage />} />
+                    </Route>
+
+
+
                     <Route path="/driver-delivery" element={<DriverDeliveryPageWrapper />} />
                     <Route path="/driver-dashboard" element={<DriverDashboard />} />
                     <Route path="/customer-tracking" element={<CustomerTrackingPage />} />
-                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
+
+                    <Route element={<AdminRoute />}>
+                        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                        <Route path="/admin-user" element={<AdminUser />} />
+                    </Route>
+
                     <Route path="/AdminDashboard" element={<Navigate to="/admin-dashboard" replace />} />
-                    <Route path="/cart/:id" element={<CartPage />} />
                     <Route path='/admin-restaurant' element={<RestaurantAdminDashboard/>}/>
                     <Route path='/update/:id' element={<UpdateRestaurantPage/>} />
                     <Route path='/admin-fooditems' element={<RestuarantAdminFoodItem/>} />
                     <Route path='/admin-contacts' element={<AdminContactView />} />
+
                     <Route path='/owner-restaurant' element={<RestaurantOwnerDashboard/>} />
                     <Route path='/:id/fooditems' element={<ManageFoodItems/>} />
+
                     <Route path='/checkout' element={<Checkout />} />
                     <Route path='/order-confirmation' element={<OrderConfirmation />} />
                     <Route path="/orders" element={<OrderList />} />
@@ -67,9 +95,9 @@ function App() {
                     <Route path="/track" element={<OrderTracking />} />
                     <Route path="/payments" element={<PaymentDetails />} />
                     <Route path="/driveradmin-dashboard" element={<AdminDriverDashboard />} />
-                    
                 </Routes>
             </Router>
+            </Suspense>
         </AuthProvider>
     );
 }

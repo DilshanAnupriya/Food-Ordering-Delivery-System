@@ -207,6 +207,15 @@ const AdminSidebar: React.FC = () => {
                 {!collapsed && <span className="ml-3">Payments</span>}
               </NavLink>
             </li>
+            <li>
+              <NavLink
+                  to="/user"
+                  className={({ isActive }) => navLinkStyle(isActive)}
+              >
+                <CreditCard size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Payments</span>}
+              </NavLink>
+            </li>
           </ul>
         </nav>
 

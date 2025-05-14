@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 const FoodDeliveryPoster = () => {
@@ -151,28 +151,9 @@ const FoodDeliveryPoster = () => {
                                     }}
                                     transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
                                 >
-                                    🍲
+                                      <div className="w-88 h-78 bg-[url('https://t3.ftcdn.net/jpg/10/95/93/22/360_F_1095932261_tEqRp8DzkNhDxw9gmBIqLTzxe2DsHvuH.jpg')] bg-cover bg-center  rounded-4xl flex items-center justify-center">
+                                </div>
                                 </motion.span>
-                                <motion.div
-                                    className="absolute top-10 right-10"
-                                    animate={{
-                                        y: [0, -5, 0],
-                                        rotate: [0, -5, 0]
-                                    }}
-                                    transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", delay: 0.5 }}
-                                >
-                                    <span className="text-5xl">🛵</span>
-                                </motion.div>
-                                <motion.div
-                                    className="absolute bottom-10 left-10"
-                                    animate={{
-                                        y: [0, 5, 0],
-                                        rotate: [0, 5, 0]
-                                    }}
-                                    transition={{ duration: 2.8, repeat: Infinity, repeatType: "reverse", delay: 1 }}
-                                >
-                                    <span className="text-5xl">🥗</span>
-                                </motion.div>
                             </div>
 
                             {/* Floating decorative elements */}

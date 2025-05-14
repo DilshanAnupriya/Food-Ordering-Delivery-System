@@ -227,7 +227,7 @@ const FAQContent = () => {
     ];
 
     return (
-        <div className="bg-orange-50 rounded-2xl p-8">
+        <div className="bg-orange-50 rounded-2xl p-8 pb-20 ">
             <div className="max-w-6xl mx-auto">
                 <div className="mb-10 text-center">
                     <h2 className="text-4xl font-bold text-gray-800 mb-4">Frequently Asked Questions</h2>

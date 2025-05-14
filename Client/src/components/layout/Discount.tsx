@@ -74,7 +74,7 @@ const Nav = () => {
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={titleVariants}
-            className="flex justify-between items-center py-10 mb-6"
+            className="flex justify-between items-center py-10 pl-3 mb-6"
         >
             <div>
                 <h2 className="text-3xl font-bold text-gray-800">
@@ -210,7 +210,7 @@ const Discount = () => {
 
     return (
         <section className="py-12 px-4 md:px-8 bg-white">
-            <div className="max-w-6xl mx-auto">
+            <div className="w-full mx-auto px-10">
                 <Nav />
 
                 <motion.div
@@ -218,8 +218,51 @@ const Discount = () => {
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, amount: 0.1 }}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10"
                 >
+                    <DiscountCard
+                        image="https://www.kitchensanctuary.com/wp-content/uploads/2021/05/Double-Cheeseburger-square-FS-42.jpg"
+                        name="Cheese Burger"
+                        restaurant="Burger King"
+                        discount="-25%"
+                        rating={4.5}
+                        deliveryTime="15-25 min"
+                    />
+
+                    <DiscountCard
+                        image="https://www.jennycancook.com/wp-content/uploads/2013/02/PeppPizza_600.jpg"
+                        name="Margherita Pizza"
+                        restaurant="Pizza Hut"
+                        discount="-30%"
+                        rating={4.7}
+                        deliveryTime="20-30 min"
+                    />
+                    <DiscountCard
+                        image="https://www.kitchensanctuary.com/wp-content/uploads/2021/05/Double-Cheeseburger-square-FS-42.jpg"
+                        name="Cheese Burger"
+                        restaurant="Burger King"
+                        discount="-25%"
+                        rating={4.5}
+                        deliveryTime="15-25 min"
+                    />
+
+                    <DiscountCard
+                        image="https://www.jennycancook.com/wp-content/uploads/2013/02/PeppPizza_600.jpg"
+                        name="Margherita Pizza"
+                        restaurant="Pizza Hut"
+                        discount="-30%"
+                        rating={4.7}
+                        deliveryTime="20-30 min"
+                    />
+
+                    <DiscountCard
+                        image="https://www.heinens.com/content/uploads/2022/05/Mocha-Iced-Coffee-with-Vanilla-Cold-Foam-800x550-1.jpg"
+                        name="Iced Coffee"
+                        restaurant="Barista"
+                        discount="-15%"
+                        rating={4.2}
+                        deliveryTime="10-15 min"
+                    />
                     <DiscountCard
                         image="https://www.kitchensanctuary.com/wp-content/uploads/2021/05/Double-Cheeseburger-square-FS-42.jpg"
                         name="Cheese Burger"
@@ -253,10 +296,10 @@ const Discount = () => {
                         variants={fadeIn}
                         initial="hidden"
                         animate={controls}
-                        className="hidden lg:block md:col-span-2 lg:col-span-3 mt-12"
+                        className="hidden lg:block md:col-span-2 lg:col-span-4 mt-12"
                     >
                         <motion.div
-                            className="relative bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 rounded-2xl shadow-xl overflow-hidden"
+                            className="relative w-full bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 rounded-2xl shadow-xl overflow-hidden"
                             whileHover={{ scale: 1.02 }}
                             transition={{ duration: 0.5 }}
                         >
@@ -308,9 +351,7 @@ const Discount = () => {
                                         repeatType: "reverse"
                                     }}
                                 >
-                                    {/* Replace with placeholder circle for the demo */}
-                                    <div className="w-48 h-48 bg-white rounded-full flex items-center justify-center">
-                                        <div className="text-orange-500 font-bold text-xl text-center">Food Delivery Image</div>
+                                    <div className="w-48 h-48 bg-[url('https://i.fbcd.co/products/resized/resized-750-500/73c4b33c29e94322066dbc5bfec443981bf035f6fe3da2a7646f3d3b5c5acbd1.jpg')] bg-cover bg-center rounded-full flex items-center justify-center">
                                     </div>
                                 </motion.div>
                             </div>
@@ -322,7 +363,5 @@ const Discount = () => {
     );
 };
 
-// Wrap the component with the section wrapper
-const DiscountWrapper = SectionWrapper(Discount, "deals");
 
-export default DiscountWrapper;
+export default Discount;

@@ -2,6 +2,8 @@ package com.example.pos1.pos1.service.impl;
 
 import com.example.pos1.pos1.dto.request.RequestAdminDto;
 import com.example.pos1.pos1.dto.request.RequestUserDto;
+import com.example.pos1.pos1.dto.request.UpdateUserDto;
+import com.example.pos1.pos1.dto.response.PaginatedUserResponseDto;
 import com.example.pos1.pos1.dto.response.UserResponseDto;
 import com.example.pos1.pos1.entity.ApplicationUser;
 import com.example.pos1.pos1.entity.UserRole;
@@ -17,6 +19,8 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,14 +29,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
+import java.awt.print.Pageable;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static com.example.pos1.pos1.security.ApplicationUserRole.ADMIN;
-import static com.example.pos1.pos1.security.ApplicationUserRole.USER;
+import static com.example.pos1.pos1.security.ApplicationUserRole.*;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +62,12 @@ public class ApplicationUserServiceImpl implements ApplicationUserService {
                 }
                 if (u.getRoleName().equals("USER")) {
                     grantedAuthorities.addAll(USER.grantedAuthorities());
+                }
+                if (u.getRoleName().equals("RESTAURANT_OWNER")) {
+                    grantedAuthorities.addAll(RESTAURANT_OWNER.grantedAuthorities());
+                }
+                if (u.getRoleName().equals("DELIVERY_PERSON")) {
+                    grantedAuthorities.addAll(DELIVERY_PERSON.grantedAuthorities());
                 }
             }
 
@@ -140,6 +148,26 @@ public class ApplicationUserServiceImpl implements ApplicationUserService {
             );
         }
 
+    @Override
+    @Transactional
+    public void changeUserRole(String userId, String newRoleName) throws IOException {
+        // Find the user by ID
+        ApplicationUser user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntryNotFoundException(String.format("User with ID %s not found", userId)));
+
+        // Find the role by name
+        UserRole newRole = roleRepo.findByRoleName(newRoleName)
+                .orElseThrow(() -> new EntryNotFoundException(String.format("Role %s not found", newRoleName)));
+
+        // Create a new Set of roles
+        Set<UserRole> newRoles = new HashSet<>();
+        newRoles.add(newRole);
+
+        // Set the new roles and save the user
+        user.setRoles(newRoles);
+        userRepo.save(user);
+    }
+
         @Override
         public UserResponseDto findData(String tokenHeader) {
             String realToken = tokenHeader.replace(jwtConfig.getTokenPrefix(), "");
@@ -176,4 +204,88 @@ public class ApplicationUserServiceImpl implements ApplicationUserService {
                     .isEnabled(true).build();
 
         }
+
+
+    @Override
+    public PaginatedUserResponseDto getAllUsers(int page, int size, String searchText) {
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(page, size);
+
+        Page<ApplicationUser> usersPage;
+        if (searchText == null || searchText.trim().isEmpty()) {
+            usersPage = userRepo.findAll(pageable);
+        } else {
+            usersPage = userRepo.findUsers(searchText, pageable);
+        }
+
+        List<UserResponseDto> userDtos = usersPage.getContent().stream()
+                .map(this::mapUserToResponseDto)
+                .collect(Collectors.toList());
+
+        return PaginatedUserResponseDto.builder()
+                .content(userDtos)
+                .totalElements(usersPage.getTotalElements())
+                .totalPages(usersPage.getTotalPages())
+                .currentPage(page)
+                .size(size)
+                .build();
+    }
+
+    @Override
+    public UserResponseDto getUserById(String userId) {
+        ApplicationUser user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntryNotFoundException(String.format("User with ID %s not found", userId)));
+
+        return mapUserToResponseDto(user);
+    }
+
+    @Override
+    @Transactional
+    public void updateUser(String userId, UpdateUserDto updateUserDto) throws IOException {
+        ApplicationUser user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntryNotFoundException(String.format("User with ID %s not found", userId)));
+
+        // If updating username, check if it already exists
+        if (updateUserDto.getUsername() != null && !updateUserDto.getUsername().equals(user.getUsername())) {
+            Optional<ApplicationUser> existingUser = userRepo.findByUsername(updateUserDto.getUsername());
+            if (existingUser.isPresent()) {
+                throw new DuplicateEntryException(String.format("User with username (%s) already exists", updateUserDto.getUsername()));
+            }
+            user.setUsername(updateUserDto.getUsername().trim());
+        }
+
+        // Update other fields if provided
+        if (updateUserDto.getFullName() != null) {
+            user.setFullName(updateUserDto.getFullName().trim());
+        }
+
+
+        // Update enabled status
+        user.setEnabled(updateUserDto.isEnabled());
+
+        userRepo.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(String userId) throws IOException {
+        ApplicationUser user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntryNotFoundException(String.format("User with ID %s not found", userId)));
+
+        userRepo.delete(user);
+    }
+
+    // Helper method to map ApplicationUser to UserResponseDto
+    private UserResponseDto mapUserToResponseDto(ApplicationUser user) {
+        Set<String> roleNames = user.getRoles().stream()
+                .map(UserRole::getRoleName)
+                .collect(Collectors.toSet());
+
+        return UserResponseDto.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .enabled(user.isEnabled())
+                .roles(roleNames)
+                .build();
+    }
 }

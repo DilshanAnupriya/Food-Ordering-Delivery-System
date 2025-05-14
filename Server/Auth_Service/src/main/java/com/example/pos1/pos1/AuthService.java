@@ -28,5 +28,7 @@ public class AuthService implements CommandLineRunner {
 
 		// save user (ADMIN)-> if not exists
 		applicationUserService.initializeAdmin();
+
+
 	}
 }

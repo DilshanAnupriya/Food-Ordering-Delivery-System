@@ -11,6 +11,8 @@ import {
     Sun,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../services/auth/authContext.tsx'; // Update with the correct path
+import { useNavigate } from 'react-router-dom'; // Import router navigation
 
 interface AdminNavbarProps {
     // Add optional props for sidebar toggle functionality
@@ -23,6 +25,10 @@ const AdminNavbar: React.FC<AdminNavbarProps> = () => {
     const [showProfile, setShowProfile] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const [searchFocused, setSearchFocused] = useState(false);
+
+    // Auth context and navigation
+    const { logout, user } = useAuth();
+    const navigate = useNavigate();
 
     const notificationRef = useRef<HTMLDivElement>(null);
     const profileRef = useRef<HTMLDivElement>(null);
@@ -44,6 +50,14 @@ const AdminNavbar: React.FC<AdminNavbarProps> = () => {
         };
     }, []);
 
+    // Handle logout
+    const handleLogout = () => {
+        logout(() => {
+            // Redirect to login page after logout
+            navigate('/login');
+        });
+    };
+
     const notifications = [
         { id: 1, text: 'New restaurant application submitted', time: '5 min ago', unread: true },
         { id: 2, text: 'Order #2458 reported an issue', time: '23 min ago', unread: true },
@@ -58,13 +72,14 @@ const AdminNavbar: React.FC<AdminNavbarProps> = () => {
         visible: { opacity: 1, y: 0, scale: 1 }
     };
 
+    // Get user display name or email
+    const userDisplayName = user?.name || user?.sub || 'Admin User';
+    const userEmail = user?.email || user?.sub || 'admin@foodapp.com';
 
     return (
         <nav className="bg-white border-b rounded-3xl border-gray-200 fixed w-[calc(100%-300px)] z-30 mt-2 shadow-sm ml-5">
             <div className="max-w-full mx-auto px-5 ">
                 <div className="flex items-center justify-between h-16">
-
-
 
                     {/* Search Bar */}
                     <div className="flex-1 max-w-xl ml-8">
@@ -162,8 +177,8 @@ const AdminNavbar: React.FC<AdminNavbarProps> = () => {
                                     <User size={18} className="text-orange-500" />
                                 </div>
                                 <div className="hidden md:block text-left">
-                                    <p className="text-sm font-medium text-gray-700">Admin User</p>
-                                    <p className="text-xs text-gray-500">admin@foodapp.com</p>
+                                    <p className="text-sm font-medium text-gray-700">{userDisplayName}</p>
+                                    <p className="text-xs text-gray-500">{userEmail}</p>
                                 </div>
                                 <ChevronDown size={16} className={`text-gray-500 transition-transform ${showProfile ? 'rotate-180' : ''}`} />
                             </button>
@@ -179,8 +194,8 @@ const AdminNavbar: React.FC<AdminNavbarProps> = () => {
                                         transition={{ duration: 0.2 }}
                                     >
                                         <div className="px-4 py-3 border-b border-gray-100">
-                                            <p className="text-sm font-medium text-gray-800">Admin User</p>
-                                            <p className="text-xs text-gray-500 truncate">admin@foodapp.com</p>
+                                            <p className="text-sm font-medium text-gray-800">{userDisplayName}</p>
+                                            <p className="text-xs text-gray-500 truncate">{userEmail}</p>
                                         </div>
                                         <div className="py-1">
                                             <button className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
@@ -197,7 +212,10 @@ const AdminNavbar: React.FC<AdminNavbarProps> = () => {
                                             </button>
                                         </div>
                                         <div className="py-1 border-t border-gray-100">
-                                            <button className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
+                                            <button
+                                                onClick={handleLogout}
+                                                className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                                            >
                                                 <LogOut size={16} />
                                                 <span>Sign out</span>
                                             </button>
