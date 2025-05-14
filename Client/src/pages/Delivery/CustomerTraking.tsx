@@ -194,14 +194,18 @@ const CustomerTrackingPage: React.FC = () => {
 
   return (
       <div className="flex flex-col min-h-screen">
-        <div className="w-full">
-          <SubNav/>
-        </div>
-        <div className="w-full">
-          <NavigationBar/>
+        {/* Fixed header section */}
+        <div className="fixed w-full z-50">
+          <div className="w-full">
+            <SubNav/>
+          </div>
+          <div className="w-full">
+            <NavigationBar/>
+          </div>
         </div>
 
-        <div className="flex-grow container mx-auto px-4 py-14 bg-gradient-to-r from-black via-black/80 to-black/60">
+        {/* Main content with padding to account for fixed header */}
+        <div className="flex-grow container mx-auto px-4 pt-32 pb-14 bg-gradient-to-r from-black via-black/80 to-black/60">
           <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-orange-100">
             <div className="bg-gradient-to-r from-orange-500 to-orange-500 py-6 px-8">
               <h1 className="text-2xl font-bold text-white">Live Delivery Tracking</h1>
@@ -335,7 +339,7 @@ const CustomerTrackingPage: React.FC = () => {
                     </div>
 
                     {/* Map */}
-                    <div className="md:col-span-2 bg-orange-50 rounded-xl border border-orange-100 overflow-hidden h-96">
+                    <div className="md:col-span-2 bg-orange-50 rounded-xl border border-orange-100 overflow-hidden h-96 relative z-0">
                       {mapCenter && (
                           <MapContainer
                               center={mapCenter}
