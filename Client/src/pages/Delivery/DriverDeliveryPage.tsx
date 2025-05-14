@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import Footer from "../../components/layout/Footer";
-import NavigationBar from "../../components/layout/Navbar";
-import SubNav from "../../components/layout/SubNav";
+// import Footer from "../../components/layout/Footer";
+// import NavigationBar from "../../components/layout/Navbar";
+// import SubNav from "../../components/layout/SubNav";
 
 export interface Location {
   latitude: number;
@@ -66,7 +66,7 @@ interface DriverDeliveryPageProps {
   driverId?: string;
 }
 
-const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver133' }) => {
+const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver124' }) => {
   const [location, setLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -186,12 +186,12 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
 
   return (
     <div className="bg-gradient-to-r from-black via-black/80 to-black/60">
-      <div className="w-full">
+      {/* <div className="w-full">
         <SubNav />
       </div>
       <div className="w-full">
         <NavigationBar />
-      </div>
+      </div> */}
   
       {/* Added margin-top to create space between NavigationBar and the next section */}
       <div className="mt-16">
@@ -452,7 +452,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
           )}
         </div>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };
