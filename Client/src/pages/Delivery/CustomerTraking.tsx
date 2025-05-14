@@ -201,7 +201,7 @@ const CustomerTrackingPage: React.FC = () => {
           <NavigationBar/>
         </div>
 
-        <div className="flex-grow container mx-auto px-4 py-8">
+        <div className="flex-grow container mx-auto px-4 py-14 bg-gradient-to-r from-black via-black/80 to-black/60">
           <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-orange-100">
             <div className="bg-gradient-to-r from-orange-500 to-orange-500 py-6 px-8">
               <h1 className="text-2xl font-bold text-white">Live Delivery Tracking</h1>
