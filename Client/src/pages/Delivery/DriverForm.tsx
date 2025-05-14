@@ -4,9 +4,6 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
-import Footer from "../../components/layout/Footer";
-import NavigationBar from "../../components/layout/Navbar";
-import SubNav from "../../components/layout/SubNav";
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -48,12 +45,21 @@ interface Driver {
   driverName: string;
   contactNumber: string;
   email: string;
+  userId: string;
   latitude: number | null;
   longitude: number | null;
   currentAddress: string;
   isAvailable: boolean;
   status: DriverStatus;
 }
+
+// Function to generate a unique driver ID
+const generateDriverId = (): string => {
+  // Generate a prefix "DRV" followed by current timestamp and 3 random digits
+  const timestamp = new Date().getTime().toString().slice(-6); // Last 6 digits of timestamp
+  const randomDigits = Math.floor(Math.random() * 900 + 100); // 3 random digits (100-999)
+  return `DRV${timestamp}${randomDigits}`;
+};
 
 const DriverForm = () => {
   const { driverId } = useParams<{ driverId: string }>();
@@ -73,12 +79,27 @@ const DriverForm = () => {
     driverName: '',
     contactNumber: '',
     email: '',
+    userId: '',
     latitude: null,
     longitude: null,
     currentAddress: '',
     isAvailable: true,
     status: DriverStatus.PENDING,
   });
+
+  // Generate driver ID and get user ID from local storage when component mounts (only in create mode)
+  useEffect(() => {
+    if (!isEditMode) {
+      // Get userId from local storage
+      const userId = localStorage.getItem('userId') || '';
+      
+      setDriver(prev => ({
+        ...prev,
+        driverId: generateDriverId(),
+        userId: userId
+      }));
+    }
+  }, [isEditMode]);
 
   useEffect(() => {
     if (isEditMode && driverId) {
@@ -118,13 +139,14 @@ const DriverForm = () => {
       const locationData = {
         driverId: driver.driverId,
         driverName: driver.driverName,
+        userId: driver.userId,
         latitude: driver.latitude,
         longitude: driver.longitude,
       };
 
       await axios.post('http://localhost:8082/api/v1/delivery/update-location', locationData);
       setSuccess('Driver location updated successfully!');
-      navigate('/'); // Redirect to home page immediately after success
+      // navigate('/'); // Redirect to home page immediately after success
     } catch (err) {
       console.error('Error saving driver location:', err);
       setError('Failed to update driver location. Please try again.');
@@ -207,12 +229,12 @@ const DriverForm = () => {
     <div className="flex flex-col min-h-screen">
       {/* Fixed header section */}
       <div className="fixed w-full z-50">
-        <div className="w-full">
+        {/* <div className="w-full">
           <SubNav />
         </div>
         <div className="w-full">
           <NavigationBar />
-        </div>
+        </div> */}
       </div>
       <div className="bg-white min-h-screen py-2">
         <div className="flex-grow container mx-auto px-4 pt-32 pb-14 bg-gradient-to-r from-black via-black/80 to-black/60">
@@ -252,15 +274,21 @@ const DriverForm = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block mb-2 font-semibold text-black">Driver ID </label>
-                  <input
-                    type="text"
-                    name="driverId"
-                    value={driver.driverId}
-                    onChange={handleChange}
-                    className="w-full p-3 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                    placeholder="Enter driver ID"
-                    required
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="driverId"
+                      value={driver.driverId}
+                      onChange={handleChange}
+                      className="w-full p-3 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                      placeholder="Auto-generated driver ID"
+                      readOnly={!isEditMode}
+                      required
+                    />
+                  </div>
+                  {!isEditMode && (
+                    <p className="text-xs mt-1 text-gray-600">Auto-generated ID </p>
+                  )}
                 </div>
                 <div>
                   <label className="block mb-2 font-semibold text-black">Driver Name </label>
@@ -274,6 +302,21 @@ const DriverForm = () => {
                     required
                   />
                 </div>
+              </div>
+              
+              {/* Added User ID field */}
+              <div className="mt-6">
+                <label className="block mb-2 font-semibold text-black">User ID </label>
+                <input
+                  type="text"
+                  name="userId"
+                  value={driver.userId}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  placeholder="User ID"
+                  readOnly={true}
+                />
+                <p className="text-xs mt-1 text-gray-600">Auto-filled from logged in user</p>
               </div>
             </div>
 
@@ -371,7 +414,7 @@ const DriverForm = () => {
           </form>
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 };

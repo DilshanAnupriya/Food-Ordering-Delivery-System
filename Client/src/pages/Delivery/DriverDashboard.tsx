@@ -3,9 +3,6 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import CompletedDeliveryCard from './CompletedDeliveryCard';
-import Footer from "../../components/layout/Footer";
-import NavigationBar from "../../components/layout/Navbar";
-import SubNav from "../../components/layout/SubNav";
 
 interface Order {
   id: string;
@@ -78,12 +75,12 @@ const DriverDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-black via-black/80 to-black/60">
-      <div className="w-full">
+      {/* <div className="w-full">
         <SubNav />
       </div>
       <div className="w-full bg-gradient-to-r from-black via-black/80 to-black/60">
         <NavigationBar />
-      </div>
+      </div> */}
       
       <div className="mt-10 ">
         <div className="max-w-7xl mx-auto px-4 py-8 ">
@@ -202,7 +199,7 @@ const DriverDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

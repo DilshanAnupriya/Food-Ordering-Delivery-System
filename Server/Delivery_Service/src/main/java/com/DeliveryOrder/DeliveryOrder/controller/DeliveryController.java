@@ -21,6 +21,13 @@ public class DeliveryController {
         return ResponseEntity.ok("Location updated successfully");
     }
 
+    // Added endpoint to get driver locations by userId
+    @GetMapping("/drivers/user/{userId}")
+    public ResponseEntity<List<DriverLocation>> getDriversByUserId(@PathVariable String userId) {
+        List<DriverLocation> drivers = deliveryService.getDriverLocationsByUserId(userId);
+        return ResponseEntity.ok(drivers);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<String> createDelivery(@RequestParam String orderId,
                                                  @RequestParam double shopLatitude,
@@ -98,5 +105,4 @@ public class DeliveryController {
         deliveryService.deleteDriverById(driverId);
         return ResponseEntity.ok("Driver " + driverId + " deleted successfully");
     }
-
 }

@@ -23,7 +23,7 @@ public class DeliveryService {
     public void updateLocation(LocationDTO location) {
         DriverLocation driverLoc = driverLocationRepo.findById(location.getDriverId())
                 .orElse(new DriverLocation(location.getDriverId(), location.getDriverName(),
-                        location.getLatitude(), location.getLongitude(), true));
+                        location.getLatitude(), location.getLongitude(), true, location.getUserId()));
 
         driverLoc.setLatitude(location.getLatitude());
         driverLoc.setLongitude(location.getLongitude());
@@ -33,6 +33,11 @@ public class DeliveryService {
             driverLoc.setDriverName(location.getDriverName());
         }
 
+        // Update userId if provided
+        if (location.getUserId() != null && !location.getUserId().isEmpty()) {
+            driverLoc.setUserId(location.getUserId());
+        }
+
         driverLocationRepo.save(driverLoc);
 
         deliveryRepo.findByDriverId(location.getDriverId()).ifPresent(delivery -> {
@@ -40,6 +45,11 @@ public class DeliveryService {
             delivery.setDriverLongitude(location.getLongitude());
             deliveryRepo.save(delivery);
         });
+    }
+
+    // Added method to get driver locations by userId
+    public List<DriverLocation> getDriverLocationsByUserId(String userId) {
+        return driverLocationRepo.findByUserId(userId);
     }
 
     @Transactional
@@ -181,5 +191,4 @@ public class DeliveryService {
         }
         driverLocationRepo.deleteById(driverId);
     }
-
 }
