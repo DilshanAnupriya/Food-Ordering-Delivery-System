@@ -12,14 +12,18 @@ interface Order {
   deliveryDate?: string;
 }
 
+interface DriverData {
+  driverId: string;
+  driverName: string;
+}
+
 const DriverDashboard: React.FC = () => {
   const [location, setLocation] = useState<[number, number] | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+  const [driverData, setDriverData] = useState<DriverData>({ driverId: '', driverName: '' });
   const navigate = useNavigate();
-
-  const driverId = 'driver124'; 
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -31,25 +35,77 @@ const DriverDashboard: React.FC = () => {
       }
     );
 
-    const fetchCompletedDeliveries = async () => {
-      try {
-        const res = await fetch(`http://localhost:8082/api/v1/delivery/completed-deliveries/${driverId}`);
-        const data = await res.json();
-        
-        const processedOrders = data.map((order: any) => ({
-          ...order,
-          deliveryDate: order.deliveryDate || order.completedAt || new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-        }));
-        
-        setOrders(processedOrders);
-        setFilteredOrders(processedOrders);
-      } catch (error) {
-        console.error('Error fetching deliveries:', error);
-      }
-    };
+    // Get userId from localStorage
+    const userId = localStorage.getItem('userId');
+    
+    if (!userId) {
+      console.error('User ID not found in localStorage');
+      // Could redirect to login page here
+      return;
+    }
 
-    fetchCompletedDeliveries();
+    // Check if driver data exists in sessionStorage
+    const storedDriverData = sessionStorage.getItem('driverData');
+    
+    if (storedDriverData) {
+      // Use driver data from sessionStorage if available
+      const parsedDriverData = JSON.parse(storedDriverData);
+      setDriverData(parsedDriverData);
+      fetchCompletedDeliveries(parsedDriverData.driverId);
+    } else {
+      // Fetch driver data by userId
+      fetchDriverDataByUserId(userId);
+    }
   }, []);
+
+  const fetchDriverDataByUserId = async (userId: string) => {
+    try {
+      const res = await fetch(`http://localhost:8082/api/v1/delivery/drivers/user/${userId}`);
+      
+      if (!res.ok) {
+        throw new Error(`Failed to fetch driver data: ${res.status}`);
+      }
+      
+      const data = await res.json();
+      
+      if (data && data.length > 0) {
+        // Use the first driver associated with this user
+        const driver = data[0];
+        const driverInfo: DriverData = {
+          driverId: driver.driverId,
+          driverName: driver.driverName || 'Driver'
+        };
+        
+        // Save driver data to sessionStorage
+        sessionStorage.setItem('driverData', JSON.stringify(driverInfo));
+        setDriverData(driverInfo);
+        
+        // Fetch completed deliveries for this driver
+        fetchCompletedDeliveries(driverInfo.driverId);
+      } else {
+        console.error('No driver data found for this user ID');
+      }
+    } catch (error) {
+      console.error('Error fetching driver data:', error);
+    }
+  };
+
+  const fetchCompletedDeliveries = async (driverId: string) => {
+    try {
+      const res = await fetch(`http://localhost:8082/api/v1/delivery/completed-deliveries/${driverId}`);
+      const data = await res.json();
+      
+      const processedOrders = data.map((order: any) => ({
+        ...order,
+        deliveryDate: order.deliveryDate || order.completedAt || new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
+      }));
+      
+      setOrders(processedOrders);
+      setFilteredOrders(processedOrders);
+    } catch (error) {
+      console.error('Error fetching deliveries:', error);
+    }
+  };
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
@@ -71,7 +127,8 @@ const DriverDashboard: React.FC = () => {
     navigate(path);
   };
 
-  const profileInitial = "J";
+  // Get profile initial from driver name
+  const profileInitial = driverData.driverName ? driverData.driverName.charAt(0) : 'D';
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-black via-black/80 to-black/60">
@@ -97,10 +154,10 @@ const DriverDashboard: React.FC = () => {
               </div>
               <div className="ml-4 flex flex-col items-start space-y-1">
                 <h1 className="text-2xl font-bold text-white">
-                  John Doe
+                  {driverData.driverName || 'Loading...'}
                 </h1>
                 <p className="text-sm text-white">
-                  Driver ID: <strong>{driverId}</strong>
+                  Driver ID: <strong>{driverData.driverId || 'Loading...'}</strong>
                 </p>
               </div>
             </div>
