@@ -1,5 +1,6 @@
 package com.example.Notification.controller;
 
+import com.example.Notification.dto.DriverConfirmationRequest;
 import com.example.Notification.dto.PaymentConfirmationRequest;
 import com.example.Notification.dto.RestaurantConfirmationRequest;
 import com.example.Notification.service.EmailService;
@@ -35,13 +36,19 @@ public class NotificationController {
             totalAmount
         );
         return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/notifications/restaurant-confirmation")
+    }    @PostMapping("/notifications/restaurant-confirmation")
     public ResponseEntity<?> sendRestaurantConfirmation(
         @RequestBody RestaurantConfirmationRequest request
     ) {
         emailService.sendRestaurantConfirmationEmail(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/notifications/driver-status")
+    public ResponseEntity<?> sendDriverStatusConfirmation(
+        @RequestBody DriverConfirmationRequest request
+    ) {
+        emailService.sendDriverStatusConfirmationEmail(request);
         return ResponseEntity.ok().build();
     }
 }

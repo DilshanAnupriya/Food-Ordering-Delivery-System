@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import AdminSidebar from "../../components/layout/AdminSideBar";
 import AdminNavbar from "../../components/admin/AdminNavbar";
 
@@ -59,6 +60,18 @@ export default function DriversDashboard() {
 
       if (!response.ok) {
         throw new Error(`Failed to update status: ${response.status}`);
+      }
+
+      // Get the driver details for the email notification
+      const driver = drivers.find(d => d.driverId === driverId);
+      if (driver) {
+        // Send email notification
+        await axios.post('http://localhost:8080/api/notifications/driver-status', {
+          email: driver.driverName, // Using driverName as email
+          driverName: driver.driverName,
+          driverId: driver.driverId,
+          status: newStatus
+        });
       }
 
       fetchDrivers(statusFilter !== 'ALL' ? statusFilter : undefined);

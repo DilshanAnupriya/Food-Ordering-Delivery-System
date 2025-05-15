@@ -1,5 +1,6 @@
 package com.example.Notification.service;
 
+import com.example.Notification.dto.DriverConfirmationRequest;
 import com.example.Notification.dto.RestaurantConfirmationRequest;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -13,7 +14,50 @@ import org.springframework.stereotype.Service;
 public class EmailService {
     
     private final JavaMailSender mailSender;
-    
+      public void sendDriverStatusConfirmationEmail(DriverConfirmationRequest request) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            
+            helper.setTo(request.getEmail());
+            helper.setSubject("Driver Application Status Update");
+            
+            String emailContent = String.format("""
+                <html>
+                <body style='font-family: Arial, sans-serif; padding: 20px;'>
+                    <h2 style='color: #333;'>Driver Application Status Update</h2>
+                    <div style='background-color: #f8f9fa; padding: 20px; border-radius: 5px;'>
+                        <p>Dear %s,</p>
+                        <p>Your driver application status has been updated.</p>
+                        <div style='margin: 20px 0; padding: 15px; background-color: #fff; border-radius: 5px;'>
+                            <p><strong>Driver ID:</strong> %s</p>
+                            <p><strong>Status:</strong> %s</p>
+                        </div>
+                        <p>%s</p>
+                        <p>If you have any questions, please contact our support team.</p>
+                    </div>
+                    <div style='margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;'>
+                        <p style='color: #666; font-size: 12px;'>This is an automated message, please do not reply.</p>
+                    </div>
+                </body>
+                </html>
+                """,
+                request.getDriverName(),
+                request.getDriverId(),
+                request.getStatus(),
+                request.getStatus().equals("APPROVED") ? 
+                    "Congratulations! You have been approved as a driver. You can now start accepting delivery requests." :
+                    "Thank you for your interest. Unfortunately, we cannot approve your application at this time."
+            );
+            
+            helper.setText(emailContent, true);
+            mailSender.send(message);
+            
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send driver status confirmation email", e);
+        }
+    }
+
     public void sendRestaurantConfirmationEmail(RestaurantConfirmationRequest request) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
