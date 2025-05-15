@@ -151,9 +151,35 @@ const CreateRestaurantPage: React.FC = () => {
                         'Content-Type': 'application/json'
                     }
                 }
-            );
+            );            if (response.status === 201) {
+                // Store restaurant details in session storage
+                const restaurantDetails = {
+                    ...formData,
+                    createdAt: new Date().toISOString()
+                };
+                sessionStorage.setItem('restaurantDetail', JSON.stringify([restaurantDetails]));
 
-            if (response.status === 201) {
+                // Send restaurant creation confirmation email
+                try {
+                    await axios.post(
+                        `http://localhost:8080/api/notifications/restaurant-confirmation`,
+                        {
+                            email: formData.restaurantEmail,
+                            restaurantName: formData.restaurantName,
+                          
+                            restaurantType: formData.restaurantType,
+                            address: formData.restaurantAddress,
+                            city: formData.city,
+                            phone: formData.restaurantPhone,
+                            openingTime: formData.openingTime,
+                            closingTime: formData.closingTime
+                        }
+                    );
+                    console.log('Restaurant confirmation email sent');
+                } catch (emailError) {
+                    console.error('Failed to send restaurant confirmation email:', emailError);
+                }
+
                 // Show success toast notification
                 toast.success('Restaurant created successfully!');
                 resetForm();
