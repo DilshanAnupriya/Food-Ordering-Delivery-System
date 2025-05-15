@@ -2,14 +2,16 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchRestaurantData } from '../../services/Restaurants/LoadAllRestaurants';
 import { fetchFoodItemsByCategory } from '../../services/Restaurants/Fooditems';
-import Navbar from "../../components/layout/Navbar.tsx";
+
 import RestaurantHeaderWrapper from "../../components/Restaurants/RestaurantHeader.tsx";
 import CategoriesSearch from "../../components/Restaurants/CategorySearch.tsx";
-import FoodItemsListWrapper from "../../components/Restaurants/FoodItemsList.tsx";
-import SubNav from "../../components/layout/SubNav.tsx";
+
+
 import Footer from "../../components/layout/Footer.tsx";
 import WrapperPagination from '../../components/Restaurants/Pagination.tsx';
 import { fetchFoodCategories } from '../../services/Restaurants/Fooditems.ts';
+import NavV2 from '../../components/layout/NavV2.tsx';
+import EnhancedFoodItemsListWrapper from "../../components/Restaurants/FoodItemsList.tsx";
 
 // Define TypeScript interfaces for the data
 interface FoodItem {
@@ -220,8 +222,8 @@ const Restaurant = () => {
 
     return (
         <div>
-            <SubNav/>
-            <Navbar/>
+
+            <NavV2/>
 
             <RestaurantHeaderWrapper restaurant={restaurant} />
 
@@ -232,8 +234,8 @@ const Restaurant = () => {
                 searchText={searchText}
                 onSearchChange={handleSearchChange}
             />
-<div className="w-[1280px] bg-white shadow-2xl p-10 ml-20  mt-[-60px] rounded-b-3xl 2xl:ml-80 mb-30">
-            <FoodItemsListWrapper
+<div className="bg-white  p-10 ml-20  mt-[-60px] rounded-b-3xl 2xl:ml-80 mb-30">
+            <EnhancedFoodItemsListWrapper
                 selectedCategory={selectedCategory}
                 foodItemsByCategory={foodItemsByCategory}
                 foodItemsTotalCount={foodItemsTotalCount}

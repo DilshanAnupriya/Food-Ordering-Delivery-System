@@ -5,13 +5,13 @@ import { useAuth } from '../../services/auth/authContext';
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import SubNav from "../../components/layout/SubNav.tsx";
 import Navbar from "../../components/layout/Navbar.tsx";
 import Footer from "../../components/layout/Footer.tsx";
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Import icons
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import NavV2 from "../../components/layout/NavV2.tsx";
 
 const CartPage = () => {
     const [cart, setCart] = useState(null);
@@ -323,10 +323,10 @@ const CartPage = () => {
     if (!cart || cart.cartItems?.length === 0 || error) {
         return (
             <>
-
-
-                <div className="min-h-screen bg-gradient-to-r from-blue-900 to-indigo-800 py-20">
-                    <Navbar />
+                <div className="fixed top-0 w-full ">
+                    <NavV2/>
+                </div>
+                <div className="min-h-screen bg-white pt-28 mt-20 pb-16 ">
                     <ToastContainer position="top-right" autoClose={3000} />
                     <motion.div
                         initial={{ y: 20, opacity: 0 }}
@@ -365,10 +365,11 @@ const CartPage = () => {
     // @ts-ignore
     return (
         <>
+            <div className="top-0 z-0 w-full ">
+                <NavV2/>
+            </div>
+            <div className="min-h-screen z-0 bg-white pt-28 mt-20 pb-16 ">
 
-
-            <div className="min-h-screen bg-gradient-to-r from-blue-900 to-indigo-800 py-16">
-                <Navbar/>
                 <ToastContainer position="top-right" autoClose={3000} />
 
                 <div className="container mx-auto px-4">
@@ -379,7 +380,7 @@ const CartPage = () => {
                         className="bg-white rounded-2xl shadow-2xl overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6">
+                        <div className="relative bg-gradient-to-r from-orange-700 to-orange-400 text-white px-8 z-10 py-6">
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center space-x-4">
                                     <ShoppingCart size={28} />

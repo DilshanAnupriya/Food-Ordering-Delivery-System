@@ -48,8 +48,8 @@ const CreateRestaurantPage: React.FC = () => {
         city: '',
         latitude: 0,
         longitude: 0,
-        availability: true,
-        orderAvailability: true,
+        availability: false,
+        orderAvailability: false,
         rating: 0,
         openingTime: '',
         closingTime: '',
@@ -57,7 +57,7 @@ const CreateRestaurantPage: React.FC = () => {
         imageUrl: '',
         coverImageUrl: '',
         owner_username:'',
-        active: true
+        active: false
     });
 
     const [activeTab, setActiveTab] = useState<number>(0);
@@ -125,8 +125,8 @@ const CreateRestaurantPage: React.FC = () => {
             city: '',
             latitude: 0,
             longitude: 0,
-            availability: true,
-            orderAvailability: true,
+            availability: false,
+            orderAvailability: false,
             rating: 0,
             openingTime: '',
             closingTime: '',
@@ -134,7 +134,7 @@ const CreateRestaurantPage: React.FC = () => {
             imageUrl: '',
             coverImageUrl: '',
             owner_username:'',
-            active: true
+            active: false
         });
     };
 
@@ -549,37 +549,37 @@ const CreateRestaurantPage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="sm:col-span-2">
-                                        <div className="flex items-center">
-                                            <input
-                                                id="orderAvailability"
-                                                name="orderAvailability"
-                                                type="checkbox"
-                                                checked={formData.orderAvailability}
-                                                onChange={handleCheckboxChange}
-                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 p-2"
-                                            />
-                                            <label htmlFor="orderAvailability" className="ml-2 block text-sm text-gray-700">
-                                                Order Available
-                                            </label>
-                                        </div>
-                                    </div>
+                                    {/*<div className="sm:col-span-2">*/}
+                                    {/*    <div className="flex items-center">*/}
+                                    {/*        <input*/}
+                                    {/*            id="orderAvailability"*/}
+                                    {/*            name="orderAvailability"*/}
+                                    {/*            type="checkbox"*/}
+                                    {/*            checked={formData.orderAvailability}*/}
+                                    {/*            onChange={handleCheckboxChange}*/}
+                                    {/*            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 p-2"*/}
+                                    {/*        />*/}
+                                    {/*        <label htmlFor="orderAvailability" className="ml-2 block text-sm text-gray-700">*/}
+                                    {/*            Order Available*/}
+                                    {/*        </label>*/}
+                                    {/*    </div>*/}
+                                    {/*</div>*/}
 
-                                    <div className="sm:col-span-2">
-                                        <div className="flex items-center">
-                                            <input
-                                                id="active"
-                                                name="active"
-                                                type="checkbox"
-                                                checked={formData.active}
-                                                onChange={handleCheckboxChange}
-                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 ml-[-150px]"
-                                            />
-                                            <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
-                                                Active
-                                            </label>
-                                        </div>
-                                    </div>
+                                    {/*<div className="sm:col-span-2">*/}
+                                    {/*    <div className="flex items-center">*/}
+                                    {/*        <input*/}
+                                    {/*            id="active"*/}
+                                    {/*            name="active"*/}
+                                    {/*            type="checkbox"*/}
+                                    {/*            checked={formData.active}*/}
+                                    {/*            onChange={handleCheckboxChange}*/}
+                                    {/*            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 ml-[-150px]"*/}
+                                    {/*        />*/}
+                                    {/*        <label htmlFor="active" className="ml-2 block text-sm text-gray-700">*/}
+                                    {/*            Active*/}
+                                    {/*        </label>*/}
+                                    {/*    </div>*/}
+                                    {/*</div>*/}
                                 </motion.div>
 
                                 <div className="flex justify-between mt-10">

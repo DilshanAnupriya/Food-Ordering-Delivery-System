@@ -1,8 +1,8 @@
-// FoodItemsList.tsx
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
+import axios from "axios";
 import SectionWrapper from "../../hoc/SectionWrapper.tsx";
+import EnhancedFoodItemCard from "./EnhancedFoodItemCard.tsx";
 
 // Define FoodItem interface
 interface FoodItem {
@@ -41,29 +41,58 @@ interface FoodItemsListProps {
     onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const FoodItemsList: React.FC<FoodItemsListProps> = ({
-                                                         selectedCategory,
-                                                         foodItemsByCategory,
-                                                         foodItemsTotalCount,
-                                                         loadingFoodItems,
-                                                         calculateFinalPrice,
-                                                         searchText,
-                                                         onSearchChange,
-                                                     }) => {
-    // @ts-ignore
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+const EnhancedFoodItemsList: React.FC<FoodItemsListProps> = ({
+                                                                 selectedCategory,
+                                                                 foodItemsByCategory,
+                                                                 foodItemsTotalCount,
+                                                                 loadingFoodItems,
+                                                                 calculateFinalPrice,
+                                                                 searchText,
+                                                                 onSearchChange,
+                                                             }) => {
     const [userId, setUserId] = useState<string | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // @ts-ignore
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [addedItemId, setAddedItemId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
+    const [isCartUpdating, setIsCartUpdating] = useState<boolean>(false);
+    const [sortOption, setSortOption] = useState<string>("recommended");
+    const [showNotification, setShowNotification] = useState<boolean>(false);
+    const [notificationMessage, setNotificationMessage] = useState<string>("");
+
+    const headerRef = useRef(null);
+    const isHeaderInView = useInView(headerRef, { once: false, margin: "-100px 0px 0px 0px" });
+
+    // Animation variants for staggered list animations
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.08,
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    // Enhanced skeleton loading animation variants
+    const skeletonVariants = {
+        initial: {
+            opacity: 0.6,
+        },
+        animate: {
+            opacity: [0.6, 0.9, 0.6],
+            transition: {
+                repeat: Infinity,
+                duration: 2,
+                ease: "easeInOut"
+            }
+        }
+    };
 
     useEffect(() => {
         // Get user ID from local storage or other auth source
-        const storedUserId = localStorage.getItem('userId');
-        const token = localStorage.getItem('token');
+        const storedUserId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
 
         if (storedUserId && token) {
             setUserId(storedUserId);
@@ -91,15 +120,15 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
 
     // Create axios instance with auth headers
     const getCartAxios = () => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
             throw new Error("Authentication token not found");
         }
         return axios.create({
-            baseURL: 'http://localhost:8082',
+            baseURL: "http://localhost:8082",
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
             }
         });
     };
@@ -110,22 +139,24 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
             const response = await axiosInstance.get(`/api/v1/cart/${userId}`);
             return response.data;
         } catch (error) {
-            console.error('Error fetching cart:', error);
+            console.error("Error fetching cart:", error);
             throw error;
         }
     };
 
     const addToCart = async (item: FoodItem) => {
-        const currentUserId = localStorage.getItem('userId');
+        const currentUserId = localStorage.getItem("userId");
         const restaurantId = item.restaurantId;
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
 
         if (!currentUserId || !token) {
-            alert("Please log in to add items to cart");
+            // Show login modal or alert
+            showNotification("Please log in to add items to cart", "error");
             return;
         }
 
         try {
+            setIsCartUpdating(true);
             const axiosInstance = getCartAxios();
             const cartItem: CartItem = {
                 foodItemId: item.foodItemId,
@@ -133,9 +164,10 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
                 foodImage: item.imageUrl,
                 restaurantId: restaurantId,
                 restaurantName: item.restaurantName,
-                price: item.discount > 0
-                    ? parseFloat(calculateFinalPrice(item.price, item.discount))
-                    : item.price,
+                price:
+                    item.discount > 0
+                        ? parseFloat(calculateFinalPrice(item.price, item.discount))
+                        : item.price,
                 quantity: 1
             };
 
@@ -155,407 +187,340 @@ const FoodItemsList: React.FC<FoodItemsListProps> = ({
             }
 
             if (hasExistingCart) {
-                await axiosInstance.post(
-                    `/api/v1/cart/${currentUserId}/items`,
-                    [cartItem]
-                );
+                await axiosInstance.post(`/api/v1/cart/${currentUserId}/items`, [cartItem]);
             } else {
-                await axiosInstance.post(
-                    '/api/v1/cart',
-                    {
-                        userId: currentUserId,
-                        cartItems: [cartItem]
-                    }
-                );
+                await axiosInstance.post("/api/v1/cart", {
+                    userId: currentUserId,
+                    cartItems: [cartItem]
+                });
             }
+
+            // Show success notification
+            showNotification(`${item.name} added to cart`, "success");
 
             setCartItems(prev => [...prev, cartItem]);
             setUserId(currentUserId);
         } catch (error) {
-            console.error('Error adding item to cart:', error);
+            console.error("Error adding item to cart:", error);
             if (axios.isAxiosError(error) && error.response?.status === 401) {
-                alert('Your session has expired. Please log in again.');
+                showNotification("Your session has expired. Please log in again.", "error");
             } else {
-                alert('Failed to add item to cart');
+                showNotification("Failed to add item to cart", "error");
             }
+        } finally {
+            setIsCartUpdating(false);
         }
     };
+
+    // // Function to show notification
+    // const showNotification = (message: string, type: "success" | "error" = "success") => {
+    //     setNotificationMessage(message);
+    //     setShowNotification(true);
+    //
+    //     // Auto-hide notification after 3 seconds
+    //     setTimeout(() => {
+    //         setShowNotification(false);
+    //     }, 3000);
+    // };
+
+    // Function to sort food items
+    const getSortedFoodItems = () => {
+        if (!selectedCategory || !foodItemsByCategory[selectedCategory]) return [];
+
+        const items = [...foodItemsByCategory[selectedCategory]];
+
+        switch (sortOption) {
+            case "price-low":
+                return items.sort((a, b) => {
+                    const priceA = a.discount > 0
+                        ? parseFloat(calculateFinalPrice(a.price, a.discount))
+                        : a.price;
+                    const priceB = b.discount > 0
+                        ? parseFloat(calculateFinalPrice(b.price, b.discount))
+                        : b.price;
+                    return priceA - priceB;
+                });
+            case "price-high":
+                return items.sort((a, b) => {
+                    const priceA = a.discount > 0
+                        ? parseFloat(calculateFinalPrice(a.price, a.discount))
+                        : a.price;
+                    const priceB = b.discount > 0
+                        ? parseFloat(calculateFinalPrice(b.price, b.discount))
+                        : b.price;
+                    return priceB - priceA;
+                });
+            case "discount":
+                return items.sort((a, b) => b.discount - a.discount);
+            case "veg":
+                return items.sort((a, b) => {
+                    if (a.type === "Veg" && b.type !== "Veg") return -1;
+                    if (a.type !== "Veg" && b.type === "Veg") return 1;
+                    return 0;
+                });
+            default: // recommended
+                return items;
+        }
+    };
+
+    // Empty state when no items are found
+    const renderEmptyState = () => (
+        <motion.div
+            className="bg-gradient-to-br from-gray-50 to-gray-100 p-12 rounded-2xl text-center shadow-sm border border-gray-100"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+        >
+            <motion.div
+                initial={{ rotate: 0 }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, delay: 0.2 }}
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-16 w-16 mx-auto text-gray-400 mb-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                    />
+                </svg>
+            </motion.div>
+            <p className="text-gray-700 text-lg font-medium">
+                No food items found in this category
+            </p>
+            <p className="text-gray-500 mt-2">
+                Try selecting another category or adjusting your search
+            </p>
+        </motion.div>
+    );
+
+    // Skeleton loader for food items
+    const renderSkeletons = () => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((index) => (
+                <motion.div
+                    key={`skeleton-${index}`}
+                    className="bg-white rounded-xl shadow-md overflow-hidden"
+                    variants={skeletonVariants}
+                    initial="initial"
+                    animate="animate"
+                    custom={index}
+                >
+                    <div className="relative h-52 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 overflow-hidden">
+                        <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
+                            initial={{ x: "-100%" }}
+                            animate={{ x: "100%" }}
+                            transition={{
+                                repeat: Infinity,
+                                duration: 1.5,
+                                ease: "linear",
+                                delay: index * 0.2
+                            }}
+                        />
+                    </div>
+
+                    <div className="p-4">
+                        <div className="h-6 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-md w-3/4 mb-4" />
+                        <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-md w-full mb-2" />
+                        <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-md w-2/3 mb-6" />
+                        <div className="flex justify-between items-center mt-4">
+                            <div className="h-6 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-md w-20" />
+                            <div className="h-8 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-full w-28" />
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
+        </div>
+    );
 
     if (!selectedCategory) return null;
 
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    // More dramatic entrance animation for food items
-    const itemVariants = {
-        hidden: { opacity: 0, scale: 0.8, y: 50 },
-        visible: {
-            opacity: 1,
-            scale: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 400,
-                damping: 22,
-                mass: 1.2
-            }
-        }
-    };
-
-    // Enhanced skeleton loading animation variants
-    const skeletonVariants = {
-        initial: {
-            opacity: 0.6,
-        },
-        animate: {
-            opacity: [0.6, 0.9, 0.6],
-            scale: [0.98, 1, 0.98],
-            transition: {
-                repeat: Infinity,
-                duration: 2,
-                ease: "easeInOut"
-            }
-        }
-    };
+    const sortedItems = getSortedFoodItems();
 
     return (
         <div className="mb-20">
+            {/* Header with animations */}
             <motion.div
-                className="flex justify-between items-center mb-8 pt-6"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                ref={headerRef}
+                className="sticky top-0 z-20 bg-white/90 backdrop-blur-lg px-4 py-6 mb-8 rounded-lg shadow-sm"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{
+                    opacity: 1,
+                    y: 0,
+                    boxShadow: isHeaderInView
+                        ? "0 1px 3px rgba(0,0,0,0.05)"
+                        : "0 10px 25px -5px rgba(0,0,0,0.1)"
+                }}
+                transition={{ duration: 0.4 }}
             >
-                <h2 className="text-3xl font-bold text-gray-800 relative">
-                    {selectedCategory}
-                    <motion.div
-                        className="absolute -bottom-2 left-0 h-1.5 bg-gradient-to-r from-orange-500 to-red-400 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: "60%" }}
-                        transition={{ delay: 0.2, duration: 0.5 }}
-                    />
-                </h2>
-                {foodItemsTotalCount[selectedCategory] !== undefined && (
-                    <div className="relative w-full md:w-64">
-                        <motion.input
-                            type="text"
-                            placeholder="Search food items..."
-                            className="w-full px-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm bg-white"
-                            value={searchText}
-                            onChange={onSearchChange}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3, duration: 0.5 }}
-                        />
-                        <svg
-                            className="absolute right-3 top-3.5 h-5 w-5 text-gray-400"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path
-                                fillRule="evenodd"
-                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                                clipRule="evenodd"
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    <div>
+                        <h2 className="text-3xl font-bold text-gray-800 relative">
+                            {selectedCategory}
+                            <motion.div
+                                className="absolute -bottom-2 left-0 h-1.5 bg-gradient-to-r from-orange-500 to-red-400 rounded-full"
+                                initial={{ width: 0 }}
+                                animate={{ width: "60%" }}
+                                transition={{ delay: 0.2, duration: 0.5 }}
                             />
-                        </svg>
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                            {foodItemsTotalCount[selectedCategory]} items available
+                        </p>
                     </div>
-                )}
+
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Search Bar */}
+                        <div className="relative">
+                            <motion.input
+                                type="text"
+                                placeholder="Search food items..."
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm bg-white pr-10"
+                                value={searchText}
+                                onChange={onSearchChange}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.3, duration: 0.5 }}
+                            />
+                            <svg
+                                className="absolute right-3.5 top-3 h-5 w-5 text-gray-400"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </div>
+
+                        {/* Sort Dropdown */}
+                        <div className="relative">
+                            <select
+                                value={sortOption}
+                                onChange={(e) => setSortOption(e.target.value)}
+                                className="appearance-none w-full px-4 py-2.5 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm bg-white text-gray-700 pr-10"
+                            >
+                                <option value="recommended">Recommended</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="discount">Highest Discount</option>
+                                <option value="veg">Vegetarian First</option>
+                            </select>
+                            <svg
+                                className="absolute right-3.5 top-3 h-5 w-5 text-gray-400 pointer-events-none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
             </motion.div>
 
-            {/* Enhanced loading skeleton for food items */}
-            {(loadingFoodItems || isLoading) && (
-                <motion.div
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                >
-                    {[1, 2, 3, 4, 5, 6].map((index) => (
-                        <motion.div
-                            key={`skeleton-${index}`}
-                            className="bg-white rounded-2xl shadow-md overflow-hidden h-96"
-                            variants={skeletonVariants}
-                            initial="initial"
-                            animate="animate"
-                            custom={index}
-                            transition={{ delay: index * 0.1 }}
-                        >
-                            {/* Image skeleton with shimmer effect */}
-                            <div className="relative h-56 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 overflow-hidden">
-                                <motion.div
-                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
-                                    initial={{ x: "-100%" }}
-                                    animate={{ x: "100%" }}
-                                    transition={{
-                                        repeat: Infinity,
-                                        duration: 1.5,
-                                        ease: "linear",
-                                        delay: index * 0.2
-                                    }}
-                                />
-                            </div>
+            {/* Loading Skeletons */}
+            {(loadingFoodItems || isLoading) && renderSkeletons()}
 
-                            <div className="p-6">
-                                {/* Title skeleton */}
-                                <div className="h-7 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-md w-3/4 mb-4 overflow-hidden">
-                                    <motion.div
-                                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
-                                        initial={{ x: "-100%" }}
-                                        animate={{ x: "100%" }}
-                                        transition={{
-                                            repeat: Infinity,
-                                            duration: 1.5,
-                                            ease: "linear",
-                                            delay: index * 0.2 + 0.1
-                                        }}
-                                    />
-                                </div>
+            {/* Empty State */}
+            {!loadingFoodItems &&
+                !isLoading &&
+                sortedItems.length === 0 &&
+                renderEmptyState()}
 
-                                {/* Description lines */}
-                                <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-md w-full mb-2 overflow-hidden" />
-                                <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-md w-2/3 mb-6 overflow-hidden" />
-
-                                {/* Price and button area */}
-                                <div className="flex justify-between items-center">
-                                    <div className="h-7 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-md w-20 overflow-hidden" />
-                                    <div className="h-10 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-full w-10 overflow-hidden" />
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </motion.div>
-            )}
-
-            {/* No items found */}
-            {!loadingFoodItems && !isLoading &&
-                foodItemsByCategory[selectedCategory] &&
-                foodItemsByCategory[selectedCategory].length === 0 && (
-                    <motion.div
-                        className="bg-gradient-to-br from-gray-50 to-gray-100 p-12 rounded-2xl text-center shadow-sm border border-gray-100"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.4 }}
-                    >
-                        <motion.div
-                            initial={{ rotate: 0 }}
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, delay: 0.2 }}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                            </svg>
-                        </motion.div>
-                        <p className="text-gray-700 text-lg font-medium">No food items found in this category</p>
-                        <p className="text-gray-500 mt-2">Try selecting another category or adjusting your search</p>
-                    </motion.div>
-                )}
-
-            {/* Food items grid */}
-            {!loadingFoodItems && !isLoading &&
-                foodItemsByCategory[selectedCategory] &&
-                foodItemsByCategory[selectedCategory].length > 0 && (
+            {/* Food Items Grid */}
+            {!loadingFoodItems &&
+                !isLoading &&
+                sortedItems.length > 0 && (
                     <motion.div
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"
                     >
-                        <AnimatePresence>
-                            {foodItemsByCategory[selectedCategory].map((item) => (
+                        <AnimatePresence mode="popLayout">
+                            {sortedItems.map((item) => (
                                 <motion.div
                                     key={item.foodItemId}
-                                    className="bg-white rounded-2xl shadow-sm overflow-hidden transform transition-all duration-500 hover:shadow-xl"
-                                    variants={itemVariants}
                                     layout
-                                    onMouseEnter={() => setHoveredItemId(item.foodItemId)}
-                                    onMouseLeave={() => setHoveredItemId(null)}
-                                    whileHover={{
-                                        y: -12,
-                                        scale: 1.03,
-                                        transition: {
-                                            type: "spring",
-                                            stiffness: 300,
-                                            damping: 15
-                                        }
-                                    }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
                                 >
-                                    <div className="relative h-56 overflow-hidden">
-                                        <motion.img
-                                            src={item.imageUrl || "/api/placeholder/400/300"}
-                                            alt={item.name}
-                                            className="w-full h-full object-cover"
-                                            loading="lazy"
-                                            initial={{ scale: 1, filter: "brightness(1)" }}
-                                            whileHover={{
-                                                scale: 1.1,
-                                                filter: "brightness(1.05) contrast(1.05)",
-                                                transition: {
-                                                    duration: 0.7,
-                                                    ease: [0.19, 1, 0.22, 1] // Cubic bezier for smooth movement
-                                                }
-                                            }}
-                                        />
-
-                                        {/* Food type badge (Veg/Non-Veg) */}
-                                        <motion.div
-                                            className={`absolute top-4 left-4 ${
-                                                item.type === 'Veg'
-                                                    ? 'bg-green-500'
-                                                    : 'bg-red-600'
-                                            } text-white px-3 py-1 rounded-full text-xs font-medium shadow-md z-10`}
-                                            initial={{ y: -20, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            transition={{ delay: 0.2 }}
-                                        >
-                                            {item.type === 'Veg' ? 'VEG' : 'NON-VEG'}
-                                        </motion.div>
-
-                                        {/* Discount tag */}
-                                        {item.discount > 0 && (
-                                            <motion.div
-                                                className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-md z-10"
-                                                initial={{ scale: 0, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                transition={{ delay: 0.2 }}
-                                            >
-                                                {item.discount}% OFF
-                                            </motion.div>
-                                        )}
-
-                                        {/* Enhanced dark overlay with larger add to cart icon on hover */}
-                                        <motion.div
-                                            className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent flex items-center justify-center cursor-pointer z-20"
-                                            initial={{ opacity: 0 }}
-                                            animate={{
-                                                opacity: hoveredItemId === item.foodItemId ? 1 : 0
-                                            }}
-                                            transition={{ duration: 0.4 }}
-                                            onClick={() => item.available && addToCart(item)}
-                                        >
-                                            {item.available ? (
-                                                <motion.div
-                                                    className="bg-white rounded-full p-4 shadow-xl flex items-center justify-center"
-                                                    initial={{ scale: 0.4, opacity: 0, y: 10 }}
-                                                    animate={{
-                                                        scale: hoveredItemId === item.foodItemId ? 1 : 0.4,
-                                                        opacity: hoveredItemId === item.foodItemId ? 1 : 0,
-                                                        y: hoveredItemId === item.foodItemId ? 0 : 10,
-                                                        rotate: addedItemId === item.foodItemId ? [0, 360] : 0
-                                                    }}
-                                                    whileHover={{
-                                                        scale: 1.1,
-                                                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)"
-                                                    }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    transition={{
-                                                        duration: 0.4,
-                                                        type: "spring",
-                                                        stiffness: 400
-                                                    }}
-                                                >
-                                                    {addedItemId === item.foodItemId ? (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                        </svg>
-                                                    ) : (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-                                                        </svg>
-                                                    )}
-                                                </motion.div>
-                                            ) : (
-                                                <motion.div
-                                                    className="bg-white bg-opacity-80 rounded-full p-4 text-gray-500 flex items-center justify-center"
-                                                    initial={{ scale: 0.4, opacity: 0, y: 10 }}
-                                                    animate={{
-                                                        scale: hoveredItemId === item.foodItemId ? 1 : 0.4,
-                                                        opacity: hoveredItemId === item.foodItemId ? 1 : 0,
-                                                        y: hoveredItemId === item.foodItemId ? 0 : 10
-                                                    }}
-                                                    transition={{
-                                                        duration: 0.4,
-                                                        type: "spring",
-                                                        stiffness: 400
-                                                    }}
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                </motion.div>
-                                            )}
-                                        </motion.div>
-                                    </div>
-
-                                    <div className="p-6">
-                                        <motion.h3
-                                            className="text-xl font-bold mb-2 text-gray-800"
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.2 }}
-                                            whileHover={{
-                                                color: "#f97316",
-                                                x: 2,
-                                                transition: { duration: 0.2 }
-                                            }}
-                                        >
-                                            {item.name}
-                                        </motion.h3>
-
-                                        <motion.p
-                                            className="text-gray-600 text-sm mb-4 line-clamp-2"
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.3 }}
-                                        >
-                                            {item.description}
-                                        </motion.p>
-
-                                        <motion.div
-                                            className="flex justify-between items-center"
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.4 }}
-                                            whileHover={{
-                                                scale: hoveredItemId === item.foodItemId ? 1.05 : 1,
-                                                transition: { duration: 0.2 }
-                                            }}
-                                        >
-                                            <div>
-                                                {item.discount > 0 ? (
-                                                    <div className="flex items-center">
-                                                        <span className="text-xl font-bold text-gray-900">${calculateFinalPrice(item.price, item.discount)}</span>
-                                                        <span className="ml-2 text-sm text-gray-500 line-through">${item.price.toFixed(2)}</span>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-xl font-bold text-gray-900">${item.price.toFixed(2)}</span>
-                                                )}
-                                            </div>
-
-                                            {!item.available && (
-                                                <span className="text-xs font-medium text-red-500 bg-red-50 px-3 py-1 rounded-full">
-                                                    Out of Stock
-                                                </span>
-                                            )}
-                                        </motion.div>
-                                    </div>
+                                    <EnhancedFoodItemCard
+                                        item={item}
+                                        calculateFinalPrice={calculateFinalPrice}
+                                        addToCart={addToCart}
+                                        addedItemId={addedItemId}
+                                    />
                                 </motion.div>
                             ))}
                         </AnimatePresence>
                     </motion.div>
                 )}
+
+            {/* Floating Notification */}
+            <AnimatePresence>
+                {showNotification && (
+                    <motion.div
+                        className={`fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-2 ${
+                            notificationMessage.includes("error") || notificationMessage.includes("failed") || notificationMessage.includes("expired")
+                                ? "bg-red-600 text-white"
+                                : "bg-green-500 text-white"
+                        }`}
+                        initial={{ opacity: 0, y: 50, scale: 0.3 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.5 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                    >
+                        {notificationMessage.includes("error") || notificationMessage.includes("failed") || notificationMessage.includes("expired") ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                        <span>{notificationMessage}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Back to top button - appears when scrolling down */}
+            <AnimatePresence>
+                {!isHeaderInView && (
+                    <motion.button
+                        className="fixed bottom-6 left-6 p-3 rounded-full bg-orange-500 text-white shadow-lg z-40"
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0 }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                        </svg>
+                    </motion.button>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
-const FoodItemsListWrapper = SectionWrapper(FoodItemsList);
+const EnhancedFoodItemsListWrapper = SectionWrapper(EnhancedFoodItemsList);
 
-export default FoodItemsListWrapper;
+export default EnhancedFoodItemsListWrapper;
