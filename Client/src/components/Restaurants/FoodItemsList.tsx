@@ -349,7 +349,7 @@ const EnhancedFoodItemsList: React.FC<FoodItemsListProps> = ({
             {/* Header with animations */}
             <motion.div
                 ref={headerRef}
-                className="sticky top-0 z-20 bg-white/90 backdrop-blur-lg px-4 py-6 mb-8 rounded-lg shadow-sm"
+                className="sticky top-0 z-20 bg-white/90 shadow-3xl border-1 border-gray-300 backdrop-blur-lg px-4 py-6 mb-8 rounded-lg shadow-sm"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{
                     opacity: 1,
@@ -371,7 +371,7 @@ const EnhancedFoodItemsList: React.FC<FoodItemsListProps> = ({
                                 transition={{ delay: 0.2, duration: 0.5 }}
                             />
                         </h2>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-gray-500 mt-3">
                             {foodItemsTotalCount[selectedCategory]} items available
                         </p>
                     </div>
@@ -447,7 +447,7 @@ const EnhancedFoodItemsList: React.FC<FoodItemsListProps> = ({
                 !isLoading &&
                 sortedItems.length > 0 && (
                     <motion.div
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 "
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"

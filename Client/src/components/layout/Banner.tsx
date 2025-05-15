@@ -1,6 +1,7 @@
 
 import { Clock, Star, MapPin, Flame, ChefHat, ShoppingBag, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
+import {Link} from "react-router-dom";
 
 const Banner = () => {
   // Features of the delivery service
@@ -76,6 +77,7 @@ const Banner = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
                 >
+                    <Link to="/cart/:id">
                   <motion.button
                       className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-medium shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 flex items-center gap-2"
                       whileHover={{
@@ -87,7 +89,8 @@ const Banner = () => {
                     <ShoppingBag size={20} />
                     Order Now
                   </motion.button>
-
+                    </Link>
+                    <Link to="/restaurants">
                   <motion.button
                       className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-lg font-medium hover:bg-white/20 transition-all duration-300 flex items-center gap-2"
                       whileHover={{
@@ -99,7 +102,9 @@ const Banner = () => {
                     <Star size={20} />
                     View Menu
                   </motion.button>
+                    </Link>
                 </motion.div>
+
 
                 {/* Features - Redesigned for cleaner look with hover effects */}
                 <motion.div

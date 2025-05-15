@@ -44,7 +44,7 @@ const EnhancedFoodItemCard = ({
 
     return (
         <motion.div
-            className="relative bg-white rounded-xl overflow-hidden shadow-md"
+            className="relative w-70 h-100 bg-white  rounded-xl overflow-hidden shadow-md"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{
                 opacity: 1,
@@ -161,17 +161,6 @@ const EnhancedFoodItemCard = ({
                     Add to Cart
                   </span>
                                 )}
-                            </motion.button>
-
-                            <motion.button
-                                className="mt-2 w-full py-2 rounded-lg font-medium text-white bg-white/20 backdrop-blur-sm hover:bg-white/30"
-                                onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                exit={{ y: 10, opacity: 0 }}
-                                transition={{ delay: 0.2, type: "spring" }}
-                            >
-                                {isDetailsExpanded ? "Show Less" : "View Details"}
                             </motion.button>
                         </motion.div>
                     )}

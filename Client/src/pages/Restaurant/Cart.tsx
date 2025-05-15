@@ -295,8 +295,10 @@ const CartPage = () => {
     if (loading) {
         return (
             <>
-                <Navbar />
-                <div className="min-h-screen bg-gradient-to-r from-blue-900 to-indigo-800 flex justify-center items-center">
+                <div className="fixed top-0 w-full ">
+                    <NavV2/>
+                </div>
+                <div className="min-h-screen bg-white flex justify-center items-center">
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -348,7 +350,7 @@ const CartPage = () => {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => navigate('/menu')}
+                                onClick={() => navigate('/restaurants')}
                                 className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-8 rounded-full text-lg font-medium hover:shadow-lg transition-all duration-300"
                             >
                                 Browse Menu
@@ -368,7 +370,7 @@ const CartPage = () => {
             <div className="top-0 z-0 w-full ">
                 <NavV2/>
             </div>
-            <div className="min-h-screen z-0 bg-white pt-28 mt-20 pb-16 ">
+            <div className="min-h-screen z-0 bg-white pt-2 mt-5 pb-16 ">
 
                 <ToastContainer position="top-right" autoClose={3000} />
 
@@ -377,7 +379,7 @@ const CartPage = () => {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5 }}
-                        className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+                        className="bg-white rounded-2xl  overflow-hidden"
                     >
                         {/* Header */}
                         <div className="relative bg-gradient-to-r from-orange-700 to-orange-400 text-white px-8 z-10 py-6">
@@ -593,7 +595,7 @@ const CartPage = () => {
 
                                         <motion.button
                                             whileHover={{ scale: 1.02 }}
-                                            onClick={() => navigate('/menu')}
+                                            onClick={() => navigate('/restaurants')}
                                             className="w-full mt-4 bg-gray-200 text-gray-700 py-3 rounded-xl hover:bg-gray-300 font-medium transition-colors"
                                         >
                                             Continue Shopping

@@ -5,6 +5,7 @@ import { createCheckoutSession } from '../../services/Payment/payment';
 import NavigationBar from '../../components/layout/Navbar';
 import SubNav from '../../components/layout/SubNav';
 import Footer from '../../components/layout/Footer';
+import NavV2 from "../../components/layout/NavV2.tsx";
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -23,8 +24,8 @@ const Checkout = () => {
                 setLoading(true);
                 setError(null);
 
-                const orderDetails = JSON.parse(sessionStorage.getItem('orderDetails') || '[]');
-                const latestOrder = orderDetails[orderDetails.length - 1];
+                const orderDetail = JSON.parse(sessionStorage.getItem('orderDetail') || '[]');
+                const latestOrder = orderDetail[orderDetail.length - 1];
 
                 if (!latestOrder) {
                     throw new Error('No order found');
@@ -66,8 +67,7 @@ const Checkout = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <SubNav />
-                <NavigationBar />
+                <NavV2 />
                 <div className="flex justify-center items-center h-[60vh]">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
@@ -79,8 +79,8 @@ const Checkout = () => {
     if (error) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <SubNav />
-                <NavigationBar />
+
+                <NavV2 />
                 <div className="max-w-lg mx-auto mt-10 p-6">
                     <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative">
                         <strong className="font-bold">Error: </strong>
@@ -100,8 +100,8 @@ const Checkout = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <SubNav />
-            <NavigationBar />
+
+            <NavV2 />
             <div className="max-w-lg mx-auto mt-10 p-6">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold mb-4">Processing Your Payment</h1>

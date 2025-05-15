@@ -147,7 +147,7 @@ const ManiNavbar = () => {
                             e.currentTarget.style.transform = "scale(1)";
                         }}
                     >
-                        Order LK
+                        Quick Bite
                     </Link>
 
                     {isDesktop && (

@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
+import NavV2 from "../../components/layout/NavV2.tsx";
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -305,12 +306,9 @@ const DriverForm = () => {
     <div className="flex flex-col min-h-screen">
       {/* Fixed header section */}
       <div className="fixed w-full z-50">
-        {/* <div className="w-full">
-          <SubNav />
+         <div className="w-full">
+          <NavV2 />
         </div>
-        <div className="w-full">
-          <NavigationBar />
-        </div> */}
       </div>
       <div className="bg-white min-h-screen py-2">
         <div className="flex-grow container mx-auto px-4 pt-32 pb-14 bg-gradient-to-r from-black via-black/80 to-black/60">

@@ -37,6 +37,7 @@ import AdminRoute from "./services/auth/AdminRoute.tsx";
 import RoleRouter from "./services/auth/RoleRouter.tsx";
 import {Suspense} from "react";
 import AdminUser from './pages/Restaurant/Admin/AdminUser.tsx';
+import DriverForm from "./pages/Delivery/DriverForm.tsx";
 
 
 function App() {
@@ -71,7 +72,7 @@ function App() {
                     <Route path="/driver-delivery" element={<DriverDeliveryPageWrapper />} />
                     <Route path="/driver-dashboard" element={<DriverDashboard />} />
                     <Route path="/customer-tracking" element={<CustomerTrackingPage />} />
-
+                    <Route path="/driver-form" element={<DriverForm/>} />
                     <Route element={<AdminRoute />}>
                         <Route path="/admin-dashboard" element={<AdminDashboard />} />
                         <Route path="/admin-user" element={<AdminUser />} />

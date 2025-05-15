@@ -26,6 +26,7 @@ export interface DeliveryTracking {
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import NavV2 from "../../components/layout/NavV2.tsx";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -196,16 +197,14 @@ const CustomerTrackingPage: React.FC = () => {
       <div className="flex flex-col min-h-screen">
         {/* Fixed header section */}
         <div className="fixed w-full z-50">
+
           <div className="w-full">
-            <SubNav/>
-          </div>
-          <div className="w-full">
-            <NavigationBar/>
+            <NavV2/>
           </div>
         </div>
 
         {/* Main content with padding to account for fixed header */}
-        <div className="flex-grow container mx-auto px-4 pt-32 pb-14 bg-gradient-to-r from-black via-black/80 to-black/60">
+        <div className="flex-grow container mx-auto px-4 pt-32 pb-14 bg-white">
           <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-orange-100">
             <div className="bg-gradient-to-r from-orange-500 to-orange-500 py-6 px-8">
               <h1 className="text-2xl font-bold text-white">Live Delivery Tracking</h1>
