@@ -71,6 +71,8 @@ const DriverForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [existingDrivers, setExistingDrivers] = useState<Driver[]>([]);
 
   const mapRef = useRef<any>(null);
 
@@ -87,22 +89,44 @@ const DriverForm = () => {
     status: DriverStatus.PENDING,
   });
 
-  // Generate driver ID and get user ID from local storage when component mounts (only in create mode)
+  // Check if the user is authenticated
   useEffect(() => {
-    if (!isEditMode) {
-      // Get userId from local storage
-      const userId = localStorage.getItem('userId') || '';
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      setError('You must be logged in to access this page');
+      setIsAuthenticated(false);
+    } else {
+      setIsAuthenticated(true);
       
+      // Get userId from local storage
       setDriver(prev => ({
         ...prev,
-        driverId: generateDriverId(),
         userId: userId
       }));
+      
+      // Fetch existing drivers for this user
+      axios.get(`/api/v1/delivery/drivers/user/${userId}`)
+        .then(response => {
+          setExistingDrivers(response.data);
+        })
+        .catch(err => {
+          console.error('Error fetching user drivers:', err);
+        });
     }
-  }, [isEditMode]);
+  }, []);
+
+  // Generate driver ID and get user ID from local storage when component mounts (only in create mode)
+  useEffect(() => {
+    if (!isEditMode && isAuthenticated) {
+      setDriver(prev => ({
+        ...prev,
+        driverId: generateDriverId()
+      }));
+    }
+  }, [isEditMode, isAuthenticated]);
 
   useEffect(() => {
-    if (isEditMode && driverId) {
+    if (isEditMode && driverId && isAuthenticated) {
       setLoading(true);
       axios.get(`/api/v1/delivery/drivers/${driverId}`)
         .then(response => {
@@ -120,7 +144,29 @@ const DriverForm = () => {
           setLoading(false);
         });
     }
-  }, [driverId, isEditMode]);
+  }, [driverId, isEditMode, isAuthenticated]);
+
+  const validateForm = () => {
+    // Check if driver name is provided
+    if (!driver.driverName.trim()) {
+      setError('Please enter the driver name');
+      return false;
+    }
+    
+    // Check if location is selected
+    if (!driver.latitude || !driver.longitude) {
+      setError('Please select a location on the map');
+      return false;
+    }
+    
+    // Check if userId exists (user is logged in)
+    if (!driver.userId) {
+      setError('You must be logged in to save a driver');
+      return false;
+    }
+    
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -128,10 +174,17 @@ const DriverForm = () => {
 
     setError(null);
     setSuccess(null);
-
-    if (!driver.driverId) return setError('Please enter a driver ID');
-    if (!driver.driverName) return setError('Please enter the driver name');
-    if (!driver.latitude || !driver.longitude) return setError('Please select a location on the map');
+    
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setError('You must be logged in to perform this action');
+      return;
+    }
+    
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       setLoading(true);
@@ -144,6 +197,7 @@ const DriverForm = () => {
         longitude: driver.longitude,
       };
 
+      // Using the correct URL from the first file (instead of relative path)
       await axios.post('http://localhost:8082/api/v1/delivery/update-location', locationData);
       setSuccess('Driver location updated successfully!');
       // navigate('/'); // Redirect to home page immediately after success
@@ -225,6 +279,28 @@ const DriverForm = () => {
     }
   }, [isEditMode]);
 
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+          <div className="text-red-500 text-xl mb-4">
+            <svg className="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            You must be logged in to access this page
+          </div>
+          <button 
+            onClick={() => navigate('/login')} 
+            className="bg-orange-400 text-white px-6 py-2 rounded-lg shadow hover:bg-orange-500 transition"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Fixed header section */}
@@ -273,7 +349,7 @@ const DriverForm = () => {
             <div className="mb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block mb-2 font-semibold text-black">Driver ID </label>
+                  <label className="block mb-2 font-semibold text-black">Driver ID <span className="text-red-500">*</span></label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -291,7 +367,7 @@ const DriverForm = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block mb-2 font-semibold text-black">Driver Name </label>
+                  <label className="block mb-2 font-semibold text-black">Driver Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="driverName"
@@ -301,12 +377,13 @@ const DriverForm = () => {
                     placeholder="Enter driver name"
                     required
                   />
+                  {!driver.driverName && <p className="text-xs mt-1 text-red-500">Driver name is required</p>}
                 </div>
               </div>
               
               {/* Added User ID field */}
               <div className="mt-6">
-                <label className="block mb-2 font-semibold text-black">User ID </label>
+                <label className="block mb-2 font-semibold text-black">User ID <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="userId"
@@ -363,7 +440,8 @@ const DriverForm = () => {
                     </MapContainer>
                   )}
                 </div>
-                <p className="mt-2 text-sm text-black">Click on the map to set driver location</p>
+                <p className="mt-2 text-sm text-black">Click on the map to set driver location <span className="text-red-500">*</span></p>
+                {!driver.latitude && !driver.longitude && <p className="text-xs text-red-500">Location selection is required</p>}
               </div>
               <div className="md:w-1/2">
                 <label className="block mb-2 font-semibold text-black">Current Address</label>
@@ -377,7 +455,7 @@ const DriverForm = () => {
                 />
                 <div className="grid grid-cols-2 gap-3 mt-4">
                   <div>
-                    <label className="block mb-2 font-semibold text-black">Latitude </label>
+                    <label className="block mb-2 font-semibold text-black">Latitude <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       value={driver.latitude || ''}
@@ -386,7 +464,7 @@ const DriverForm = () => {
                     />
                   </div>
                   <div>
-                    <label className="block mb-2 font-semibold text-black">Longitude </label>
+                    <label className="block mb-2 font-semibold text-black">Longitude <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       value={driver.longitude || ''}

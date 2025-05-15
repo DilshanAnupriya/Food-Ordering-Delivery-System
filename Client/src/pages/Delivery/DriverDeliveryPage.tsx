@@ -66,6 +66,21 @@ interface DriverDeliveryPageProps {
   driverId?: string;
 }
 
+// Sad face SVG for pop-up
+const BAD_FACE_SVG = (
+  <svg
+    className="w-20 h-20 mb-4"
+    viewBox="0 0 64 64"
+    fill="none"
+    aria-hidden="true"
+  >
+    <circle cx="32" cy="32" r="30" fill="#fff3f3" stroke="#ff4d4f" strokeWidth="4"/>
+    <ellipse cx="22" cy="28" rx="4" ry="6" fill="#ff4d4f"/>
+    <ellipse cx="42" cy="28" rx="4" ry="6" fill="#ff4d4f"/>
+    <path d="M22 44c2.5-4 13.5-4 16 0" stroke="#ff4d4f" strokeWidth="3" strokeLinecap="round"/>
+  </svg>
+);
+
 const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver124' }) => {
   const [location, setLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
@@ -73,6 +88,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
   const [error, setError] = useState<string | null>(null);
   const [markingDelivered, setMarkingDelivered] = useState<boolean>(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState<boolean>(false);
+  const [showNoDeliveryPopup, setShowNoDeliveryPopup] = useState<boolean>(false);
 
   // Get current location every 5 seconds and send to backend
   useEffect(() => {
@@ -87,7 +103,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ driverId, latitude, longitude }),
           })
-          .catch(err => console.error('Failed to update location:', err));
+            .catch(err => console.error('Failed to update location:', err));
         },
         (error) => {
           console.error('Location error:', error);
@@ -111,35 +127,40 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
       .then((data) => {
         setDelivery(data);
         setLoading(false);
+        // Show popup if no delivery assigned
+        if (!data || Object.keys(data).length === 0) {
+          setShowNoDeliveryPopup(true);
+        } else {
+          setShowNoDeliveryPopup(false);
+        }
       })
       .catch((err) => {
         console.error('Failed to load delivery', err);
-        setError('Unable to load delivery information. Please try again later.');
+        setError('No Active Deliveries ');
         setLoading(false);
       });
   }, [driverId]);
 
   const markAsDelivered = async () => {
     if (markingDelivered || !delivery) return;
-  
+
     try {
       setMarkingDelivered(true);
-  
+
       const response = await fetch(`http://localhost:8082/api/v1/delivery/mark-delivered/${driverId}`, {
         method: 'POST',
       });
-  
+
       if (!response.ok) {
         throw new Error(`Failed to update delivery status: ${response.status}`);
       }
-  
+
       // Update state and show success popup
       setDelivery(prev => prev ? { ...prev, isDelivered: true } : null);
       setShowSuccessPopup(true);
-  
+
       // Hide the success popup after 5 seconds
       setTimeout(() => setShowSuccessPopup(false), 5000);
-  
     } catch (err) {
       console.error('Error in markAsDelivered:', err);
       setDelivery(prev => prev ? { ...prev, isDelivered: false } : null);
@@ -170,15 +191,6 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
           </div>
           <h3 className="text-xl font-semibold text-center text-gray-800 mb-2">Error</h3>
           <p className="text-center text-gray-600 mb-6">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 flex items-center justify-center"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Retry
-          </button>
         </div>
       </div>
     );
@@ -186,14 +198,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
 
   return (
     <div className="bg-gradient-to-r from-black via-black/80 to-black/60">
-      {/* <div className="w-full">
-        <SubNav />
-      </div>
-      <div className="w-full">
-        <NavigationBar />
-      </div> */}
-  
-      {/* Added margin-top to create space between NavigationBar and the next section */}
+      {/* <div className="w-full"> <SubNav /> </div> <div className="w-full"> <NavigationBar /> </div> */}
       <div className="mt-16">
         <nav className="max-w-7xl bg-black mx-auto px-4 py-1">
           <div className="max-w-7xl mx-auto px-4">
@@ -214,10 +219,8 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
         </nav>
       </div>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-3">
         <div className="bg-orange-50 rounded-xl shadow-md overflow-hidden">
-          {/* Header with gradient background */}
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
             <h1 className="text-2xl font-bold text-white">
               Driver Delivery Status
@@ -227,7 +230,6 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
             </p>
           </div>
 
-          {/* Loading state */}
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="flex flex-col items-center">
@@ -237,16 +239,14 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
             </div>
           ) : delivery ? (
             <div className="p-6">
-              {/* Order information card */}
               <div className="mb-6 bg-white rounded-lg border border-gray-100 shadow-sm p-5 relative">
-                {/* Success Popup - Only shown in order information container */}
                 {showSuccessPopup && (
                   <div className="absolute top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-10 flex items-center animate-fade-in">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span>Delivery successfully completed!</span>
-                    <button 
+                    <button
                       onClick={() => setShowSuccessPopup(false)}
                       className="ml-4 text-green-700 hover:text-green-900"
                     >
@@ -256,7 +256,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                     </button>
                   </div>
                 )}
-                
+
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center">
                   <div>
                     <h2 className="text-lg font-semibold text-gray-800 mb-2">Order Information</h2>
@@ -295,7 +295,6 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                       </div>
                     </div>
                   </div>
-                  
                   {!delivery.isDelivered && (
                     <button
                       onClick={markAsDelivered}
@@ -322,7 +321,6 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                 </div>
               </div>
 
-              {/* Map container - UPDATED TO PREVENT OVERLAP */}
               {isValidCoords(location) ? (
                 <div className="rounded-xl overflow-hidden shadow-md border border-gray-100 mb-6">
                   <div className="bg-gray-50 border-b px-4 py-3 flex justify-between items-center">
@@ -357,33 +355,32 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                         style={{ height: '100%', width: '100%', zIndex: 0 }}
                       >
                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                        
+
                         {/* Shop Marker */}
-                        <Marker 
-                          position={[delivery.shopLatitude, delivery.shopLongitude]} 
+                        <Marker
+                          position={[delivery.shopLatitude, delivery.shopLongitude]}
                           icon={shopIcon}
                         >
                           <Popup>Resturaent Location</Popup>
                         </Marker>
-                        
                         {/* Customer Marker */}
-                        <Marker 
-                          position={[delivery.destinationLatitude, delivery.destinationLongitude]} 
+                        <Marker
+                          position={[delivery.destinationLatitude, delivery.destinationLongitude]}
                           icon={customerIcon}
                         >
                           <Popup>Customer Location</Popup>
                         </Marker>
-                        
+
                         {/* Driver Marker */}
                         {location && (
-                          <Marker 
-                            position={[location.latitude, location.longitude]} 
+                          <Marker
+                            position={[location.latitude, location.longitude]}
                             icon={driverIcon}
                           >
                             <Popup>Your Location</Popup>
                           </Marker>
                         )}
-                        
+
                         {/* Polyline connecting the points */}
                         {location && (
                           <Polyline
@@ -415,8 +412,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                   </div>
                 </div>
               )}
-              
-              {/* Delivery instructions card */}
+
               <div className="p-5 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200">
                 <div className="flex items-start">
                   <div className="bg-orange-100 rounded-full p-2 mr-4">
@@ -434,21 +430,54 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-12">
-              <div className="bg-gray-100 rounded-full p-4 mb-4">
-                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
+            <>
+              {showNoDeliveryPopup && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 transition-all">
+                  <div className="relative bg-gradient-to-br from-pink-100 via-white/90 to-orange-100 shadow-2xl rounded-3xl px-10 py-10 max-w-md w-full flex flex-col items-center border-2 border-orange-200 backdrop-blur-md">
+                    {/* Close Button */}
+                    <button
+                      onClick={() => setShowNoDeliveryPopup(false)}
+                      className="absolute top-4 right-4 text-orange-400 hover:text-orange-600 focus:outline-none"
+                      aria-label="Close"
+                    >
+                      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                    {/* Bad Face Icon */}
+                    {BAD_FACE_SVG}
+                    <h3 className="text-2xl font-extrabold text-orange-600 mb-2 text-center font-sans drop-shadow">
+                      Oops! No Delivery Assigned
+                    </h3>
+                    <p className="text-lg text-gray-700 text-center mb-6 font-medium">
+                      You’re not assigned to a delivery yet.<br/>
+                      Please hang tight – we’ll notify you as soon as a new order is ready!
+                    </p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="mt-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-lg font-bold rounded-full shadow-lg hover:scale-105 transition-transform"
+                    >
+                      <span role="img" aria-label="refresh">🔄</span> Refresh
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-col items-center justify-center p-12" aria-hidden={showNoDeliveryPopup}>
+                <div className="bg-gray-100 rounded-full p-4 mb-4">
+                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">No Active Deliveries</h3>
+                <p className="text-gray-600 text-center">You currently don't have any active deliveries assigned.</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Refresh
+                </button>
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">No Active Deliveries</h3>
-              <p className="text-gray-600 text-center">You currently don't have any active deliveries assigned.</p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Refresh
-              </button>
-            </div>
+            </>
           )}
         </div>
       </main>
