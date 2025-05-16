@@ -47,12 +47,23 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) =>
                     {restaurant.openingTime.substring(0, 5)} - {restaurant.closingTime.substring(0, 5)}
                 </div>
                 <div className="mt-4 flex justify-between">
-                    <span className={`px-2 py-1 text-xs rounded ${restaurant.availability ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {restaurant.availability ? 'Open' : 'Closed'}
-                    </span>
-                    <span className={`px-2 py-1 text-xs rounded ${restaurant.orderAvailability ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {restaurant.orderAvailability ? 'Online Order' : 'No Online Order'}
-                    </span>
+                    {restaurant.availability ? (
+                        <>
+                            <span className="mr-1 py-1 text-xs rounded bg-green-100 text-green-800">
+                                Restaurant available
+                            </span>
+                            <span className="px-1 py-1 text-xs rounded bg-green-100 text-green-800">
+                                {restaurant.active ? 'Open' : 'Closed'}
+                            </span>
+                            <span className="px-1 py-1 text-xs rounded bg-blue-100 text-blue-800">
+                                {restaurant.orderAvailability ? 'Online Order' : 'No Online Order'}
+                            </span>
+                        </>
+                    ) : (
+                        <span className="py-1 text-xs rounded bg-red-100 text-red-800 w-full text-center">
+                            Restaurant unavailable
+                        </span>
+                    )}
                 </div>
             </div>
         </div>

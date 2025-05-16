@@ -6,7 +6,6 @@ import { API_BASE_URL } from '../../../services/Common/Common';
 import {
     Clock,
     Star,
-    Users,
     Package,
     TrendingUp,
     DollarSign,
@@ -64,6 +63,13 @@ const RestaurantOwnerDashboard: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 1024);
+    const [updateLoading, setUpdateLoading] = useState<{
+        availability: boolean;
+        orderAvailability: boolean;
+    }>({
+        availability: false,
+        orderAvailability: false
+    });
     const [orderStats, setOrderStats] = useState<OrderStats>({
         total: 0,
         pending: 0,
@@ -107,7 +113,6 @@ const RestaurantOwnerDashboard: React.FC = () => {
         }).format(date);
     };
 
-    // Get username from token (in a real app, you would use a proper auth library)
     // Get username from JWT token
     const getUsername = () => {
         try {
@@ -140,6 +145,74 @@ const RestaurantOwnerDashboard: React.FC = () => {
         } catch (error) {
             console.error('Error parsing JWT token:', error);
             return null;
+        }
+    };
+
+    // Toggle restaurant availability
+    const toggleRestaurantAvailability = async () => {
+        if (!restaurant) return;
+
+        try {
+            setUpdateLoading(prev => ({ ...prev, availability: true }));
+
+            const response = await axios.put(
+                `${API_BASE_URL}/restaurants/availability/${restaurant.restaurantId}`,
+                { availability: !restaurant.availability },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                }
+            );
+
+            if (response.data.code === 201) {
+                // Update the local state
+                setRestaurant(prev => prev ? { ...prev, availability: !prev.availability } : null);
+                // Show success message
+                alert(`Restaurant availability ${!restaurant.availability ? 'enabled' : 'disabled'} successfully!`);
+            } else {
+                throw new Error('Failed to update restaurant availability');
+            }
+        } catch (err) {
+            console.error('Error updating restaurant availability:', err);
+            alert('An error occurred while updating restaurant availability. Please try again.');
+        } finally {
+            setUpdateLoading(prev => ({ ...prev, availability: false }));
+        }
+    };
+
+    // Toggle order availability
+    const toggleOrderAvailability = async () => {
+        if (!restaurant) return;
+
+        try {
+            setUpdateLoading(prev => ({ ...prev, orderAvailability: true }));
+
+            const response = await axios.put(
+                `${API_BASE_URL}/restaurants/order-availability/${restaurant.restaurantId}`,
+                { orderAvailability: !restaurant.orderAvailability },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                }
+            );
+
+            if (response.data.code === 201) {
+                // Update the local state
+                setRestaurant(prev => prev ? { ...prev, orderAvailability: !prev.orderAvailability } : null);
+                // Show success message
+                alert(`Order availability ${!restaurant.orderAvailability ? 'enabled' : 'disabled'} successfully!`);
+            } else {
+                throw new Error('Failed to update order availability');
+            }
+        } catch (err) {
+            console.error('Error updating order availability:', err);
+            alert('An error occurred while updating order availability. Please try again.');
+        } finally {
+            setUpdateLoading(prev => ({ ...prev, orderAvailability: false }));
         }
     };
 
@@ -344,7 +417,7 @@ const RestaurantOwnerDashboard: React.FC = () => {
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         className="flex items-center gap-2 text-orange-500 hover:text-orange-600"
-                                        onClick={() => navigate(`/update/${restaurant.restaurantId}`)}
+                                        onClick={() => navigate(`/res/${restaurant.restaurantId}`)}
                                     >
                                         <PenTool size={16} />
                                         <span>Edit Details</span>
@@ -372,7 +445,7 @@ const RestaurantOwnerDashboard: React.FC = () => {
                                             <div>
                                                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
                                                 <div className="mt-1 flex items-center gap-4">
-                                                    <div className={`px-3 py-1 rounded-full text-xs font-medium inline-flex items-center ${
+                                                    <div className={`px-1 py-1 rounded-full text-xs font-medium inline-flex items-center ${
                                                         restaurant.active
                                                             ? 'bg-green-100 text-green-800'
                                                             : 'bg-red-100 text-red-800'
@@ -380,8 +453,16 @@ const RestaurantOwnerDashboard: React.FC = () => {
                                                         {restaurant.active ? <CheckCircle size={12} className="mr-1" /> : <AlertCircle size={12} className="mr-1" />}
                                                         {restaurant.active ? 'Open' : 'Closed'}
                                                     </div>
+                                                    <div className={`px-1 py-1 rounded-full text-xs font-medium inline-flex items-center ${
+                                                        restaurant.availability
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-red-100 text-red-800'
+                                                    }`}>
+                                                        {restaurant.availability ? <CheckCircle size={12} className="mr-1" /> : <AlertCircle size={12} className="mr-1" />}
+                                                        {restaurant.availability ? 'Restaurant available' : 'Restaurant unavailable'}
+                                                    </div>
 
-                                                    <div className={`px-3 py-1 rounded-full text-xs font-medium inline-flex items-center ${
+                                                    <div className={`px-1 py-1 rounded-full text-xs font-medium inline-flex items-center ${
                                                         restaurant.orderAvailability
                                                             ? 'bg-blue-100 text-blue-800'
                                                             : 'bg-gray-100 text-gray-800'
@@ -456,7 +537,7 @@ const RestaurantOwnerDashboard: React.FC = () => {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 transition-colors"
-                                        onClick={() => navigate('/')}
+                                        onClick={() => navigate(`/restaurant/orders/${restaurant?.restaurantId}`)}
                                     >
                                         <Package size={18} />
                                         <span>View Orders</span>
@@ -468,38 +549,42 @@ const RestaurantOwnerDashboard: React.FC = () => {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                                        onClick={() => {
-                                            // Toggle restaurant availability
-                                            // In a real app, this would make an API call
-                                            alert('This would toggle restaurant availability');
-                                        }}
+                                        onClick={toggleRestaurantAvailability}
+                                        disabled={updateLoading.availability}
                                     >
-                                        {restaurant.active ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
-                                        <span>{restaurant.active ? 'Mark as Closed' : 'Mark as Open'}</span>
+                                        {updateLoading.availability ? (
+                                            <div className="animate-spin h-4 w-4 border-2 border-gray-500 rounded-full border-t-transparent mr-2"></div>
+                                        ) : (
+                                            restaurant.availability ? <AlertCircle size={18} /> : <CheckCircle size={18} />
+                                        )}
+                                        <span>
+                                            {updateLoading.availability
+                                                ? "Updating..."
+                                                : restaurant.availability
+                                                    ? "Mark as Unavailable"
+                                                    : "Mark as Available"}
+                                        </span>
                                     </motion.button>
 
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                                        onClick={() => {
-                                            // Toggle order availability
-                                            // In a real app, this would make an API call
-                                            alert('This would toggle order availability');
-                                        }}
+                                        onClick={toggleOrderAvailability}
+                                        disabled={updateLoading.orderAvailability}
                                     >
-                                        {restaurant.orderAvailability ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
-                                        <span>{restaurant.orderAvailability ? 'Stop Accepting Orders' : 'Start Accepting Orders'}</span>
-                                    </motion.button>
-
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                                        onClick={() => navigate('/settings')}
-                                    >
-                                        <Settings size={18} />
-                                        <span>Restaurant Settings</span>
+                                        {updateLoading.orderAvailability ? (
+                                            <div className="animate-spin h-4 w-4 border-2 border-gray-500 rounded-full border-t-transparent mr-2"></div>
+                                        ) : (
+                                            restaurant.orderAvailability ? <AlertCircle size={18} /> : <CheckCircle size={18} />
+                                        )}
+                                        <span>
+                                            {updateLoading.orderAvailability
+                                                ? "Updating..."
+                                                : restaurant.orderAvailability
+                                                    ? "Stop Accepting Orders"
+                                                    : "Start Accepting Orders"}
+                                        </span>
                                     </motion.button>
                                 </div>
                             </div>
@@ -617,147 +702,108 @@ const RestaurantOwnerDashboard: React.FC = () => {
                                                         {index === 0 ? '5 minutes ago' : index === 1 ? '15 minutes ago' : '25 minutes ago'}
                                                     </p>
                                                 </div>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    className="px-3 py-1.5 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors"
-                                                >
+                                                <button className="px-3 py-1 bg-orange-100 text-orange-600 rounded-lg text-sm hover:bg-orange-200 transition-colors">
                                                     View Details
-                                                </motion.button>
+                                                </button>
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="text-center py-8 text-gray-500">
-                                            No pending orders at the moment
+                                        <div className="text-center py-8">
+                                            <CheckCircle size={40} className="mx-auto text-green-500 mb-4" />
+                                            <p className="text-gray-600">No pending orders at the moment!</p>
                                         </div>
                                     )}
 
                                     {orderStats.pending > 3 && (
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            className="w-full py-2 text-orange-500 hover:text-orange-600 text-sm flex items-center justify-center gap-2"
-                                            onClick={() => navigate('/orders?status=pending')}
-                                        >
-                                            <span>View all {orderStats.pending} pending orders</span>
-                                            <ExternalLink size={14} />
-                                        </motion.button>
+                                        <div className="text-center mt-4">
+                                            <motion.button
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                className="text-orange-500 hover:text-orange-600 font-medium flex items-center justify-center mx-auto"
+                                                onClick={() => navigate('/orders')}
+                                            >
+                                                <span>View all pending orders</span>
+                                                <ExternalLink size={14} className="ml-2" />
+                                            </motion.button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
                         </motion.div>
 
-                        {/* Recent Reviews (This would be populated from an API in a real app) */}
+                        {/* Recent Activity */}
                         <motion.div
                             variants={itemVariants}
                             className="bg-white rounded-xl shadow-sm overflow-hidden"
                         >
                             <div className="p-6">
                                 <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-bold text-gray-800">Recent Reviews</h2>
-                                    <div className="flex items-center">
-                                        <Star size={16} className="text-yellow-400 mr-1" />
-                                        <span className="text-gray-800 font-medium">{restaurant.rating.toFixed(1)}</span>
+                                    <h2 className="text-xl font-bold text-gray-800">Recent Activity</h2>
+                                    <div className="text-xs text-gray-500">Last 24 hours</div>
+                                </div>
+
+                                {/* Sample activity feed */}
+                                <div className="space-y-4">
+                                    <div className="flex">
+                                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3 mt-1">
+                                            <CheckCircle size={16} className="text-green-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium">Order #1234 completed</p>
+                                            <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex">
+                                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 mt-1">
+                                            <Package size={16} className="text-blue-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium">New order #1235 received</p>
+                                            <p className="text-xs text-gray-500 mt-1">3 hours ago</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex">
+                                        <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center mr-3 mt-1">
+                                            <Star size={16} className="text-yellow-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium">New 5-star review received</p>
+                                            <p className="text-xs text-gray-500 mt-1">5 hours ago</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex">
+                                        <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3 mt-1">
+                                            <Settings size={16} className="text-purple-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium">Updated menu items</p>
+                                            <p className="text-xs text-gray-500 mt-1">12 hours ago</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    {/* Sample reviews - in a real app, these would come from an API */}
-                                    <div className="border border-gray-100 rounded-lg p-4">
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex items-center">
-                                                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                                                    <Users size={16} className="text-gray-500" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium">John D.</p>
-                                                    <p className="text-sm text-gray-500">2 days ago</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex">
-                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                    <Star
-                                                        key={star}
-                                                        size={14}
-                                                        className={star <= 5 ? "text-yellow-400" : "text-gray-300"}
-                                                        fill={star <= 5 ? "currentColor" : "none"}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <p className="mt-3 text-gray-600 text-sm">
-                                            Absolutely loved the food! Everything was fresh and delicious.
-                                            The service was also excellent. Will definitely come back!
-                                        </p>
-                                    </div>
-
-                                    <div className="border border-gray-100 rounded-lg p-4">
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex items-center">
-                                                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                                                    <Users size={16} className="text-gray-500" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium">Sarah M.</p>
-                                                    <p className="text-sm text-gray-500">1 week ago</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex">
-                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                    <Star
-                                                        key={star}
-                                                        size={14}
-                                                        className={star <= 4 ? "text-yellow-400" : "text-gray-300"}
-                                                        fill={star <= 4 ? "currentColor" : "none"}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <p className="mt-3 text-gray-600 text-sm">
-                                            Great food and ambiance! The only thing I would improve is
-                                            the waiting time. But overall a pleasant experience.
-                                        </p>
-                                    </div>
-
+                                <div className="text-center mt-6">
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="w-full py-2 text-orange-500 hover:text-orange-600 text-sm flex items-center justify-center gap-2"
-                                        onClick={() => navigate('/reviews')}
+                                        className="text-orange-500 hover:text-orange-600 font-medium flex items-center justify-center mx-auto"
+                                        onClick={() => navigate('/activity')}
                                     >
-                                        <span>View all reviews</span>
-                                        <ExternalLink size={14} />
+                                        <span>View all activity</span>
+                                        <ExternalLink size={14} className="ml-2" />
                                     </motion.button>
                                 </div>
                             </div>
                         </motion.div>
                     </motion.div>
 
-                    {/* Footer with helpful information or tips */}
-                    <motion.div
-                        variants={itemVariants}
-                        className="bg-blue-50 border border-blue-100 rounded-xl p-6 mt-6 mb-8"
-                    >
-                        <div className="flex items-start">
-                            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-                                <Coffee size={24} className="text-blue-500" />
-                            </div>
-                            <div>
-                                <h3 className="font-medium text-blue-800 mb-1">Restaurant Owner Tips</h3>
-                                <p className="text-blue-600 text-sm">
-                                    Remember to regularly update your menu and respond promptly to customer reviews.
-                                    Engaging with your customers builds loyalty and improves your restaurant's reputation.
-                                </p>
-                                <button
-                                    className="mt-3 text-blue-700 hover:text-blue-800 text-sm flex items-center"
-                                    onClick={() => navigate('/help/owner-tips')}
-                                >
-                                    <span>View more tips</span>
-                                    <ExternalLink size={14} className="ml-1" />
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
+                    {/* Footer */}
+                    <div className="mt-12 mb-8 text-center text-gray-500 text-sm">
+                        <p>© {new Date().getFullYear()} Restaurant Dashboard. All rights reserved.</p>
+                    </div>
                 </div>
             </div>
         </div>

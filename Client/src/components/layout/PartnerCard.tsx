@@ -195,7 +195,7 @@ const PartnerSection = () => {
                         headTxt="Become a Restaurant Partner"
                         description="Join thousands of restaurants that deliver with our platform. Increase your sales, reach new customers, and grow your business with our advanced ordering technology."
                         index={0}
-                        link="/restaurant/create"
+                        link="/res/create"
                     />
 
                     <PartnerCard

@@ -38,6 +38,9 @@ import RoleRouter from "./services/auth/RoleRouter.tsx";
 import {Suspense} from "react";
 import AdminUser from './pages/Restaurant/Admin/AdminUser.tsx';
 import DriverForm from "./pages/Delivery/DriverForm.tsx";
+import RestaurantOrders from "./pages/Restaurant/Admin/RestaurantOrders.tsx";
+import ResUpdate from "./pages/Restaurant/Admin/ResUpdate.tsx";
+import ResCreate from "./pages/Restaurant/resCreate.tsx";
 
 
 function App() {
@@ -65,6 +68,7 @@ function App() {
                         <Route path="/restaurant/:id" element={<Restaurant />} />
                         <Route path="/restaurant/create" element={<RestaurantCreate />} />
                         <Route path="/cart/:id" element={<CartPage />} />
+                        <Route path="/res/create" element={<ResCreate />} />
                     </Route>
 
 
@@ -81,8 +85,10 @@ function App() {
                     <Route path="/AdminDashboard" element={<Navigate to="/admin-dashboard" replace />} />
                     <Route path='/admin-restaurant' element={<RestaurantAdminDashboard/>}/>
                     <Route path='/update/:id' element={<UpdateRestaurantPage/>} />
+                    <Route path='/res/:id' element={<ResUpdate/>} />
                     <Route path='/admin-fooditems' element={<RestuarantAdminFoodItem/>} />
                     <Route path='/admin-contacts' element={<AdminContactView />} />
+                    <Route path='/restaurant/orders/:id' element={<RestaurantOrders />} />
 
                     <Route path='/owner-restaurant' element={<RestaurantOwnerDashboard/>} />
                     <Route path='/:id/fooditems' element={<ManageFoodItems/>} />

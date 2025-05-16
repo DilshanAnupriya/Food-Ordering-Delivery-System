@@ -39,8 +39,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobile = false, restaurant }) => {
     const menuItems = [
         { title: 'Dashboard', icon: <Home size={20} />, path: '/owner-restaurant' },
         { title: 'Food Items', icon: <Package size={20} />, path: `/${restaurant?.restaurantId}/fooditems` },
-        { title: 'Orders', icon: <ShoppingBag size={20} />, path: '/orders' },
-        { title: 'Customers', icon: <Users size={20} />, path: '/customers' },
         { title: 'Settings', icon: <Settings size={20} />, path: '/settings' },
     ];
 

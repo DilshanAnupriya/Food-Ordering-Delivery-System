@@ -166,12 +166,12 @@ const ManageFoodItems = () => {
             const discountedPrice = price - (price * discount / 100);
             return (
                 <span>
-                    <span className="text-gray-400 line-through text-sm mr-2">${price.toFixed(2)}</span>
-                    <span className="text-green-600 font-semibold">${discountedPrice.toFixed(2)}</span>
+                    <span className="text-gray-400 line-through text-sm mr-2">{price.toFixed(2)}</span>
+                    <span className="text-green-600 font-semibold">{discountedPrice.toFixed(2)}</span>
                 </span>
             );
         }
-        return <span className="font-semibold">${price.toFixed(2)}</span>;
+        return <span className="font-semibold">Rs.{price.toFixed(2)}</span>;
     };
 
     // Calculate total pages

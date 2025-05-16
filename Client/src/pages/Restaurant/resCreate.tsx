@@ -60,7 +60,7 @@ interface StandardResponseDto {
     data: never;
 }
 
-const CreateRestaurantPage = () => {
+const ResCreate = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
@@ -355,11 +355,7 @@ const CreateRestaurantPage = () => {
     return (
         <>
             <div className="h-screen bg-gray-50">
-                <div className="ml-[250px] mt-2">
-                    <AdminNavbar />
-                </div>
-                <AdminSideBar />
-                <div className="absolute xl:w-[1100px] ml-[280px] mt-[-700px]">
+                <div className="mt-20 ">
                     <motion.div
                         className="max-w-5xl mx-auto"
                         initial={{ opacity: 0, y: 20 }}
@@ -1006,4 +1002,4 @@ const CreateRestaurantPage = () => {
     );
 };
 
-export default CreateRestaurantPage;
+export default ResCreate;

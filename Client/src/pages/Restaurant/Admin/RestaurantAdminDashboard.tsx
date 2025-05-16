@@ -16,7 +16,8 @@ interface Restaurant {
     restaurantPhone: string;
     restaurantEmail: string;
     active: boolean;             // restaurant open/closed
-    orderAvailability: boolean;  // accepting orders
+    orderAvailability: boolean;// accepting orders
+    availability: boolean;
     rating: number;
     imageUrl: string;
     description: string;
@@ -291,6 +292,13 @@ const RestaurantDashboard: React.FC = () => {
                                             </div>
 
                                             <div className="flex items-center justify-between mt-2">
+                                                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                    restaurant.availability
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                    {restaurant.availability ? 'Restaurant available' : 'Restaurant unavailable'}
+                                                </div>
                                                 <div className={`px-3 py-1 rounded-full text-xs font-medium ${
                                                     restaurant.active
                                                         ? 'bg-green-100 text-green-800'
@@ -299,10 +307,11 @@ const RestaurantDashboard: React.FC = () => {
                                                     {restaurant.active ? 'Open' : 'Closed'}
                                                 </div>
 
-                                                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+
+                                                <div className={`px-1 py-1 rounded-full text-xs font-medium ${
                                                     restaurant.orderAvailability
                                                         ? 'bg-blue-100 text-blue-800'
-                                                        : 'bg-gray-100 text-gray-800'
+                                                        : 'bg-red-100 text-red-800'
                                                 }`}>
                                                     {restaurant.orderAvailability ? 'Accepting Orders' : 'Not Accepting Orders'}
                                                 </div>

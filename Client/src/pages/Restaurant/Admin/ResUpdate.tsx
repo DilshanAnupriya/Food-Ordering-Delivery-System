@@ -1,36 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import AdminNavbar from "../../components/admin/AdminNavbar.tsx";
-import AdminSideBar from "../../components/layout/AdminSideBar.tsx";
-
-// Import Leaflet CSS (need to add to your project)
-// import 'leaflet/dist/leaflet.css';
-
-// Define marker icon (leaflet's default icon has path issues)
-const icon = L.icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-
-// Component to update map view when coordinates change
-function MapUpdater({ center }) {
-    const map = useMap();
-
-    useEffect(() => {
-        if (center && center[0] !== 0 && center[1] !== 0) {
-            map.setView(center, 13);
-        }
-    }, [center, map]);
-
-    return null;
-}
+import AdminNavbar from "../../../components/admin/AdminNavbar.tsx";
+import { fetchRestaurantData } from "../../../services/Restaurants/LoadAllRestaurants.ts";
+import { API_BASE_URL } from '../../../services/Common/Common.ts';
+import Sidebar from "../../../components/Restaurants/Owner/Sidebar.tsx";
 
 // Types
 interface RestaurantRequestDto {
@@ -50,20 +26,21 @@ interface RestaurantRequestDto {
     description: string;
     imageUrl: string;
     coverImageUrl: string;
-    owner_username: string;
+    owner_username:string
     active: boolean;
 }
 
 interface StandardResponseDto {
     code: number;
     message: string;
-    data: never;
+    data: any;
 }
 
-const CreateRestaurantPage = () => {
+const ResUpdate: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(false);
-    const [isLocating, setIsLocating] = useState(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
     const [formData, setFormData] = useState<RestaurantRequestDto>({
         restaurantName: '',
         restaurantAddress: '',
@@ -73,26 +50,81 @@ const CreateRestaurantPage = () => {
         city: '',
         latitude: 0,
         longitude: 0,
-        availability: false,
-        orderAvailability: false,
+        availability: true,
+        orderAvailability: true,
         rating: 0,
         openingTime: '',
         closingTime: '',
         description: '',
         imageUrl: '',
         coverImageUrl: '',
-        owner_username: '',
-        active: false
+        owner_username:'',
+        active: true
     });
 
-    const [activeTab, setActiveTab] = useState(0);
-    const [formProgress, setFormProgress] = useState(0);
-    const [markerPosition, setMarkerPosition] = useState([0, 0]);
-    const [locationFound, setLocationFound] = useState(false);
-    const [error, setError] = useState('');
+    const [activeTab, setActiveTab] = useState<number>(0);
+    const [formProgress, setFormProgress] = useState<number>(0);
 
-    // Update progress bar as fields are filled
+    // Fetch existing restaurant data
     useEffect(() => {
+        const loadRestaurantData = async () => {
+            try {
+                setIsPageLoading(true);
+                if (id) {
+                    const response = await fetchRestaurantData(id);
+                    if (response && response.code === 200 && response.data) {
+                        const restaurantData = response.data;
+
+                        // Map the response data to our form data structure
+                        setFormData({
+                            restaurantName: restaurantData.restaurantName || '',
+                            restaurantAddress: restaurantData.restaurantAddress || '',
+                            restaurantPhone: restaurantData.restaurantPhone || '',
+                            restaurantEmail: restaurantData.restaurantEmail || '',
+                            restaurantType: restaurantData.restaurantType || '',
+                            city: restaurantData.city || '',
+                            latitude: restaurantData.latitude || 0,
+                            longitude: restaurantData.longitude || 0,
+                            availability: restaurantData.availability !== undefined ? restaurantData.availability : true,
+                            orderAvailability: restaurantData.orderAvailability !== undefined ? restaurantData.orderAvailability : true,
+                            rating: restaurantData.rating || 0,
+                            openingTime: restaurantData.openingTime || '',
+                            closingTime: restaurantData.closingTime || '',
+                            description: restaurantData.description || '',
+                            imageUrl: restaurantData.imageUrl || '',
+                            coverImageUrl: restaurantData.coverImageUrl || '',
+                            owner_username: restaurantData.owner_username || '',
+                            active: restaurantData.active !== undefined ? restaurantData.active : true
+                        });
+
+                        // Calculate initial form progress
+                        calculateFormProgress({
+                            restaurantName: restaurantData.restaurantName || '',
+                            restaurantAddress: restaurantData.restaurantAddress || '',
+                            restaurantPhone: restaurantData.restaurantPhone || '',
+                            restaurantEmail: restaurantData.restaurantEmail || '',
+                            restaurantType: restaurantData.restaurantType || '',
+                            city: restaurantData.city || '',
+                        });
+                    } else {
+                        toast.error('Failed to load restaurant data');
+                        navigate('/owner-restaurant');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading restaurant data:', error);
+                toast.error('Could not load restaurant information');
+                navigate('/owner-restaurant');
+            } finally {
+                setIsPageLoading(false);
+            }
+        };
+
+        loadRestaurantData();
+    }, [id, navigate]);
+
+    // Calculate form progress based on required fields
+    const calculateFormProgress = (data: any) => {
         const requiredFields = [
             'restaurantName',
             'restaurantAddress',
@@ -103,108 +135,18 @@ const CreateRestaurantPage = () => {
         ];
 
         const filledFields = requiredFields.filter(field =>
-            formData[field as keyof RestaurantRequestDto] !== '' &&
-            formData[field as keyof RestaurantRequestDto] !== 0
+            data[field] !== '' &&
+            data[field] !== undefined &&
+            data[field] !== 0
         );
 
         setFormProgress((filledFields.length / requiredFields.length) * 100);
+    };
+
+    // Update progress bar as fields are filled
+    useEffect(() => {
+        calculateFormProgress(formData);
     }, [formData]);
-
-    // Get current location
-    const getCurrentLocation = () => {
-        setIsLocating(true);
-        setError('');
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const { latitude, longitude } = position.coords;
-
-                    // Update form data with coordinates
-                    setFormData(prev => ({
-                        ...prev,
-                        latitude,
-                        longitude
-                    }));
-
-                    // Update marker position for map
-                    setMarkerPosition([latitude, longitude]);
-                    setLocationFound(true);
-
-                    // Reverse geocode to get address
-                    try {
-                        const response = await axios.get(
-                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-                        );
-
-                        const address = response.data;
-
-                        if (address && address.address) {
-                            const streetAddress = [
-                                address.address.road,
-                                address.address.house_number
-                            ].filter(Boolean).join(' ');
-
-                            setFormData(prev => ({
-                                ...prev,
-                                restaurantAddress: streetAddress || '',
-                                city: address.address.city || address.address.town || address.address.village || '',
-                            }));
-                        }
-                    } catch (error) {
-                        console.error("Error getting address:", error);
-                    }
-
-                    setIsLocating(false);
-                },
-                (error) => {
-                    console.error("Error getting location:", error);
-                    setError('Could not get your location. Please check your browser permissions.');
-                    setIsLocating(false);
-                },
-                { enableHighAccuracy: true }
-            );
-        } else {
-            setError('Geolocation is not supported by your browser');
-            setIsLocating(false);
-        }
-    };
-
-    // Handle map click to update coordinates
-    const handleMapClick = (e) => {
-        const { lat, lng } = e.latlng;
-
-        setFormData(prev => ({
-            ...prev,
-            latitude: lat,
-            longitude: lng
-        }));
-
-        setMarkerPosition([lat, lng]);
-        setLocationFound(true);
-
-        // Reverse geocode to get address
-        axios.get(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-        ).then(response => {
-            const address = response.data;
-
-            if (address && address.address) {
-                const streetAddress = [
-                    address.address.road,
-                    address.address.house_number
-                ].filter(Boolean).join(' ');
-
-                setFormData(prev => ({
-                    ...prev,
-                    restaurantAddress: streetAddress || '',
-                    city: address.address.city || address.address.town || address.address.village || '',
-                }));
-            }
-        }).catch(error => {
-            console.error("Error getting address:", error);
-        });
-    };
 
     const restaurantTypes = [
         'Italian',
@@ -224,54 +166,42 @@ const CreateRestaurantPage = () => {
         'Lebanese'
     ];
 
-    const handleInputChange = (e) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        if (name === "ownerRestaurant") {
+            setFormData({ ...formData, owner_username: value });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
-    const handleCheckboxChange = (e) => {
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, checked } = e.target;
         setFormData({ ...formData, [name]: checked });
     };
 
-    const handleNumberChange = (e) => {
+    const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: parseFloat(value) });
     };
 
-    const resetForm = () => {
-        setFormData({
-            restaurantName: '',
-            restaurantAddress: '',
-            restaurantPhone: '',
-            restaurantEmail: '',
-            restaurantType: '',
-            city: '',
-            latitude: 0,
-            longitude: 0,
-            availability: false,
-            orderAvailability: false,
-            rating: 0,
-            openingTime: '',
-            closingTime: '',
-            description: '',
-            imageUrl: '',
-            coverImageUrl: '',
-            owner_username: '',
-            active: false
-        });
-        setMarkerPosition([0, 0]);
-        setLocationFound(false);
-    };
-
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
         try {
-            const response = await axios.post(
-                'http://localhost:8082/api/v1/restaurants',
-                formData,
+            // Add logging to check what's being sent
+            console.log("Submitting restaurant data:", formData);
+
+            // Ensure restaurantType is explicitly included in the request
+            const restaurantUpdateData = {
+                ...formData,
+                restaurantType: formData.restaurantType, // Explicitly include this
+            };
+
+            const response = await axios.put<StandardResponseDto>(
+                `${API_BASE_URL}/restaurants/${id}`,
+                restaurantUpdateData,
                 {
                     headers: {
                         'Content-Type': 'application/json'
@@ -279,48 +209,29 @@ const CreateRestaurantPage = () => {
                 }
             );
 
-            if (response.status === 201) {
-                // Store restaurant details in session storage
-                const restaurantDetails = {
-                    ...formData,
-                    createdAt: new Date().toISOString()
-                };
-                sessionStorage.setItem('restaurantDetail', JSON.stringify([restaurantDetails]));
-
-                // Send restaurant creation confirmation email
-                try {
-                    await axios.post(
-                        `http://localhost:8080/api/notifications/restaurant-confirmation`,
-                        {
-                            email: formData.restaurantEmail,
-                            restaurantName: formData.restaurantName,
-                            restaurantType: formData.restaurantType,
-                            address: formData.restaurantAddress,
-                            city: formData.city,
-                            phone: formData.restaurantPhone,
-                            openingTime: formData.openingTime,
-                            closingTime: formData.closingTime
-                        }
-                    );
-                    console.log('Restaurant confirmation email sent');
-                } catch (emailError) {
-                    console.error('Failed to send restaurant confirmation email:', emailError);
-                }
-
+            if (response.status === 201 || response.status === 200) {
                 // Show success toast notification
-                toast.success('Restaurant created successfully!');
-                resetForm();
-                // Navigate to admin restaurant page after successful creation
-                navigate('/admin-restaurant');
+                console.log(response.data)
+                toast.success('Restaurant updated successfully!');
+                // Navigate back to restaurant dashboard after successful update
+                navigate('/owner-restaurant');
+            } else {
+                // Handle specific error if needed
+                toast.error(`Update failed: ${response.data.message || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error('Error creating restaurant:', error);
-            toast.error('Failed to create restaurant. Please try again.');
+            console.error('Error updating restaurant:', error);
+            // More detailed error handling
+            if (axios.isAxiosError(error)) {
+                const errorMsg = error.response?.data?.message || 'Failed to update restaurant';
+                toast.error(errorMsg);
+            } else {
+                toast.error('Failed to update restaurant. Please try again.');
+            }
         } finally {
             setIsLoading(false);
         }
     };
-
     const formTabs = [
         { name: 'Basic Info', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
         { name: 'Details', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
@@ -352,26 +263,45 @@ const CreateRestaurantPage = () => {
         }
     };
 
+    // Function to get map preview URL using OpenStreetMap instead of Google Maps
+    const getMapPreviewUrl = () => {
+        if (formData.latitude && formData.longitude) {
+            return `https://www.openstreetmap.org/export/embed.html?bbox=${formData.longitude - 0.01}%2C${formData.latitude - 0.01}%2C${formData.longitude + 0.01}%2C${formData.latitude + 0.01}&layer=mapnik&marker=${formData.latitude}%2C${formData.longitude}`;
+        }
+        return '';
+    };
+
+    // Display loading spinner if page is loading
+    if (isPageLoading) {
+        return (
+            <div className="h-screen flex justify-center items-center bg-gray-50">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-500 border-solid"></div>
+            </div>
+        );
+    }
+
     return (
         <>
-            <div className="h-screen bg-gray-50">
+            <div className="h-screen ">
                 <div className="ml-[250px] mt-2">
-                    <AdminNavbar />
+                    <AdminNavbar/>
                 </div>
-                <AdminSideBar />
-                <div className="absolute xl:w-[1100px] ml-[280px] mt-[-700px]">
+                <Sidebar/>
+
+                <div className="absolute mt-20 ml-70 w-250 pb-40">
+
                     <motion.div
                         className="max-w-5xl mx-auto"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                     >
-                        <div className="bg-white shadow-lg sm:rounded-lg overflow-hidden rounded-2xl w-full mt-3 2xl:w-[1600px] 2xl:ml-[-50px] 2xl:mt-[-150px] h-[740px]">
+                        <div className="bg-white shadow-lg sm:rounded-lg overflow-hidden rounded-2xl w-full mt-3 2xl:w-[1600px] 2xl:ml-[-50px] 2xl:mt-[-150px] h-[700px]">
                             {/* Header with progress bar */}
                             <div className="bg-gradient-to-r from-orange-600 to-orange-400 text-white px-6 py-4">
-                                <h2 className="text-2xl font-bold">Create New Restaurant</h2>
+                                <h2 className="text-2xl font-bold">Update Restaurant</h2>
                                 <p className="mt-1 text-indigo-100">
-                                    Fill in the details below to add a new restaurant to our system
+                                    Update the details for {formData.restaurantName}
                                 </p>
                                 <div className="mt-4 h-2 bg-white rounded-full overflow-hidden">
                                     <motion.div
@@ -419,7 +349,7 @@ const CreateRestaurantPage = () => {
                                 {/* Basic Info Tab */}
                                 {activeTab === 0 && (
                                     <motion.div
-                                        className="px-6 py-4 space-y-6 h-[500px] overflow-y-auto"
+                                        className="px-6 py-4 space-y-6"
                                         variants={containerVariants}
                                         initial="hidden"
                                         animate="visible"
@@ -545,7 +475,7 @@ const CreateRestaurantPage = () => {
                                             </div>
                                         </motion.div>
 
-                                        <div className="flex justify-end">
+                                        <div className="flex justify-end 2xl:mt-30">
                                             <motion.button
                                                 type="button"
                                                 onClick={() => setActiveTab(1)}
@@ -565,7 +495,7 @@ const CreateRestaurantPage = () => {
                                 {/* Details Tab */}
                                 {activeTab === 1 && (
                                     <motion.div
-                                        className="px-6 py-4 space-y-6 h-[500px] overflow-y-auto"
+                                        className="px-6 py-4 space-y-6"
                                         variants={containerVariants}
                                         initial="hidden"
                                         animate="visible"
@@ -577,15 +507,15 @@ const CreateRestaurantPage = () => {
                                                     Description
                                                 </label>
                                                 <div className="mt-1">
-                          <textarea
-                              id="description"
-                              name="description"
-                              rows={3}
-                              value={formData.description}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
-                              placeholder="Describe your restaurant in detail..."
-                          />
+                                            <textarea
+                                                id="description"
+                                                name="description"
+                                                rows={3}
+                                                value={formData.description}
+                                                onChange={handleInputChange}
+                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                placeholder="Describe your restaurant in detail..."
+                                            />
                                                 </div>
                                             </div>
 
@@ -611,7 +541,7 @@ const CreateRestaurantPage = () => {
                                                     {[1, 2, 3, 4, 5].map((star) => (
                                                         <svg
                                                             key={star}
-                                                            className={`h-5 w-5 ${star <= Math.round(formData.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                            className={`h-5 w-5 ${star <= formData.rating ? 'text-yellow-400' : 'text-gray-300'}`}
                                                             fill="currentColor"
                                                             viewBox="0 0 20 20"
                                                         >
@@ -654,7 +584,6 @@ const CreateRestaurantPage = () => {
                                                     />
                                                 </div>
                                             </div>
-
                                             <div className="sm:col-span-3">
                                                 <label htmlFor="owner_username" className="block text-sm font-medium text-gray-700">
                                                     Restaurant Owner<span className="text-red-500">*</span>
@@ -668,11 +597,59 @@ const CreateRestaurantPage = () => {
                                                         value={formData.owner_username}
                                                         onChange={handleInputChange}
                                                         className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
-                                                        placeholder="owner name"
+                                                        placeholder="Owner name"
                                                     />
                                                 </div>
                                             </div>
 
+                                            {/* Checkboxes for availability */}
+                                            <div className="sm:col-span-2">
+                                                <div className="flex items-center">
+                                                    <input
+                                                        id="availability"
+                                                        name="availability"
+                                                        type="checkbox"
+                                                        checked={formData.availability}
+                                                        onChange={handleCheckboxChange}
+                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 mt-8"
+                                                    />
+                                                    <label htmlFor="availability" className="ml-2 block text-sm text-gray-700 pt-8">
+                                                        Restaurant Available
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div className="sm:col-span-2">
+                                                <div className="flex items-center">
+                                                    <input
+                                                        id="orderAvailability"
+                                                        name="orderAvailability"
+                                                        type="checkbox"
+                                                        checked={formData.orderAvailability}
+                                                        onChange={handleCheckboxChange}
+                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 p-2"
+                                                    />
+                                                    <label htmlFor="orderAvailability" className="ml-2 block text-sm text-gray-700">
+                                                        Order Available
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div className="sm:col-span-2">
+                                                <div className="flex items-center">
+                                                    <input
+                                                        id="active"
+                                                        name="active"
+                                                        type="checkbox"
+                                                        checked={formData.active}
+                                                        onChange={handleCheckboxChange}
+                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200 ml-[-150px]"
+                                                    />
+                                                    <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
+                                                        Active
+                                                    </label>
+                                                </div>
+                                            </div>
                                         </motion.div>
 
                                         <div className="flex justify-between mt-10">
@@ -691,7 +668,7 @@ const CreateRestaurantPage = () => {
                                             <motion.button
                                                 type="button"
                                                 onClick={() => setActiveTab(2)}
-                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
@@ -707,139 +684,75 @@ const CreateRestaurantPage = () => {
                                 {/* Location Tab */}
                                 {activeTab === 2 && (
                                     <motion.div
-                                        className="px-6 py-4 space-y-6 h-[500px] overflow-y-auto"
+                                        className="px-6 py-4 space-y-6"
                                         variants={containerVariants}
                                         initial="hidden"
                                         animate="visible"
                                     >
-                                        <motion.div variants={itemVariants}>
-                                            <div className="flex justify-between mb-4">
-                                                <h3 className="text-lg font-medium text-gray-900">Restaurant Location</h3>
-                                                <motion.button
-                                                    type="button"
-                                                    onClick={getCurrentLocation}
-                                                    disabled={isLocating}
-                                                    className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white ${
-                                                        isLocating ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'
-                                                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                >
-                                                    {isLocating ? (
-                                                        <>
-                                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                            </svg>
-                                                            Getting location...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <svg className="mr-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            </svg>
-                                                            Use My Current Location
-                                                        </>
-                                                    )}
-                                                </motion.button>
-                                            </div>
-
-                                            {error && (
-                                                <div className="rounded-md bg-red-50 p-4 mb-4">
-                                                    <div className="flex">
-                                                        <div className="flex-shrink-0">
-                                                            <svg className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                            </svg>
-                                                        </div>
-                                                        <div className="ml-3">
-                                                            <h3 className="text-sm font-medium text-red-800">Location Error</h3>
-                                                            <div className="mt-2 text-sm text-red-700">
-                                                                <p>{error}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Display coordinates */}
-                                            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mb-4">
-                                                <div className="sm:col-span-3">
-                                                    <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">
-                                                        Latitude
-                                                    </label>
-                                                    <div className="mt-1">
-                                                        <input
-                                                            type="number"
-                                                            name="latitude"
-                                                            id="latitude"
-                                                            step="any"
-                                                            value={formData.latitude || ''}
-                                                            onChange={handleNumberChange}
-                                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                            placeholder="Restaurant latitude"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="sm:col-span-3">
-                                                    <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">
-                                                        Longitude
-                                                    </label>
-                                                    <div className="mt-1">
-                                                        <input
-                                                            type="number"
-                                                            name="longitude"
-                                                            id="longitude"
-                                                            step="any"
-                                                            value={formData.longitude || ''}
-                                                            onChange={handleNumberChange}
-                                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                            placeholder="Restaurant longitude"
-                                                        />
-                                                    </div>
+                                        <motion.div variants={itemVariants} className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                            {/* Latitude */}
+                                            <div className="sm:col-span-3">
+                                                <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">
+                                                    Latitude
+                                                </label>
+                                                <div className="mt-1">
+                                                    <input
+                                                        type="number"
+                                                        step="0.000001"
+                                                        name="latitude"
+                                                        id="latitude"
+                                                        value={formData.latitude}
+                                                        onChange={handleNumberChange}
+                                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                        placeholder="e.g. 51.507351"
+                                                    />
                                                 </div>
                                             </div>
 
-                                            {/* Map container with map or placeholder */}
-                                            <div className="rounded-lg border border-gray-300 overflow-hidden h-64 relative">
-                                                {locationFound ? (
-                                                    <MapContainer
-                                                        center={markerPosition}
-                                                        zoom={13}
-                                                        style={{ height: '100%', width: '100%' }}
-                                                        scrollWheelZoom={false}
-                                                        onClick={handleMapClick}
-                                                    >
-                                                        <TileLayer
-                                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            {/* Longitude */}
+                                            <div className="sm:col-span-3">
+                                                <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">
+                                                    Longitude
+                                                </label>
+                                                <div className="mt-1">
+                                                    <input
+                                                        type="number"
+                                                        step="0.000001"
+                                                        name="longitude"
+                                                        id="longitude"
+                                                        value={formData.longitude}
+                                                        onChange={handleNumberChange}
+                                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                        placeholder="e.g. -0.127758"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Map Preview */}
+                                            <div className="sm:col-span-6">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Map Preview
+                                                </label>
+                                                {formData.latitude && formData.longitude ? (
+                                                    <div className="mt-2 border border-gray-300 rounded-md overflow-hidden h-64">
+                                                        <iframe
+                                                            title="Restaurant Location"
+                                                            width="100%"
+                                                            height="100%"
+                                                            frameBorder="0"
+                                                            scrolling="no"
+                                                            marginHeight={0}
+                                                            marginWidth={0}
+                                                            src={getMapPreviewUrl()}
                                                         />
-                                                        <Marker position={markerPosition} icon={icon}>
-                                                        </Marker>
-                                                        <MapUpdater center={markerPosition} />
-                                                    </MapContainer>
+                                                    </div>
                                                 ) : (
-                                                    <div className="h-full w-full flex items-center justify-center bg-gray-50">
-                                                        <div className="text-center">
-                                                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            </svg>
-                                                            <h3 className="mt-2 text-sm font-medium text-gray-900">No location selected</h3>
-                                                            <p className="mt-1 text-sm text-gray-500">
-                                                                Click "Use My Current Location" or manually enter coordinates to display the map
-                                                            </p>
-                                                        </div>
+                                                    <div className="mt-2 border border-gray-300 rounded-md flex items-center justify-center h-64 bg-gray-50">
+                                                        <p className="text-gray-500">
+                                                            Enter latitude and longitude to see map preview
+                                                        </p>
                                                     </div>
                                                 )}
-                                            </div>
-
-                                            <div className="mt-4 text-sm text-gray-500">
-                                                <p>
-                                                    <span className="font-medium">Tip:</span> You can click directly on the map to update the restaurant location.
-                                                </p>
                                             </div>
                                         </motion.div>
 
@@ -859,7 +772,7 @@ const CreateRestaurantPage = () => {
                                             <motion.button
                                                 type="button"
                                                 onClick={() => setActiveTab(3)}
-                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
@@ -875,80 +788,92 @@ const CreateRestaurantPage = () => {
                                 {/* Images Tab */}
                                 {activeTab === 3 && (
                                     <motion.div
-                                        className="px-6 py-4 space-y-6 h-[500px] overflow-y-auto"
+                                        className="px-6 py-4 space-y-6"
                                         variants={containerVariants}
                                         initial="hidden"
                                         animate="visible"
                                     >
                                         <motion.div variants={itemVariants} className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                                            {/* Restaurant Profile Image */}
-                                            <div className="sm:col-span-6">
+                                            {/* Restaurant Logo/Image */}
+                                            <div className="sm:col-span-3">
                                                 <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">
-                                                    Restaurant Profile Image
+                                                    Restaurant Logo/Image URL
                                                 </label>
-                                                <div className="mt-1 flex items-center">
-                                                    <div className="h-32 w-32 rounded-md overflow-hidden bg-gray-100 border border-gray-300 flex items-center justify-center">
-                                                        {formData.imageUrl ? (
-                                                            <img
-                                                                src={formData.imageUrl}
-                                                                alt="Restaurant profile preview"
-                                                                className="h-full w-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <svg className="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                        )}
-                                                    </div>
-                                                    <div className="ml-5">
-                                                        <input
-                                                            type="text"
-                                                            name="imageUrl"
-                                                            id="imageUrl"
-                                                            value={formData.imageUrl}
-                                                            onChange={handleInputChange}
-                                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
-                                                            placeholder="Enter image URL"
-                                                        />
-                                                        <p className="mt-2 text-sm text-gray-500">
-                                                            Recommended size: 300x300 pixels
-                                                        </p>
-                                                    </div>
+                                                <div className="mt-1">
+                                                    <input
+                                                        type="text"
+                                                        name="imageUrl"
+                                                        id="imageUrl"
+                                                        value={formData.imageUrl}
+                                                        onChange={handleInputChange}
+                                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                        placeholder="https://example.com/image.jpg"
+                                                    />
                                                 </div>
+                                                {formData.imageUrl && (
+                                                    <div className="mt-2 border border-gray-300 rounded-md overflow-hidden w-32 h-32">
+                                                        <img
+                                                            src={formData.imageUrl}
+                                                            alt="Restaurant logo preview"
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.currentTarget.src = 'https://via.placeholder.com/128?text=Invalid+Image';
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Restaurant Cover Image */}
-                                            <div className="sm:col-span-6">
+                                            <div className="sm:col-span-3">
                                                 <label htmlFor="coverImageUrl" className="block text-sm font-medium text-gray-700">
-                                                    Restaurant Cover Image
+                                                    Cover Image URL
                                                 </label>
-                                                <div className="mt-1 flex items-center">
-                                                    <div className="h-32 w-64 rounded-md overflow-hidden bg-gray-100 border border-gray-300 flex items-center justify-center">
-                                                        {formData.coverImageUrl ? (
-                                                            <img
-                                                                src={formData.coverImageUrl}
-                                                                alt="Restaurant cover preview"
-                                                                className="h-full w-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <svg className="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                        )}
-                                                    </div>
-                                                    <div className="ml-5">
-                                                        <input
-                                                            type="text"
-                                                            name="coverImageUrl"
-                                                            id="coverImageUrl"
-                                                            value={formData.coverImageUrl}
-                                                            onChange={handleInputChange}
-                                                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
-                                                            placeholder="Enter cover image URL"
+                                                <div className="mt-1">
+                                                    <input
+                                                        type="text"
+                                                        name="coverImageUrl"
+                                                        id="coverImageUrl"
+                                                        value={formData.coverImageUrl}
+                                                        onChange={handleInputChange}
+                                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md transition-all duration-200 p-2"
+                                                        placeholder="https://example.com/cover.jpg"
+                                                    />
+                                                </div>
+                                                {formData.coverImageUrl && (
+                                                    <div className="mt-2 border border-gray-300 rounded-md overflow-hidden h-32">
+                                                        <img
+                                                            src={formData.coverImageUrl}
+                                                            alt="Restaurant cover preview"
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.currentTarget.src = 'https://via.placeholder.com/300x128?text=Invalid+Image';
+                                                            }}
                                                         />
-                                                        <p className="mt-2 text-sm text-gray-500">
-                                                            Recommended size: 1200x400 pixels
-                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Image Upload Guidelines */}
+                                            <div className="sm:col-span-6">
+                                                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                                                    <div className="flex">
+                                                        <div className="flex-shrink-0">
+                                                            <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                                            </svg>
+                                                        </div>
+                                                        <div className="ml-3">
+                                                            <h3 className="text-sm font-medium text-blue-800">Image Guidelines</h3>
+                                                            <div className="mt-2 text-sm text-blue-700">
+                                                                <ul className="list-disc pl-5 space-y-1">
+                                                                    <li>Logo image: Square format (1:1 ratio), at least 256x256 pixels</li>
+                                                                    <li>Cover image: Landscape format (16:9 ratio), at least 1200x675 pixels</li>
+                                                                    <li>Maximum file size: 5MB per image</li>
+                                                                    <li>Supported formats: JPG, PNG, WebP</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -967,27 +892,26 @@ const CreateRestaurantPage = () => {
                                                 </svg>
                                                 Previous
                                             </motion.button>
-
                                             <motion.button
                                                 type="submit"
+                                                className={`inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                                                    isLoading ? 'bg-orange-400' : 'bg-orange-500 hover:bg-orange-700'
+                                                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200`}
                                                 disabled={isLoading}
-                                                className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-                                                    isLoading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'
-                                                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
                                                 whileHover={{ scale: isLoading ? 1 : 1.05 }}
                                                 whileTap={{ scale: isLoading ? 1 : 0.95 }}
                                             >
                                                 {isLoading ? (
                                                     <>
-                                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                         </svg>
-                                                        Creating...
+                                                        Updating...
                                                     </>
                                                 ) : (
                                                     <>
-                                                        Create Restaurant
+                                                        Update Restaurant
                                                         <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                         </svg>
@@ -1006,4 +930,4 @@ const CreateRestaurantPage = () => {
     );
 };
 
-export default CreateRestaurantPage;
+export default ResUpdate;

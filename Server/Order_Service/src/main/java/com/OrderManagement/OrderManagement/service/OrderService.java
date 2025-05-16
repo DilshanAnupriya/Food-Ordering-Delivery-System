@@ -40,6 +40,13 @@ public class OrderService {
         return orderRepository.findByUserId(userId);
     }
 
+    public List<OrderModel> getOrdersByRestaurantId(String restaurantId) {
+        if (restaurantId == null) {
+            throw new OrderException("restaurant ID cannot be null", HttpStatus.BAD_REQUEST);
+        }
+        return orderRepository.findByRestaurantId(restaurantId);
+    }
+
     public OrderModel getOrderById(Long orderId) {
         if (orderId == null) {
             throw new OrderException("Order ID cannot be null", HttpStatus.BAD_REQUEST);

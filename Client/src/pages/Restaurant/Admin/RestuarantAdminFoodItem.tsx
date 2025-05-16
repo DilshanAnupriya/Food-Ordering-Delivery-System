@@ -695,7 +695,7 @@ const AdminFoodItemDashboard = () => {
                                                                     </div>
                                                                     <div className="text-right">
                                                                         <p className="text-lg font-bold text-gray-900">
-                                                                            ${item.price.toFixed(2)}
+                                                                            {item.price.toFixed(2)}
                                                                         </p>
                                                                         {item.discount > 0 && (
                                                                             <p className="text-xs text-gray-500 line-through">

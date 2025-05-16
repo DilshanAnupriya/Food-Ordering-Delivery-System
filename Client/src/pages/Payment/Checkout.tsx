@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../services/auth/authContext';
 import { createCheckoutSession } from '../../services/Payment/payment';
-import axios from 'axios';
-import NavigationBar from '../../components/layout/Navbar';
-import SubNav from '../../components/layout/SubNav';
 import Footer from '../../components/layout/Footer';
 import NavV2 from "../../components/layout/NavV2.tsx";
 
@@ -21,20 +18,15 @@ const Checkout = () => {
                 return;
             }
 
-            try {                setLoading(true);
+            try {
+                setLoading(true);
                 setError(null);
 
                 const orderDetail = JSON.parse(sessionStorage.getItem('orderDetail') || '[]');
-
-                console.log('Session storage content:', sessionStorage.getItem('orderDetail'));
-                const latestOrder = orderDetail[orderDetail.length - 1];                if (!latestOrder) {
-                    throw new Error('No order found in session storage. Please ensure you have placed an order first.');
-
                 const latestOrder = orderDetail[orderDetail.length - 1];
 
                 if (!latestOrder) {
                     throw new Error('No order found');
-
                 }
 
                 const productRequest = {
@@ -46,45 +38,15 @@ const Checkout = () => {
                     orderId: latestOrder.orderId
                 };
 
-                const response = await createCheckoutSession(productRequest);                if (response.status === 'SUCCESS' && response.sessionUrl) {
-                    try {
-                        
-                          // Send order confirmation email
-                        await axios.post(
-                            `http://localhost:8080/api/notifications/order-confirmation`,
-                            null,
-                            {
-                                params: {
-                                    email: user.sub,
-                                    orderId: latestOrder.orderId,
-                                    totalAmount: latestOrder.totalAmount
-                                }
-                            }
-                        );
-                        console.log('Order confirmation email sent');
+                const response = await createCheckoutSession(productRequest);
 
-                        // Send payment confirmation email
-                        await axios.post(
-                            `http://localhost:8080/api/notifications/payment-confirmation`,
-                            {
-                                email: user.sub,
-                                orderId: latestOrder.orderId,
-                                amount: latestOrder.totalAmount,
-                                paymentStatus: 'SUCCESS'
-                            }
-                        );
-                        console.log('Payment confirmation email sent');
-
-                        // Redirect to Stripe checkout
-                        window.location.href = response.sessionUrl;
-                        // After successful payment, navigate to order confirmation
-                        setTimeout(() => {
-                            navigate('/order-confirmation');
-                        }, 1000);
-                    } catch (emailError) {
-                        console.error('Failed to send confirmation emails:', emailError);
-                        // Continue with checkout even if email fails
-                    }
+                if (response.status === 'SUCCESS' && response.sessionUrl) {
+                    // Redirect to Stripe checkout
+                    window.location.href = response.sessionUrl;
+                    // After successful payment, navigate to order confirmation
+                    setTimeout(() => {
+                        navigate('/order-confirmation');
+                    }, 1000);
                 } else {
                     throw new Error('Failed to create checkout session');
                 }

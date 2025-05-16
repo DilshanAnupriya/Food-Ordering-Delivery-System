@@ -14,14 +14,14 @@ function AdminDashboard() {
   return (
       <div className="flex flex-col min-h-screen">
         {/* Top navigation component - fixed at the top in its own implementation */}
-        <div className="relative w-full">
+        <div className="absolute ml-70">
           <AdminNavbar />
         </div>
 
         {/* Main layout with sidebar and content */}
         <div className="flex flex-1 pt-16"> {/* Add padding to account for fixed navbar */}
           {/* Dynamic sidebar that can be toggled */}
-          <div className={`fixed top-16 left-0 bottom-0 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-0 -ml-64'}`}>
+          <div className={`fixed  left-0 bottom-0 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-0 -ml-64'}`}>
             <AdminSidebar />
           </div>
 
@@ -36,7 +36,7 @@ function AdminDashboard() {
 
           {/* Main content that adjusts based on sidebar state */}
           <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'} pb-0`}>
-            <div className="p-6 bg-gray-50 min-h-screen">
+            <div className="p-6  min-h-screen">
               <div className="max-w-7xl mx-auto">
                 <h1 className="text-2xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
 
