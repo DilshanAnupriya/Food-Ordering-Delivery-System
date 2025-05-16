@@ -58,6 +58,7 @@ const CustomerTrackingPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+  const [noDriverAssigned, setNoDriverAssigned] = useState<boolean>(false);
 
   // Get orderId from session storage
   useEffect(() => {
@@ -121,6 +122,7 @@ const CustomerTrackingPage: React.FC = () => {
           })
           .then((data) => {
             setDelivery(data);
+            setNoDriverAssigned(false);
             setLoading(false);
 
             // If we have driver coordinates, adjust map center between driver and customer
@@ -132,19 +134,25 @@ const CustomerTrackingPage: React.FC = () => {
           })
           .catch((err) => {
             console.error('Failed to load delivery tracking', err);
-            // For development purposes, let's create mock data when API fails
-            const mockDelivery: DeliveryTracking = {
-              orderId: orderId,
-              isDelivered: false,
-              estimatedArrival: '15 minutes',
-              driverName: 'John Driver',
-              driverLatitude: customerLocation?.latitude ? customerLocation.latitude - 0.01 : 40.712776,
-              driverLongitude: customerLocation?.longitude ? customerLocation.longitude - 0.01 : -74.005974,
-              customerLatitude: customerLocation?.latitude || 40.712776,
-              customerLongitude: customerLocation?.longitude || -74.005974
-            };
-            setDelivery(mockDelivery);
-            setError(null); // Clear error since we have mock data
+            // Instead of mock data, set noDriverAssigned flag
+            setNoDriverAssigned(true);
+            
+            // Only set customer location for the map
+            if (customerLocation) {
+              const partialDelivery: DeliveryTracking = {
+                orderId: orderId,
+                isDelivered: false,
+                estimatedArrival: 'Pending',
+                driverName: '',
+                driverLatitude: 0,
+                driverLongitude: 0,
+                customerLatitude: customerLocation.latitude,
+                customerLongitude: customerLocation.longitude
+              };
+              setDelivery(partialDelivery);
+            }
+            
+            setError(null); // Clear error since we're handling this case
             setLoading(false);
           });
     };
@@ -185,6 +193,9 @@ const CustomerTrackingPage: React.FC = () => {
     if (!delivery) return [];
 
     const { driverLatitude, driverLongitude, customerLatitude, customerLongitude } = delivery;
+    
+    // Only return route if driver has valid coordinates
+    if (!isValidCoords(driverLatitude, driverLongitude)) return [];
 
     // Return direct line between driver and customer
     return [
@@ -197,7 +208,6 @@ const CustomerTrackingPage: React.FC = () => {
       <div className="flex flex-col min-h-screen">
         {/* Fixed header section */}
         <div className="fixed w-full z-50">
-
           <div className="w-full">
             <NavV2/>
           </div>
@@ -231,6 +241,21 @@ const CustomerTrackingPage: React.FC = () => {
                 </div>
             )}
 
+            {/* No Driver Assigned Message */}
+            {noDriverAssigned && !loading && !error && (
+                <div className="p-6 bg-orange-50 border-l-4 border-orange-500 text-orange-700 mb-6 mx-6">
+                  <div className="flex items-center">
+                    <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1v-3a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-semibold">No drivers assigned to this order yet</span>
+                  </div>
+                  <p className="mt-2 text-sm">
+                    Please check back later. Your order is being processed and a driver will be assigned soon.
+                  </p>
+                </div>
+            )}
+
             {!loading && !error && delivery && (
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -247,7 +272,7 @@ const CustomerTrackingPage: React.FC = () => {
                           </div>
                           <div className="ml-4">
                             <p className="text-sm text-orange-600">Driver</p>
-                            <p className="font-medium">{delivery.driverName}</p>
+                            <p className="font-medium">{noDriverAssigned ? "Not assigned yet" : delivery.driverName}</p>
                           </div>
                         </div>
 
@@ -259,11 +284,11 @@ const CustomerTrackingPage: React.FC = () => {
                           </div>
                           <div className="ml-4">
                             <p className="text-sm text-orange-600">Estimated Arrival</p>
-                            <p className="font-medium">{delivery.estimatedArrival}</p>
+                            <p className="font-medium">{noDriverAssigned ? "Pending driver assignment" : delivery.estimatedArrival}</p>
                           </div>
                         </div>
 
-                        {customerLocation && delivery && isValidCoords(delivery.driverLatitude, delivery.driverLongitude) && (
+                        {customerLocation && delivery && isValidCoords(delivery.driverLatitude, delivery.driverLongitude) && !noDriverAssigned && (
                             <div className="flex items-center">
                               <div className="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center">
                                 <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -293,7 +318,7 @@ const CustomerTrackingPage: React.FC = () => {
                           </div>
                           <div className="ml-4">
                             <p className="text-sm text-orange-600">Status</p>
-                            <p className="font-medium">{delivery.isDelivered ? 'Delivered' : 'In Progress'}</p>
+                            <p className="font-medium">{noDriverAssigned ? "Processing" : (delivery.isDelivered ? 'Delivered' : 'In Progress')}</p>
                           </div>
                         </div>
                       </div>
@@ -318,11 +343,11 @@ const CustomerTrackingPage: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex items-center">
-                            <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                            <div className={`w-8 h-8 ${noDriverAssigned ? 'bg-gray-300' : 'bg-green-500'} text-white rounded-full flex items-center justify-center text-xs font-bold`}>
                               3
                             </div>
                             <div className="ml-3">
-                              <p className="font-medium text-green-800">Out for Delivery</p>
+                              <p className={`font-medium ${noDriverAssigned ? 'text-gray-500' : 'text-green-800'}`}>Out for Delivery</p>
                             </div>
                           </div>
                           <div className="flex items-center">
@@ -362,8 +387,8 @@ const CustomerTrackingPage: React.FC = () => {
                                 </Marker>
                             )}
 
-                            {/* Driver Marker */}
-                            {delivery && isValidCoords(delivery.driverLatitude, delivery.driverLongitude) && (
+                            {/* Driver Marker - only show if driver is assigned */}
+                            {delivery && isValidCoords(delivery.driverLatitude, delivery.driverLongitude) && !noDriverAssigned && (
                                 <Marker
                                     position={[delivery.driverLatitude, delivery.driverLongitude]}
                                     icon={driverIcon}
@@ -374,9 +399,9 @@ const CustomerTrackingPage: React.FC = () => {
                                 </Marker>
                             )}
 
-                            {/* Route Line */}
+                            {/* Route Line - only show if driver is assigned */}
                             {delivery && isValidCoords(delivery.driverLatitude, delivery.driverLongitude) &&
-                                isValidCoords(delivery.customerLatitude, delivery.customerLongitude) && (
+                                isValidCoords(delivery.customerLatitude, delivery.customerLongitude) && !noDriverAssigned && (
                                     <Polyline
                                         positions={calculateRoutePoints()}
                                         color="#f97316"

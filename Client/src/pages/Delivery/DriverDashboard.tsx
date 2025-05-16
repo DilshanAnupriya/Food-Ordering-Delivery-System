@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import CompletedDeliveryCard from './CompletedDeliveryCard';
+import NavV2 from "../../components/layout/NavV2.tsx";
 
 interface Order {
   id: string;
@@ -131,18 +132,16 @@ const DriverDashboard: React.FC = () => {
   const profileInitial = driverData.driverName ? driverData.driverName.charAt(0) : 'D';
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-black via-black/80 to-black/60">
-      {/* <div className="w-full">
-        <SubNav />
+    <div className="min-h-screen ">
+
+      <div className="w-full ">
+
       </div>
-      <div className="w-full bg-gradient-to-r from-black via-black/80 to-black/60">
-        <NavigationBar />
-      </div> */}
       
-      <div className="mt-10 ">
+      <div className="mt-1 ">
         <div className="max-w-7xl mx-auto px-4 py-8 ">
           {/* Header */}
-          <div className="flex justify-between h-20 w-full bg-black items-center mb-7 rounded-lg">
+          <div className="flex justify-between h-20 w-full bg-orange-500 items-center mb-7 rounded-lg">
             <div className="flex items-center">
               <div className="relative ml-4">
                 <div className="h-16 w-16 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg border-2 border-white">
@@ -164,10 +163,16 @@ const DriverDashboard: React.FC = () => {
 
             <div className="flex space-x-4">
               <button
-                className="bg-orange-500 text-white px-4 py-2 rounded-md mr-4 hover:bg-yellow-400 hover:text-black transition-colors"
+                className="bg-yellow-500 text-white px-4 py-2 rounded-md mr-4 hover:bg-yellow-400 hover:text-black transition-colors"
                 onClick={() => handleNavigate('/driver-delivery')}
               >
                 Deliveries
+              </button>
+              <button
+                  className="bg-red-500 text-white px-4 py-2 rounded-md mr-4 hover:bg-yellow-400 hover:text-black transition-colors"
+                  onClick={() => handleNavigate('/login')}
+              >
+                Logout
               </button>
             </div>
           </div>
