@@ -74,6 +74,7 @@ const DriverForm = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [existingDrivers, setExistingDrivers] = useState<Driver[]>([]);
+  const [username, setUsername] = useState<string>('');
 
   const mapRef = useRef<any>(null);
 
@@ -93,16 +94,20 @@ const DriverForm = () => {
   // Check if the user is authenticated
   useEffect(() => {
     const userId = localStorage.getItem('userId');
+    const storedUsername = localStorage.getItem('username') || '';
+    
     if (!userId) {
       setError('You must be logged in to access this page');
       setIsAuthenticated(false);
     } else {
       setIsAuthenticated(true);
+      setUsername(storedUsername);
       
       // Get userId from local storage
       setDriver(prev => ({
         ...prev,
-        userId: userId
+        userId: userId,
+        driverName: storedUsername // Set the driver name from the stored username
       }));
       
       // Fetch existing drivers for this user
@@ -146,6 +151,38 @@ const DriverForm = () => {
         });
     }
   }, [driverId, isEditMode, isAuthenticated]);
+
+  // Try to get username from JWT token if not in localStorage
+  useEffect(() => {
+    if (isAuthenticated && !username) {
+      // Try to fetch user details from token
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          // Simple JWT parsing to get the payload
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          
+          const payload = JSON.parse(jsonPayload);
+          if (payload.sub) {
+            setUsername(payload.sub);
+            localStorage.setItem('username', payload.sub);
+            
+            // Update driver name
+            setDriver(prev => ({
+              ...prev,
+              driverName: payload.sub
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('Error parsing JWT token:', err);
+      }
+    }
+  }, [isAuthenticated, username]);
 
   const validateForm = () => {
     // Check if driver name is provided
