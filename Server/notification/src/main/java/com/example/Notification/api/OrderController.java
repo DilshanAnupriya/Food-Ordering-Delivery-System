@@ -2,7 +2,7 @@ package com.example.Notification.api;
 
 
 
-import com.example.Notification.services.EmailService;
+import com.example.Notification.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

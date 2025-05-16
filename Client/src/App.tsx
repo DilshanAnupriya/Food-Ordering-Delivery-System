@@ -96,6 +96,7 @@ function App() {
                     <Route path="/track" element={<OrderTracking />} />
                     <Route path="/payments" element={<PaymentDetails />} />
                     <Route path="/driveradmin-dashboard" element={<AdminDriverDashboard />} />
+                      <Route path="/driver-form" element={<DriverForm/>} />
                 </Routes>
             </Router>
             </Suspense>
