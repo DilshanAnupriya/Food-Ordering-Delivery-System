@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import SectionWrapper from "../../hoc/SectionWrapper.tsx";
+import { Link } from 'react-router';
 
 interface TrendingRestaurant {
     restaurantName: string;

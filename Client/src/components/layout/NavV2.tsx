@@ -60,6 +60,9 @@ const ManiNavbar = () => {
         window.addEventListener("resize", handleResize);
         document.addEventListener("mousedown", handleClickOutside);
 
+        // Initialize scroll state
+        handleScroll();
+
         // Cleanup the event listeners when the component is unmounted
         return () => {
             window.removeEventListener("scroll", handleScroll);
@@ -121,15 +124,15 @@ const ManiNavbar = () => {
     return (
         <>
             <header
-                className="fixed w-full left-1/2 z-50 transform -translate-x-1/2 transition-all duration-300 ease-in-out"
+                className="fixed top-0 w-full left-0 z-50 transition-all duration-300 ease-in-out"
                 style={{
                     paddingTop: "1.25rem",
                     paddingBottom: "1.25rem",
                     paddingLeft: getLeftPadding(),
                     paddingRight: getRightPadding(),
-                    top: scrolled ? "0" : windowWidth >= 768 ? "2.5rem" : "0",
-                    backgroundColor: scrolled ? "black" : "transparent",
-                    fontFamily: '"Mona Sans", sans-serif'
+                    backgroundColor: "black",
+                    fontFamily: '"Mona Sans", sans-serif',
+                    boxShadow: scrolled ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none"
                 }}
             >
                 <div className="flex items-center justify-between mx-auto">
@@ -349,6 +352,10 @@ const ManiNavbar = () => {
                     </div>
                 </div>
             </header>
+
+            {/* Add padding to prevent content from hiding behind fixed navbar */}
+            <div style={{ paddingTop: "5rem" }}></div>
+
             <style>{`
                 @keyframes fadeIn {
                     from {

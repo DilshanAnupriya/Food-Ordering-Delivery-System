@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 
 const FAQContent = () => {
     const [activeTabIndex, setActiveTabIndex] = useState(0);
@@ -290,9 +291,11 @@ const FAQContent = () => {
                                         <p className="text-gray-600 mb-4">
                                             Our customer support team is available 24/7 to assist you with any queries or concerns.
                                         </p>
-                                        <button className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200">
+                                        <Link to="/contact">
+                                        <button   className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200">
                                             Contact Support
                                         </button>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>

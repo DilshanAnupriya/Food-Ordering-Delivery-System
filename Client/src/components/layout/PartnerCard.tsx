@@ -204,7 +204,7 @@ const PartnerSection = () => {
                         headTxt="Deliver With Us"
                         description="Enjoy flexible hours, competitive earnings, and weekly payments. Be your own boss and earn money by delivering food from local restaurants to hungry customers."
                         index={1}
-                        link="/driver"
+                        link="/driver-form"
                     />
                 </div>
 

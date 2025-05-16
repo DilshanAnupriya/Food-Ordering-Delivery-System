@@ -4,6 +4,7 @@ import SectionWrapper from "../../hoc/SectionWrapper.tsx";
 import { AiFillStar } from 'react-icons/ai';
 import { BiTimer } from 'react-icons/bi';
 import { MdDeliveryDining } from 'react-icons/md';
+import {Link} from "react-router-dom";
 
 // Animation variants
 const sectionVariants = {
@@ -238,18 +239,18 @@ const Discount = () => {
                         deliveryTime="20-30 min"
                     />
                     <DiscountCard
-                        image="https://www.kitchensanctuary.com/wp-content/uploads/2021/05/Double-Cheeseburger-square-FS-42.jpg"
-                        name="Cheese Burger"
-                        restaurant="Burger King"
-                        discount="-25%"
+                        image="https://cdn.sanity.io/images/g1s4qnmz/production/9edf7c23ab535752b4e4c597636756078930551a-2500x2500.jpg"
+                        name="Fried Rice"
+                        restaurant="Keells"
+                        discount="-5%"
                         rating={4.5}
                         deliveryTime="15-25 min"
                     />
 
                     <DiscountCard
-                        image="https://www.jennycancook.com/wp-content/uploads/2013/02/PeppPizza_600.jpg"
-                        name="Margherita Pizza"
-                        restaurant="Pizza Hut"
+                        image="https://images.arla.com/recordid/15F33607-F6D9-4952-B6AA210D3033BF14/club-sandwich1.jpg?format=jpg&width=1200&height=630&mode=crop"
+                        name="Sandwich"
+                        restaurant="BARISTA"
                         discount="-30%"
                         rating={4.7}
                         deliveryTime="20-30 min"
@@ -258,33 +259,33 @@ const Discount = () => {
                     <DiscountCard
                         image="https://www.heinens.com/content/uploads/2022/05/Mocha-Iced-Coffee-with-Vanilla-Cold-Foam-800x550-1.jpg"
                         name="Iced Coffee"
-                        restaurant="Barista"
+                        restaurant="BARISTA"
                         discount="-15%"
                         rating={4.2}
                         deliveryTime="10-15 min"
                     />
                     <DiscountCard
-                        image="https://www.kitchensanctuary.com/wp-content/uploads/2021/05/Double-Cheeseburger-square-FS-42.jpg"
-                        name="Cheese Burger"
-                        restaurant="Burger King"
+                        image="https://www.wholesomeyum.com/wp-content/uploads/2022/12/wholesomeyum-Baked-Whole-Chicken-Wings-15.jpg"
+                        name="Chicken Wings"
+                        restaurant="KFC"
                         discount="-25%"
                         rating={4.5}
                         deliveryTime="15-25 min"
                     />
 
                     <DiscountCard
-                        image="https://www.jennycancook.com/wp-content/uploads/2013/02/PeppPizza_600.jpg"
-                        name="Margherita Pizza"
-                        restaurant="Pizza Hut"
+                        image="https://www.cuisinart.com/dw/image/v2/ABAF_PRD/on/demandware.static/-/Sites-us-cuisinart-sfra-Library/default/dw3a257599/images/recipe-Images/french-fries-airfryer-recipe.jpg?sw=1200&sh=1200&sm=fit"
+                        name="French Fries"
+                        restaurant="SUBWAY"
                         discount="-30%"
                         rating={4.7}
                         deliveryTime="20-30 min"
                     />
 
                     <DiscountCard
-                        image="https://www.heinens.com/content/uploads/2022/05/Mocha-Iced-Coffee-with-Vanilla-Cold-Foam-800x550-1.jpg"
-                        name="Iced Coffee"
-                        restaurant="Barista"
+                        image="https://www.taco-bell.ro/wp-content/uploads/soft-taco-supreme-540x274.png"
+                        name="Taco"
+                        restaurant="Taco Bell"
                         discount="-15%"
                         rating={4.2}
                         deliveryTime="10-15 min"
@@ -322,6 +323,7 @@ const Discount = () => {
                                         </p>
                                         <p className="text-orange-50 mb-6 text-sm">Limited time offer. Terms & conditions apply.</p>
 
+                                        <Link to="/cart/:id">
                                         <motion.button
                                             whileHover={{
                                                 scale: 1.05,
@@ -336,6 +338,7 @@ const Discount = () => {
                                                 <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
                                             </svg>
                                         </motion.button>
+                                        </Link>
                                     </motion.div>
                                 </div>
 

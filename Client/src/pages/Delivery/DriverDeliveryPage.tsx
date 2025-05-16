@@ -81,7 +81,8 @@ const BAD_FACE_SVG = (
   </svg>
 );
 
-const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'driver124' }) => {
+const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => {
+  const [driverIdFromStorage, setDriverIdFromStorage] = useState<string>('DRV898144864'); // Default fallback
   const [location, setLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -89,6 +90,25 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
   const [markingDelivered, setMarkingDelivered] = useState<boolean>(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState<boolean>(false);
   const [showNoDeliveryPopup, setShowNoDeliveryPopup] = useState<boolean>(false);
+
+  // Get driver ID from session storage on mount
+  useEffect(() => {
+    try {
+      const driverDataStr = sessionStorage.getItem('driverData');
+      if (driverDataStr) {
+        const driverData = JSON.parse(driverDataStr);
+        if (driverData && driverData.driverId) {
+          setDriverIdFromStorage(driverData.driverId);
+        }
+      }
+    } catch (err) {
+      console.error('Error retrieving driver data from session storage:', err);
+      // Keep using the default or provided driverId as fallback
+    }
+  }, []);
+
+  // Use either the prop driverId or the one from session storage
+  const currentDriverId = driverId || driverIdFromStorage;
 
   // Get current location every 5 seconds and send to backend
   useEffect(() => {
@@ -101,7 +121,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
           fetch('http://localhost:8082/api/v1/delivery/update-location', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ driverId, latitude, longitude }),
+            body: JSON.stringify({ driverId: currentDriverId, latitude, longitude }),
           })
             .catch(err => console.error('Failed to update location:', err));
         },
@@ -114,12 +134,12 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [driverId]);
+  }, [currentDriverId]);
 
   // Fetch assigned delivery on mount
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:8082/api/v1/delivery/by-driver/${driverId}`)
+    fetch(`http://localhost:8082/api/v1/delivery/by-driver/${currentDriverId}`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch delivery data');
         return res.json();
@@ -139,7 +159,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
         setError('No Active Deliveries ');
         setLoading(false);
       });
-  }, [driverId]);
+  }, [currentDriverId]);
 
   const markAsDelivered = async () => {
     if (markingDelivered || !delivery) return;
@@ -147,7 +167,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
     try {
       setMarkingDelivered(true);
 
-      const response = await fetch(`http://localhost:8082/api/v1/delivery/mark-delivered/${driverId}`, {
+      const response = await fetch(`http://localhost:8082/api/v1/delivery/mark-delivered/${currentDriverId}`, {
         method: 'POST',
       });
 
@@ -211,7 +231,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                     Active Driver
                   </div>
                   <span className="text-gray-600">|</span>
-                  <div className="text-white">Driver ID: <span className="font-medium">{driverId}</span></div>
+                  <div className="text-white">Driver ID: <span className="font-medium">{currentDriverId}</span></div>
                 </div>
               </div>
             </div>
@@ -450,8 +470,8 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId = 'dri
                       Oops! No Delivery Assigned
                     </h3>
                     <p className="text-lg text-gray-700 text-center mb-6 font-medium">
-                      You’re not assigned to a delivery yet.<br/>
-                      Please hang tight – we’ll notify you as soon as a new order is ready!
+                      You're not assigned to a delivery yet.<br/>
+                      Please hang tight – we'll notify you as soon as a new order is ready!
                     </p>
                     <button
                       onClick={() => window.location.reload()}

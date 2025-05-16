@@ -5,6 +5,7 @@ import Footer from '../../components/layout/Footer';
 import SubNav from '../../components/layout/SubNav';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../../services/auth/authContext';
+import NavV2 from "../../components/layout/NavV2.tsx";
 
 interface OrderStatus {
   statusInfo: string;
@@ -139,12 +140,9 @@ const OrderTracking: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-r from-black via-black/80 to-black/60">
+    <div className="flex flex-col min-h-screen bg-white">
       <div className="w-full">
-        <SubNav />
-      </div>
-      <div className="w-full">
-        <NavigationBar />
+        <NavV2 />
       </div>
 
       <main className="flex-grow">
@@ -162,7 +160,7 @@ const OrderTracking: React.FC = () => {
           </div>
 
           {/* Tracking Form */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden mb-10">
+          <div className="bg-white rounded-xl border-1 border-gray-300  overflow-hidden mb-10">
             <div className="p-8">
               <form onSubmit={handleTrack} className="mb-8">
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -375,7 +373,7 @@ const OrderTracking: React.FC = () => {
           </div>
 
           {/* Help Section */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="bg-white rounded-xl  border-1 border-gray-300 overflow-hidden">
             <div className="p-8 text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-3">Need help with your order?</h3>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
