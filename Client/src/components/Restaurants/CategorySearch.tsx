@@ -35,8 +35,8 @@ const WrapperCategorySearch: React.FC<CategorySearchProps> = ({
     }, [selectedCategory, onCategoryChange]);
 
     return (
-        <div className="mb-10  ">
-            <div className="relative overflow-hidden bg-gradient-to-r from-orange-600 to-orange-400 rounded-xl shadow-lg">
+        <div className="mb-10 w-full mt-5 ">
+            <div className="relative w-full overflow-hidden bg-gradient-to-r from-orange-600 to-orange-400 rounded-xl shadow-lg">
                 {/* Decorative food pattern background */}
                 <div className="absolute inset-0 opacity-5">
                     <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">

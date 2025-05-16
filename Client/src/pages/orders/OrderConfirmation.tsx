@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../services/auth/authContext';
 import { fetchRestaurantData } from '../../services/Restaurants/LoadAllRestaurants';
 import { orderService } from '../../services/Orders/orderService';
+import NavV2 from '../../components/layout/NavV2';
 
 interface OrderDetails {
     orderId: string;
@@ -196,7 +197,8 @@ const OrderConfirmation = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-r from-black via-black/80 to-black/60">
+        <div className=" bg-white">
+            <NavV2/>
             <div className="max-w-2xl mx-auto mt-10 p-6">
                 <div className="bg-white rounded-lg shadow-md p-8 text-center">
                     <div className="mb-6">

@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Logo and Company Info */}
             <div className="flex flex-col space-y-4">
-              <h1 className="text-4xl font-bold">Order<span className=" text-orange-500">.Lk</span></h1>
+              <h1 className="text-4xl font-bold">Quick<span className=" text-orange-500">Bite</span></h1>
 
               {/* App Store Buttons */}
               <div className="flex space-x-2">
@@ -53,7 +53,7 @@ const Footer: React.FC = () => {
                       placeholder="youremail@gmail.com"
                       className="px-4 py-2 bg-gray-200 rounded-md flex-grow"
                   />
-                  <button className="bg-gray-400 hover:bg-orange-400 text-white px-6 py-2 rounded-md">
+                  <button className="bg-orange-400 hover:bg-orange-700 text-white px-6 py-2 rounded-md">
                     Subscribe
                   </button>
                 </div>
@@ -106,13 +106,13 @@ const Footer: React.FC = () => {
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="mb-4 md:mb-0">
-                <p>Order.uk Copyright 2024, All Rights Reserved.</p>
+                <p>QuickBite Copyright 2025, All Rights Reserved.</p>
               </div>
               <div className="flex flex-wrap gap-4 md:gap-8">
                 <a href="#" className="text-sm hover:underline">Privacy Policy</a>
                 <a href="#" className="text-sm hover:underline">Terms</a>
                 <a href="#" className="text-sm hover:underline">Pricing</a>
-                <a href="#" className="text-sm hover:underline">Do not sell or share my personal information</a>
+                <a href="#" className="text-sm hover:underline">Do not sell or share our personal  information</a>
               </div>
             </div>
           </div>

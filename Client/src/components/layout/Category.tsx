@@ -53,6 +53,7 @@ const CategoryCardSkeleton = () => {
     );
 };
 
+// @ts-ignore
 const FoodCard = ({ categoryName, index }) => {
     const cardRef = useRef(null);
     const isInView = useInView(cardRef, { once: true, amount: 0.2 });

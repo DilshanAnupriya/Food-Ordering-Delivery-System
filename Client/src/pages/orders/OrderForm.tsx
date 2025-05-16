@@ -9,6 +9,7 @@ import SubNav from '../../components/layout/SubNav';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import NavV2 from "../../components/layout/NavV2.tsx";
 
 // Fix for Leaflet icon issue
 L.Icon.Default.mergeOptions({
@@ -501,12 +502,9 @@ const OrderForm = () => {
   return (
     <div className="bg-white relative overflow-hidden">
       <div className="w-full">
-        <SubNav />
+        <NavV2 />
       </div>
-      <div className="w-full">
-        <NavigationBar />
-      </div>
-      <div className="container mx-auto px-4 py-8 bg-gradient-to-r from-black via-black/80 to-black/60">
+      <div className="container mx-auto px-4 py-8 bg-white rounded-2xl">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-orange-500">
             {isEditMode ? 'Edit Order' : 'Create New Order'}
@@ -596,7 +594,7 @@ const OrderForm = () => {
           </div>
 
           {/* Map and location section */}
-          <div className="mb-6">
+          <div className="relative z-10  mb-6 ">
             <h2 className="text-xl font-semibold mb-4 text-orange-500">Delivery Location</h2>
 
             <div className="flex flex-col md:flex-row gap-6">
