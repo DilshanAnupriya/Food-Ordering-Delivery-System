@@ -1,0 +1,36 @@
+version: '3'
+services:
+  mysql-payment:
+    image: mysql:8.3.0
+    container_name: mysql-payment
+    environment:
+      MYSQL_ROOT_PASSWORD: 0715980980
+      MYSQL_DATABASE: payment_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_order_data:/var/lib/mysql
+      - ./docker/mysql/payment_init.sql:/docker-entrypoint-initdb.d/payment_init.sql
+    networks:
+      - food-delivery-network
+
+  payment-service:
+    build: ./Payment_Service
+    container_name: payment-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-payment:3306/payment_db
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=0715980980
+    depends_on:
+      - mysql-payment
+    networks:
+      - food-delivery-network
+
+volumes:
+  mysql_order_data:
+
+networks:
+  food-delivery-network:
+    driver: bridge
