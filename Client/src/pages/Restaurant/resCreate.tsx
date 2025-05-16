@@ -311,7 +311,7 @@ const ResCreate = () => {
                 toast.success('Restaurant created successfully!');
                 resetForm();
                 // Navigate to admin restaurant page after successful creation
-                navigate('/admin-restaurant');
+                navigate('/');
             }
         } catch (error) {
             console.error('Error creating restaurant:', error);
