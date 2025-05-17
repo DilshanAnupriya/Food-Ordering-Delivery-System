@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-// import Footer from "../../components/layout/Footer";
-// import NavigationBar from "../../components/layout/Navbar";
-// import SubNav from "../../components/layout/SubNav";
+import Footer from "../../components/layout/Footer";
+import NavigationBar from "../../components/layout/Navbar";
+import SubNav from "../../components/layout/SubNav";
+import { useNavigate } from 'react-router-dom';
 
 export interface Location {
   latitude: number;
@@ -62,72 +63,60 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-interface DriverDeliveryPageProps {
-  driverId?: string;
-}
-
-// Sad face SVG for pop-up
-const BAD_FACE_SVG = (
-  <svg
-    className="w-20 h-20 mb-4"
-    viewBox="0 0 64 64"
-    fill="none"
-    aria-hidden="true"
-  >
-    <circle cx="32" cy="32" r="30" fill="#fff3f3" stroke="#ff4d4f" strokeWidth="4"/>
-    <ellipse cx="22" cy="28" rx="4" ry="6" fill="#ff4d4f"/>
-    <ellipse cx="42" cy="28" rx="4" ry="6" fill="#ff4d4f"/>
-    <path d="M22 44c2.5-4 13.5-4 16 0" stroke="#ff4d4f" strokeWidth="3" strokeLinecap="round"/>
-  </svg>
-);
-
-// API base URL as a constant - to fix API endpoints
-const API_BASE_URL = 'http://localhost:8082/api/v1'; 
-
-const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => {
-  const [driverIdFromStorage, setDriverIdFromStorage] = useState<string>('DRV898144864'); // Default fallback
+const DriverDeliveryPage: React.FC = () => {
   const [location, setLocation] = useState<Location | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [markingDelivered, setMarkingDelivered] = useState<boolean>(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState<boolean>(false);
-  const [showNoDeliveryPopup, setShowNoDeliveryPopup] = useState<boolean>(false);
+  const [driverId, setDriverId] = useState<string>('');
+  const navigate = useNavigate();
 
-  // Get driver ID from session storage on mount
   useEffect(() => {
-    try {
-      const driverDataStr = sessionStorage.getItem('driverData');
-      if (driverDataStr) {
-        const driverData = JSON.parse(driverDataStr);
-        if (driverData && driverData.driverId) {
-          setDriverIdFromStorage(driverData.driverId);
-        }
-      }
-    } catch (err) {
-      console.error('Error retrieving driver data from session storage:', err);
-      // Keep using the default or provided driverId as fallback
+    // Check if user is logged in
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      navigate('/login');
+      return;
     }
-  }, []);
 
-  // Use either the prop driverId or the one from session storage
-  const currentDriverId = driverId || driverIdFromStorage;
+    // Get driver data from session storage
+    const storedDriverData = sessionStorage.getItem('driverData');
+    
+    if (storedDriverData) {
+      try {
+        const parsedDriverData = JSON.parse(storedDriverData);
+        if (parsedDriverData && parsedDriverData.driverId) {
+          setDriverId(parsedDriverData.driverId);
+        } else {
+          setError('Driver ID not found in session storage. Please go back to dashboard.');
+        }
+      } catch (err) {
+        console.error('Error parsing driver data from session storage:', err);
+        setError('Error loading driver data. Please go back to dashboard.');
+      }
+    } else {
+      setError('Driver data not found. Please go back to dashboard and try again.');
+    }
+  }, [navigate]);
 
   // Get current location every 5 seconds and send to backend
   useEffect(() => {
+    if (!driverId) return;
+
     const intervalId = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setLocation({ latitude, longitude });
 
-          // Fixed: Changed PUT method to POST as the server expects POST
-          fetch(`${API_BASE_URL}/delivery/update-location`, {
-            method: 'POST',  // Changed from PUT to POST
+          fetch('http://localhost:8082/api/v1/delivery/update-location', {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ driverId: currentDriverId, latitude, longitude }),
+            body: JSON.stringify({ driverId, latitude, longitude }),
           })
-            .catch(err => console.error('Failed to update location:', err));
+          .catch(err => console.error('Failed to update location:', err));
         },
         (error) => {
           console.error('Location error:', error);
@@ -138,83 +127,84 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [currentDriverId]);
+  }, [driverId]);
 
   // Fetch assigned delivery on mount
   useEffect(() => {
+  if (!driverId) return;
+  
+  const fetchDeliveryData = (retryCount = 0) => {
     setLoading(true);
-    
-    // Add error handling with timeout
-    const fetchTimeout = setTimeout(() => {
-      if (loading) {
-        setError('Server timeout. Please try again later.');
-        setLoading(false);
-      }
-    }, 10000); // 10 seconds timeout
-    
-    // Fetch data with proper error handling
-    fetch(`${API_BASE_URL}/delivery/by-driver/${currentDriverId}`)
+    fetch(`http://localhost:8082/api/v1/delivery/by-driver/${driverId}`)
       .then((res) => {
-        clearTimeout(fetchTimeout);
-        
-        // Handle different response statuses
-        if (res.status === 404) {
-          // No active deliveries - not an error
-          setDelivery(null);
-          setShowNoDeliveryPopup(true);
-          setLoading(false);
-          return null;
-        } else if (!res.ok) {
-          throw new Error(`Server error: ${res.status}`);
+        if (!res.ok) {
+          if (res.status === 500 && retryCount < 3) {
+            // Server error - retry after delay
+            console.log(`Server error, retrying (${retryCount + 1}/3)...`);
+            setTimeout(() => fetchDeliveryData(retryCount + 1), 3000);
+            throw new Error('Server error, retrying...');
+          }
+          throw new Error(`Failed to fetch delivery data (Status: ${res.status})`);
         }
         return res.json();
       })
       .then((data) => {
-        if (data) {
+        if (!data) {
+          setError('No delivery data found for this driver.');
+        } else {
           setDelivery(data);
-          setShowNoDeliveryPopup(false);
         }
         setLoading(false);
       })
       .catch((err) => {
-        clearTimeout(fetchTimeout);
         console.error('Failed to load delivery', err);
-        setError('Failed to connect to server. Please try again later.');
-        setLoading(false);
+        // Only set error state if we're not retrying
+        if (!err.message.includes('retrying')) {
+          setError('Unable to load delivery information. Please try again later.');
+          setLoading(false);
+        }
       });
-      
-    return () => clearTimeout(fetchTimeout);
-  }, [currentDriverId, loading]);
+  };
+
+  fetchDeliveryData();
+}, [driverId]);
 
   const markAsDelivered = async () => {
-    if (markingDelivered || !delivery) return;
+  if (markingDelivered || !delivery || !driverId) return;
 
-    try {
-      setMarkingDelivered(true);
+  try {
+    setMarkingDelivered(true);
+    console.log(`Marking delivery for driver ${driverId} as delivered...`);
 
-      const response = await fetch(`${API_BASE_URL}/delivery/mark-delivered/${delivery.orderId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ driverId: currentDriverId })
-      });
+    const response = await fetch(`http://localhost:8082/api/v1/delivery/mark-delivered/${driverId}`, {
+      method: 'POST',
+    });
 
-      if (!response.ok) {
-        throw new Error(`Failed to update delivery status: ${response.status}`);
-      }
-
+    if (!response.ok) {
+      console.error(`Failed to update delivery status: ${response.status}`);
+      // Log response body for more details
+      const errorText = await response.text();
+      console.error(`Error response: ${errorText}`);
+      throw new Error(`Failed to update delivery status: ${response.status}`);
+    }
+    
+    //LOG SUCCESS
+     console.log("Delivery successfully marked as delivered");
+  
       // Update state and show success popup
       setDelivery(prev => prev ? { ...prev, isDelivered: true } : null);
       setShowSuccessPopup(true);
-
+  
       // Hide the success popup after 5 seconds
       setTimeout(() => setShowSuccessPopup(false), 5000);
-    } catch (err) {
-      console.error('Error in markAsDelivered:', err);
-      setError('Failed to mark delivery as completed. Please try again.');
-    } finally {
-      setMarkingDelivered(false);
-    }
-  };
+
+  } catch (err) {
+    console.error('Error in markAsDelivered:', err);
+    setError(`Failed to mark delivery as complete. Please try again.`);
+  } finally {
+    setMarkingDelivered(false);
+  }
+};
 
   const isValidCoords = (coord: Location | null): boolean =>
     Boolean(
@@ -225,28 +215,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
       coord.longitude !== 0
     );
 
-  // Mock Data for Testing - This is useful when the API is down
-  const useMockData = () => {
-    if (!delivery && !loading && error) {
-      console.log('Using mock data for testing');
-      return {
-        orderId: "ORD123456789",
-        isDelivered: false,
-        shopLatitude: 37.7749,
-        shopLongitude: -122.4194,
-        destinationLatitude: 37.7833,
-        destinationLongitude: -122.4167,
-        driverLatitude: location?.latitude || 37.78,
-        driverLongitude: location?.longitude || -122.42
-      };
-    }
-    return delivery;
-  };
-
-  // Get delivery data - either real or mock
-  const displayDelivery = useMockData();
-
-  if (error && !displayDelivery) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
@@ -259,18 +228,15 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
           </div>
           <h3 className="text-xl font-semibold text-center text-gray-800 mb-2">Error</h3>
           <p className="text-center text-gray-600 mb-6">{error}</p>
-          <div className="flex justify-center">
-            <button 
-              onClick={() => {
-                setError(null);
-                setLoading(true);
-                window.location.reload();
-              }}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Try Again
-            </button>
-          </div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 flex items-center justify-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -278,7 +244,14 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
 
   return (
     <div className="bg-gradient-to-r from-black via-black/80 to-black/60">
-      {/* <div className="w-full"> <SubNav /> </div> <div className="w-full"> <NavigationBar /> </div> */}
+      <div className="w-full">
+        <SubNav />
+      </div>
+      <div className="w-full">
+        <NavigationBar />
+      </div>
+  
+      {/* Added margin-top to create space between NavigationBar and the next section */}
       <div className="mt-16">
         <nav className="max-w-7xl bg-black mx-auto px-4 py-1">
           <div className="max-w-7xl mx-auto px-4">
@@ -291,7 +264,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
                     Active Driver
                   </div>
                   <span className="text-gray-600">|</span>
-                  <div className="text-white">Driver ID: <span className="font-medium">{currentDriverId}</span></div>
+                  <div className="text-white">Driver ID: <span className="font-medium">{driverId}</span></div>
                 </div>
               </div>
             </div>
@@ -299,8 +272,10 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
         </nav>
       </div>
 
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-3">
         <div className="bg-orange-50 rounded-xl shadow-md overflow-hidden">
+          {/* Header with gradient background */}
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
             <h1 className="text-2xl font-bold text-white">
               Driver Delivery Status
@@ -310,6 +285,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
             </p>
           </div>
 
+          {/* Loading state */}
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="flex flex-col items-center">
@@ -317,16 +293,18 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
                 <p className="mt-4 text-gray-500">Loading delivery information...</p>
               </div>
             </div>
-          ) : displayDelivery ? (
+          ) : delivery ? (
             <div className="p-6">
+              {/* Order information card */}
               <div className="mb-6 bg-white rounded-lg border border-gray-100 shadow-sm p-5 relative">
+                {/* Success Popup - Only shown in order information container */}
                 {showSuccessPopup && (
                   <div className="absolute top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg z-10 flex items-center animate-fade-in">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span>Delivery successfully completed!</span>
-                    <button
+                    <button 
                       onClick={() => setShowSuccessPopup(false)}
                       className="ml-4 text-green-700 hover:text-green-900"
                     >
@@ -336,7 +314,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
                     </button>
                   </div>
                 )}
-
+                
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center">
                   <div>
                     <h2 className="text-lg font-semibold text-gray-800 mb-2">Order Information</h2>
@@ -348,7 +326,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
                           </svg>
                         </div>
                         <span className="font-medium text-gray-700 mr-2">Order ID:</span>
-                        <span className="text-gray-900">{displayDelivery.orderId}</span>
+                        <span className="text-gray-900">{delivery.orderId}</span>
                       </div>
                       <div className="flex items-center">
                         <div className="bg-gray-100 rounded-full p-1 mr-3">
@@ -357,7 +335,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
                           </svg>
                         </div>
                         <span className="font-medium text-gray-700 mr-2">Status:</span>
-                        {displayDelivery.isDelivered ? (
+                        {delivery.isDelivered ? (
                           <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full flex items-center">
                             <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -375,7 +353,8 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
                       </div>
                     </div>
                   </div>
-                  {!displayDelivery.isDelivered && (
+                  
+                  {!delivery.isDelivered && (
                     <button
                       onClick={markAsDelivered}
                       disabled={markingDelivered}
@@ -401,6 +380,7 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
                 </div>
               </div>
 
+              {/* Map container - UPDATED TO PREVENT OVERLAP */}
               {isValidCoords(location) ? (
                 <div className="rounded-xl overflow-hidden shadow-md border border-gray-100 mb-6">
                   <div className="bg-gray-50 border-b px-4 py-3 flex justify-between items-center">
@@ -429,45 +409,46 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
                   <div className="h-96 w-full relative">
                     <div className="absolute inset-0">
                       <MapContainer
-                        center={[location?.latitude || displayDelivery.shopLatitude, location?.longitude || displayDelivery.shopLongitude]}
+                        center={[location?.latitude || 0, location?.longitude || 0]}
                         zoom={14}
                         scrollWheelZoom={true}
                         style={{ height: '100%', width: '100%', zIndex: 0 }}
                       >
                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
+                        
                         {/* Shop Marker */}
-                        <Marker
-                          position={[displayDelivery.shopLatitude, displayDelivery.shopLongitude]}
+                        <Marker 
+                          position={[delivery.shopLatitude, delivery.shopLongitude]} 
                           icon={shopIcon}
                         >
-                          <Popup>Restaurant Location</Popup>
+                          <Popup>Resturaent Location</Popup>
                         </Marker>
+                        
                         {/* Customer Marker */}
-                        <Marker
-                          position={[displayDelivery.destinationLatitude, displayDelivery.destinationLongitude]}
+                        <Marker 
+                          position={[delivery.destinationLatitude, delivery.destinationLongitude]} 
                           icon={customerIcon}
                         >
                           <Popup>Customer Location</Popup>
                         </Marker>
-
+                        
                         {/* Driver Marker */}
                         {location && (
-                          <Marker
-                            position={[location.latitude, location.longitude]}
+                          <Marker 
+                            position={[location.latitude, location.longitude]} 
                             icon={driverIcon}
                           >
                             <Popup>Your Location</Popup>
                           </Marker>
                         )}
-
+                        
                         {/* Polyline connecting the points */}
                         {location && (
                           <Polyline
                             positions={[
-                              [displayDelivery.shopLatitude, displayDelivery.shopLongitude],
+                              [delivery.shopLatitude, delivery.shopLongitude],
                               [location.latitude, location.longitude],
-                              [displayDelivery.destinationLatitude, displayDelivery.destinationLongitude]
+                              [delivery.destinationLatitude, delivery.destinationLongitude]
                             ]}
                             color="blue"
                             weight={3}
@@ -492,7 +473,8 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
                   </div>
                 </div>
               )}
-
+              
+              {/* Delivery instructions card */}
               <div className="p-5 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200">
                 <div className="flex items-start">
                   <div className="bg-orange-100 rounded-full p-2 mr-4">
@@ -510,65 +492,25 @@ const DriverDeliveryPage: React.FC<DriverDeliveryPageProps> = ({ driverId }) => 
               </div>
             </div>
           ) : (
-            <>
-              {showNoDeliveryPopup && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 transition-all">
-                  <div className="relative bg-gradient-to-br from-pink-100 via-white/90 to-orange-100 shadow-2xl rounded-3xl px-10 py-10 max-w-md w-full flex flex-col items-center border-2 border-orange-200 backdrop-blur-md">
-                    {/* Close Button */}
-                    <button
-                      onClick={() => setShowNoDeliveryPopup(false)}
-                      className="absolute top-4 right-4 text-orange-400 hover:text-orange-600 focus:outline-none"
-                      aria-label="Close"
-                    >
-                      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                      </svg>
-                    </button>
-                    {/* Bad Face Icon */}
-                    {BAD_FACE_SVG}
-                    <h3 className="text-2xl font-extrabold text-orange-600 mb-2 text-center font-sans drop-shadow">
-                      Oops! No Delivery Assigned
-                    </h3>
-                    <p className="text-lg text-gray-700 text-center mb-6 font-medium">
-                      You're not assigned to a delivery yet.<br/>
-                      Please hang tight – we'll notify you as soon as a new order is ready!
-                    </p>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="mt-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-lg font-bold rounded-full shadow-lg hover:scale-105 transition-transform"
-                    >
-                      <span role="img" aria-label="refresh">🔄</span> Refresh
-                    </button>
-                  </div>
-                </div>
-              )}
-              <div className="flex flex-col items-center justify-center p-12" aria-hidden={showNoDeliveryPopup}>
-                <div className="bg-gray-100 rounded-full p-4 mb-4">
-                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Active Deliveries</h3>
-                <p className="text-gray-500 text-center mb-6">
-                  You don't have any pending deliveries at the moment.<br />
-                  New orders will appear here when assigned to you.
-                </p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Refresh
-                </button>
+            <div className="flex flex-col items-center justify-center p-12">
+              <div className="bg-gray-100 rounded-full p-4 mb-4">
+                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
               </div>
-            </>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">No Active Deliveries</h3>
+              <p className="text-gray-600 text-center">You currently don't have any active deliveries assigned.</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-6 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Refresh
+              </button>
+            </div>
           )}
         </div>
       </main>
-
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 };

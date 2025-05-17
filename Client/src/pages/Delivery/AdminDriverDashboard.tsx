@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import AdminSidebar from "../../components/layout/AdminSideBar";
 import AdminNavbar from "../../components/admin/AdminNavbar";
@@ -19,11 +19,14 @@ export default function DriversDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
+  const [isStatusUpdating, setIsStatusUpdating] = useState<boolean>(false);
+  const [updatingDriverId, setUpdatingDriverId] = useState<string | null>(null);
+
   useEffect(() => {
     fetchDrivers();
   }, []);
 
-  const fetchDrivers = async (status?: string) => {
+  const fetchDrivers = useCallback(async (status?: string) => {
     setLoading(true);
     try {
       let url = 'http://localhost:8082/api/v1/delivery/drivers';
@@ -44,10 +47,25 @@ export default function DriversDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleStatusChange = async (driverId: string, newStatus: string) => {
+    if (isStatusUpdating) return;
+    
+    setIsStatusUpdating(true);
+    setUpdatingDriverId(driverId);
+    setError(null);
+    
     try {
+      // Optimistically update UI first
+      setDrivers(prevDrivers => 
+        prevDrivers.map(d => 
+          d.driverId === driverId 
+            ? { ...d, status: newStatus as 'APPROVED' | 'PENDING' | 'REJECTED' } 
+            : d
+        )
+      );
+      
       const response = await fetch(
         `http://localhost:8082/api/v1/delivery/drivers/${driverId}/status?status=${newStatus}`,
         {
@@ -65,18 +83,27 @@ export default function DriversDashboard() {
       // Get the driver details for the email notification
       const driver = drivers.find(d => d.driverId === driverId);
       if (driver) {
-        // Send email notification
-        await axios.post('http://localhost:8080/api/notifications/driver-status', {
-          email: driver.driverName, // Using driverName as email
-          driverName: driver.driverName,
-          driverId: driver.driverId,
-          status: newStatus
-        });
+        try {
+          // Send email notification
+          await axios.post('http://localhost:8080/api/notifications/driver-status', {
+            email: driver.driverName, // Using driverName as email
+            driverName: driver.driverName,
+            driverId: driver.driverId,
+            status: newStatus
+          });
+        } catch (emailErr) {
+          console.error("Failed to send email notification:", emailErr);
+          // Continue even if email fails - don't revert UI
+        }
       }
-
-      fetchDrivers(statusFilter !== 'ALL' ? statusFilter : undefined);
     } catch (err) {
       setError(`Error updating driver status: ${err instanceof Error ? err.message : String(err)}`);
+      
+      // Revert the optimistic update if API call failed
+      await fetchDrivers(statusFilter !== 'ALL' ? statusFilter : undefined);
+    } finally {
+      setIsStatusUpdating(false);
+      setUpdatingDriverId(null);
     }
   };
 
@@ -99,6 +126,7 @@ export default function DriversDashboard() {
 
   const handleFilterChange = (status: string) => {
     setStatusFilter(status);
+    setError(null);
     fetchDrivers(status !== 'ALL' ? status : undefined);
   };
 
@@ -174,7 +202,24 @@ export default function DriversDashboard() {
                 </div>
               </div>
 
-              {/* Stats Cards */}
+              <div className="flex justify-between items-center mb-6">
+                {/* <button
+                  onClick={() => fetchDrivers(statusFilter !== 'ALL' ? statusFilter : undefined)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  disabled={loading}
+                >
+                  <svg 
+                    className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button> */}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                   <div className="flex items-center justify-between">
@@ -232,8 +277,16 @@ export default function DriversDashboard() {
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <div className="ml-3">
+                    <div className="ml-3 flex justify-between w-full">
                       <p className="text-sm text-red-700">{error}</p>
+                      <button 
+                        onClick={() => setError(null)} 
+                        className="ml-auto text-red-700 hover:text-red-900 transition-colors"
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -305,23 +358,34 @@ export default function DriversDashboard() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
                                 <div className="flex justify-end items-center gap-2">
-                                  <select
-                                    defaultValue=""
-                                    onChange={(e) => {
-                                      if (e.target.value) {
-                                        handleStatusChange(driver.driverId, e.target.value);
-                                        e.target.value = "";
-                                      }
-                                    }}
-                                    className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-                                  >
-                                    <option value="">Change Status</option>
-                                    <option value="APPROVED">Approve</option>
-                                    <option value="REJECTED">Reject</option>
-                                  </select>
+                                  {updatingDriverId === driver.driverId && isStatusUpdating ? (
+                                    <div className="px-3 py-1 text-sm text-gray-500">
+                                      <div className="flex items-center">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+                                        Updating...
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <select
+                                      value=""
+                                      onChange={(e) => {
+                                        if (e.target.value) {
+                                          handleStatusChange(driver.driverId, e.target.value);
+                                        }
+                                      }}
+                                      disabled={isStatusUpdating}
+                                      className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                                    >
+                                      <option value="">Change Status</option>
+                                      <option value="APPROVED">Approve</option>
+                                      <option value="REJECTED">Reject</option>
+                                      <option value="PENDING">Pending</option>
+                                    </select>
+                                  )}
                                   <button
                                     onClick={() => handleDeleteDriver(driver.driverId)}
-                                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-150"
+                                    disabled={isStatusUpdating}
+                                    className={`inline-flex items-center px-3 py-1 border border-transparent text-sm leading-5 font-medium rounded-md text-white ${isStatusUpdating ? 'bg-red-400' : 'bg-red-600 hover:bg-red-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-150`}
                                   >
                                     Delete
                                   </button>

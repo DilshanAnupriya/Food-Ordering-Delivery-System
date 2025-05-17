@@ -238,7 +238,12 @@ const DriverForm = () => {
       // Using the correct URL from the first file (instead of relative path)
       await axios.post('http://localhost:8082/api/v1/delivery/update-location', locationData);
       setSuccess('Driver location updated successfully!');
-      // navigate('/'); // Redirect to home page immediately after success
+      
+      // Set a short timeout to display the success message before navigating
+      setTimeout(() => {
+        navigate('/'); // Navigate to home page after successful submission
+      }, 1000); // Navigate after 1 second so the user can see the success message
+      
     } catch (err) {
       console.error('Error saving driver location:', err);
       setError('Failed to update driver location. Please try again.');
