@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import SectionWrapper from "../../hoc/SectionWrapper.tsx";
+import { Link } from 'react-router';
 
 interface TrendingRestaurant {
     restaurantName: string;
@@ -162,7 +163,7 @@ const TrendingRestaurants = () => {
     }, []);
 
     return (
-        <section className="py-12  bg-gray-100 shadow-2xl rounded-3xl">
+        <section className="py-12 mt-10 bg-orange-50 pb-20 rounded-2xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6  lg:px-8">
                 <motion.div
                     variants={titleVariants}
@@ -171,7 +172,7 @@ const TrendingRestaurants = () => {
                     className="mb-10"
                 >
                     <h2 className="text-3xl font-bold text-gray-900">
-                        Popular Restaurants
+                        Popular <span className="text-orange-500">Restaurants</span>
                     </h2>
                     <div className="h-1 w-24 bg-orange-500 mt-2"></div>
                     <p className="mt-4 text-gray-600">
@@ -202,7 +203,7 @@ const TrendingRestaurants = () => {
                     </motion.div>
                 ) : (
                     <motion.div
-                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"
+                        className="grid grid-cols-1 pt-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"

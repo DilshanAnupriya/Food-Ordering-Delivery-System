@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 
+@Getter
 public enum ApplicationUserRole {
 
     ADMIN(Sets.newHashSet(
@@ -23,17 +24,26 @@ public enum ApplicationUserRole {
             ApplicationUserPermission.PRODUCT_WRITE,
             ApplicationUserPermission.ORDER_WRITE,
             ApplicationUserPermission.ORDER_READ
+    )),
+    RESTAURANT_OWNER(Sets.newHashSet(
+                  ApplicationUserPermission.PRODUCT_READ,
+          ApplicationUserPermission.PRODUCT_WRITE,
+          ApplicationUserPermission.USER_ROLE_WRITE,
+          ApplicationUserPermission.ORDER_WRITE,
+          ApplicationUserPermission.ORDER_READ
+          )),
+    DELIVERY_PERSON(Sets.newHashSet(
+            ApplicationUserPermission.PRODUCT_WRITE,
+            ApplicationUserPermission.ORDER_WRITE,
+            ApplicationUserPermission.ORDER_READ
     ));
+
 
 
     private final Set<ApplicationUserPermission> applicationUserPermissions;
 
     ApplicationUserRole(Set<ApplicationUserPermission> applicationUserPermissions) {
         this.applicationUserPermissions = applicationUserPermissions;
-    }
-
-    public Set<ApplicationUserPermission> getApplicationUserPermissions() {
-        return applicationUserPermissions;
     }
 
 

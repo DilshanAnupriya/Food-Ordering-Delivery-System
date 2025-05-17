@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/auth/auth';
 import { useAuth } from '../../services/auth/authContext';
@@ -15,6 +15,51 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
 
+    // Check if user is already logged in and redirect accordingly
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const userRole = authService.getUserRole();
+            console.log("Initial userRole check:", userRole);
+
+            // Redirect based on user role
+            redirectBasedOnRole(userRole);
+        }
+    }, [navigate]);
+
+    // Function to handle redirects based on roles
+    const redirectBasedOnRole = (userRole: string | null) => {
+        console.log("Redirecting based on role:", userRole);
+
+        if (!userRole) {
+            // If no role is detected but we have a token, assign a default role
+            const token = localStorage.getItem('token');
+            if (token) {
+                console.log("No role detected, but token exists. Setting default role: ROLE_USER");
+                localStorage.setItem('userRole', 'ROLE_USER');
+                navigate('/'); // Navigate to home page as default
+                return;
+            }
+            return; // No token and no role, don't redirect
+        }
+
+        switch (userRole) {
+            case 'ROLE_ADMIN':
+                navigate('/admin-dashboard');
+                break;
+            case 'ROLE_RESTAURANT_OWNER':
+                navigate('/owner-restaurant');
+                break;
+            case 'ROLE_DELIVERY_PERSON':
+                navigate('/driver-dashboard');
+                break;
+            case 'ROLE_USER':
+            default:
+                navigate('/'); // Regular users go to home page
+                break;
+        }
+    };
+
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
@@ -25,8 +70,23 @@ const Login = () => {
                 username: formData.username.trim(),
                 password: formData.password
             });
-            checkAuthStatus(); // Update auth context after successful login
-            navigate('/'); // Navigate to home page
+
+            // Update auth context after successful login
+            checkAuthStatus();
+
+            // Get user role and navigate accordingly
+            let userRole = authService.getUserRole();
+            console.log("User role after login:", userRole); // Debug log
+
+            // If no role is detected, assign a default role
+            if (!userRole) {
+                console.log("No role detected after login, assigning default role: ROLE_USER");
+                localStorage.setItem('userRole', 'ROLE_USER');
+                userRole = 'ROLE_USER';
+            }
+
+            // Redirect based on user role
+            redirectBasedOnRole(userRole);
         } catch (err) {
             // @ts-ignore
             setError(err.message || 'Login failed. Please try again.');
@@ -35,6 +95,7 @@ const Login = () => {
         }
     };
 
+    // Rest of component remains the same
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
             {/* Decorative food elements */}

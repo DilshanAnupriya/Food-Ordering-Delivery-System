@@ -40,6 +40,13 @@ public class OrderService {
         return orderRepository.findByUserId(userId);
     }
 
+    public List<OrderModel> getOrdersByRestaurantId(String restaurantId) {
+        if (restaurantId == null) {
+            throw new OrderException("restaurant ID cannot be null", HttpStatus.BAD_REQUEST);
+        }
+        return orderRepository.findByRestaurantId(restaurantId);
+    }
+
     public OrderModel getOrderById(Long orderId) {
         if (orderId == null) {
             throw new OrderException("Order ID cannot be null", HttpStatus.BAD_REQUEST);
@@ -296,7 +303,7 @@ public class OrderService {
                 .orElseThrow(() -> new OrderException("Order not found with ID: " + orderId, HttpStatus.NOT_FOUND));
 
         StringBuilder statusInfo = new StringBuilder();
-        statusInfo.append("Order #").append(orderId).append("\n");
+        statusInfo.append("Order ").append(orderId).append("\n");
         statusInfo.append("Status: ").append(order.getStatus()).append("\n");
         statusInfo.append("Last Updated: ").append(order.getLastUpdated()).append("\n");
 

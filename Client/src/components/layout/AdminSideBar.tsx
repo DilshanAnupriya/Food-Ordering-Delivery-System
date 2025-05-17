@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   UtensilsCrossed,
   CreditCard,
   Truck,
   HelpCircle,
   LogOut,
-  ShoppingCart,
+  UserRoundSearch,
   ChevronRight,
   ChevronLeft,
   Store,
@@ -15,9 +15,12 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../services/auth/authContext.tsx'; // Update this import path as needed
 
 const AdminSidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [restaurantSubmenuOpen, setRestaurantSubmenuOpen] = useState(false);
 
@@ -35,6 +38,14 @@ const AdminSidebar: React.FC = () => {
     if (collapsed) return;
     e.preventDefault();
     setRestaurantSubmenuOpen(!restaurantSubmenuOpen);
+  };
+
+  const handleLogout = () => {
+    // Call the logout function from AuthContext
+    logout(() => {
+      // Callback function to redirect after logout
+      navigate('/login'); // Redirect to login page after logout
+    });
   };
 
   const navLinkStyle = (isActive: boolean) =>
@@ -153,15 +164,6 @@ const AdminSidebar: React.FC = () => {
                               <span>Food Items</span>
                             </NavLink>
                           </li>
-                          <li>
-                            <NavLink
-                                to="/cart"
-                                className={({ isActive }) => navLinkStyle(isActive)}
-                            >
-                              <ShoppingCart size={18} />
-                              <span>Cart</span>
-                            </NavLink>
-                          </li>
                         </motion.ul>
                     )}
                   </AnimatePresence>
@@ -180,16 +182,7 @@ const AdminSidebar: React.FC = () => {
             </li>
             <li>
               <NavLink
-                  to="/admin-contacts"
-                  className={({ isActive }) => navLinkStyle(isActive)}
-              >
-                <MessageSquare size={20} className="flex-shrink-0" />
-                {!collapsed && <span className="ml-3">Contact Messages</span>}
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                  to="/delivery"
+                  to="/driveradmin-dashboard"
                   className={({ isActive }) =>
                       navLinkStyle(isActive || location.pathname.startsWith('/driver'))
                   }
@@ -205,6 +198,24 @@ const AdminSidebar: React.FC = () => {
               >
                 <CreditCard size={20} className="flex-shrink-0" />
                 {!collapsed && <span className="ml-3">Payments</span>}
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                  to="/admin-user"
+                  className={({ isActive }) => navLinkStyle(isActive)}
+              >
+                <UserRoundSearch size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Users</span>}
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                  to="/admin-contacts"
+                  className={({ isActive }) => navLinkStyle(isActive)}
+              >
+                <MessageSquare size={20} className="flex-shrink-0" />
+                {!collapsed && <span className="ml-3">Contact Messages</span>}
               </NavLink>
             </li>
           </ul>
@@ -224,6 +235,7 @@ const AdminSidebar: React.FC = () => {
             </li>
             <li>
               <button
+                  onClick={handleLogout}
                   className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors text-gray-700 hover:bg-red-100 hover:text-red-600 w-full"
               >
                 <LogOut size={20} className="flex-shrink-0" />

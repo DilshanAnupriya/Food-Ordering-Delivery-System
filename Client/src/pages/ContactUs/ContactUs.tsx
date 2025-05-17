@@ -1,13 +1,13 @@
-import Navbar from '../../components/layout/Navbar';
-import SubNav from '../../components/layout/SubNav';
+
 import Footer from '../../components/layout/Footer';
 import ContactForm from '../ContactUs/ContactForm';
+import NavV2 from "../../components/layout/NavV2.tsx";
 
 const ContactUs = () => {
     return (
         <div className="flex flex-col min-h-screen">
-            <SubNav />
-            <Navbar />
+
+            <NavV2 />
             <main className="flex-grow">
                 <ContactForm />
             </main>

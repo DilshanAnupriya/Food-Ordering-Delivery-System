@@ -53,6 +53,8 @@ public class ApplicationSecurityConfig extends WebSecurityConfiguration {
                 .addFilterAfter(new JwtTokeVerifier(jwtConfig, secretKey), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/users/visitor/**").permitAll()
+                        .requestMatchers("/api/v1/users/change-role").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/customers/visitor/**").permitAll()
                         .anyRequest().authenticated() // Authenticate all other requests
                 );

@@ -9,6 +9,7 @@ import SubNav from '../../components/layout/SubNav';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import NavV2 from "../../components/layout/NavV2.tsx";
 
 // Fix for Leaflet icon issue
 L.Icon.Default.mergeOptions({
@@ -448,7 +449,7 @@ const OrderForm = () => {
         const createdOrder = await orderService.createOrder(orderData);
 
         // Store order details in session storage
-        const orderDetails = {
+        const orderDetail = {
           orderId: createdOrder.orderId,
           restaurantId: createdOrder.restaurantId,
           userId: createdOrder.userId,
@@ -456,9 +457,9 @@ const OrderForm = () => {
         };
 
         // Get existing orders array or initialize new one
-        const existingOrders = JSON.parse(sessionStorage.getItem('orderDetails') || '[]');
-        existingOrders.push(orderDetails);
-        sessionStorage.setItem('orderDetails', JSON.stringify(existingOrders));
+        const existingOrders = JSON.parse(sessionStorage.getItem('orderDetail') || '[]');
+        existingOrders.push(orderDetail);
+        sessionStorage.setItem('orderDetail', JSON.stringify(existingOrders));
 
         // Handle multiple restaurant orders
         if (multipleOrders) {
@@ -501,12 +502,9 @@ const OrderForm = () => {
   return (
     <div className="bg-white relative overflow-hidden">
       <div className="w-full">
-        <SubNav />
+        <NavV2 />
       </div>
-      <div className="w-full">
-        <NavigationBar />
-      </div>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 bg-white rounded-2xl">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-orange-500">
             {isEditMode ? 'Edit Order' : 'Create New Order'}
@@ -596,7 +594,7 @@ const OrderForm = () => {
           </div>
 
           {/* Map and location section */}
-          <div className="mb-6">
+          <div className="relative z-10  mb-6 ">
             <h2 className="text-xl font-semibold mb-4 text-orange-500">Delivery Location</h2>
 
             <div className="flex flex-col md:flex-row gap-6">
@@ -787,7 +785,7 @@ const OrderForm = () => {
               {completedOrders.map((completedOrder, index) => (
                 <div key={index} className="p-3 bg-white rounded shadow-sm">
                   <p className="text-gray-700">
-                    <span className="font-medium">Order #{completedOrder.id}:</span> {cartData?.[completedOrder.restaurantId]?.restaurantName || 'Restaurant'} - 
+                    <span className="font-medium">Order {completedOrder.id}:</span> {cartData?.[completedOrder.restaurantId]?.restaurantName || 'Restaurant'} - 
                     <span className="text-green-600 font-medium"> ${completedOrder.totalAmount.toFixed(2)}</span>
                   </p>
                 </div>
