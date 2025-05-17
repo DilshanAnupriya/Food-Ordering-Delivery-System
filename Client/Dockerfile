@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Expose the dev server port
-EXPOSE 5173
+EXPOSE 5174
 
 # Start the dev server
 CMD ["npm", "run", "dev", "--", "--host"]
