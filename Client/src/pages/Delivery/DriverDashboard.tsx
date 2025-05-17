@@ -27,6 +27,14 @@ const DriverDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is logged in
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      // If no userId is found, redirect to login page
+      navigate('/login');
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocation([pos.coords.latitude, pos.coords.longitude]);
@@ -35,16 +43,7 @@ const DriverDashboard: React.FC = () => {
         console.error(err);
       }
     );
-
-    // Get userId from localStorage
-    const userId = localStorage.getItem('userId');
     
-    if (!userId) {
-      console.error('User ID not found in localStorage');
-      // Could redirect to login page here
-      return;
-    }
-
     // Check if driver data exists in sessionStorage
     const storedDriverData = sessionStorage.getItem('driverData');
     
@@ -57,7 +56,7 @@ const DriverDashboard: React.FC = () => {
       // Fetch driver data by userId
       fetchDriverDataByUserId(userId);
     }
-  }, []);
+  }, [navigate]);
 
   const fetchDriverDataByUserId = async (userId: string) => {
     try {
@@ -128,6 +127,23 @@ const DriverDashboard: React.FC = () => {
     navigate(path);
   };
 
+  const handleLogout = () => {
+    // Clear all user-related data from storage
+    localStorage.removeItem('userId');
+    localStorage.removeItem('token'); // In case you're using token authentication
+    sessionStorage.removeItem('driverData');
+    
+    // Optional: You could also clear other related data
+    localStorage.removeItem('userRole');
+    sessionStorage.clear(); // Clear all session storage
+    
+    // Show a logout message (optional)
+    alert('You have been successfully logged out.');
+    
+    // Navigate to login page
+    navigate('/login');
+  };
+
   // Get profile initial from driver name
   const profileInitial = driverData.driverName ? driverData.driverName.charAt(0) : 'D';
 
@@ -170,7 +186,7 @@ const DriverDashboard: React.FC = () => {
               </button>
               <button
                   className="bg-red-500 text-white px-4 py-2 rounded-md mr-4 hover:bg-yellow-400 hover:text-black transition-colors"
-                  onClick={() => handleNavigate('/login')}
+                  onClick={handleLogout}
               >
                 Logout
               </button>
