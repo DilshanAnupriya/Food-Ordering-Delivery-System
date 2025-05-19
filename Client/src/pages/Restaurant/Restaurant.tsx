@@ -234,7 +234,7 @@ const Restaurant = () => {
                 searchText={searchText}
                 onSearchChange={handleSearchChange}
             />
-<div className="bg-white   rounded-b-3xl 2xl:ml-80 mb-30">
+<div className="bg-white   rounded-b-3xl  mb-30">
             <EnhancedFoodItemsListWrapper
                 selectedCategory={selectedCategory}
                 foodItemsByCategory={foodItemsByCategory}
