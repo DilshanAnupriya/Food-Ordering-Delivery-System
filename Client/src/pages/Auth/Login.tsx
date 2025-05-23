@@ -98,14 +98,16 @@ const Login = () => {
     // Rest of component remains the same
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-            {/* Decorative food elements */}
-            <div className="absolute top-4 left-4 opacity-5 lg:opacity-10">
-                <img src="/api/placeholder/200/200" alt="placeholder" className="w-40 h-40" />
-            </div>
-            <div className="absolute bottom-4 right-4 opacity-5 lg:opacity-10">
-                <img src="/api/placeholder/200/200" alt="placeholder" className="w-40 h-40" />
-            </div>
-
+            <video
+                className="absolute top-0 left-0 w-full h-full object-cover z-0"
+                autoPlay
+                muted
+                loop
+            >
+                <source src="public/assets/Sprinkling Grated Cheese Pasta 4K.mp4" type="video/mp4" />
+            </video>
+            <div className="absolute top-0 left-0 w-full h-full bg-black opacity-80 z-10 items-center justify-center">
+            <div className="bg-white py-8 px-4  w-120 ml-160 xl:ml-120 mt-25 shadow-xl sm:rounded-xl sm:px-10 transform transition-all duration-500 hover:shadow-2xl">
             <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
                 <div className="flex justify-center">
                     <div className="bg-orange-500 text-white rounded-full p-4 shadow-lg transform transition-all duration-500 hover:scale-110">
@@ -119,7 +121,7 @@ const Login = () => {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-                <div className="bg-white py-8 px-4 shadow-xl sm:rounded-xl sm:px-10 transform transition-all duration-500 hover:shadow-2xl">
+
                     {error && (
                         <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded animate-pulse">
                             <p className="font-medium">Oops!</p>
@@ -238,7 +240,9 @@ const Login = () => {
                             </Link>
                         </div>
                     </div>
-                </div>
+
+            </div>
+            </div>
             </div>
         </div>
     );
